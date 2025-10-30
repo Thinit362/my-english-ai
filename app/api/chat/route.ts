@@ -25,10 +25,9 @@ export async function POST(req: NextRequest) {
       `Answer briefly and clearly, add examples when helpful.`;
 
     const result = await model.generateContent([
-      { role: "user", parts: [{ text: context }] },
-      { role: "user", parts: [{ text: String(prompt || "") }] },
+      { parts: [{ text: context }] },
+      { parts: [{ text: String(prompt || "") }] },
     ]);
-
     const text = result.response.text() || "";
     return NextResponse.json({ text });
   } catch (err: any) {
