@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-/**
- * API handler cho Gemini Chat – chạy ổn định trên local & Vercel.
- * Model: gemini-2.5-flash
- */
 export async function POST(req: NextRequest) {
   try {
     const { pageKey, unit, message } = await req.json();
@@ -36,9 +32,17 @@ Nếu học sinh hỏi về kỹ năng (nghe, nói, đọc, viết, ngữ pháp,
 Trả lời bằng tiếng Việt thân thiện, dễ hiểu.
     `;
 
+<<<<<<< HEAD
     // 💬 Gọi model sinh phản hồi
     const result = await model.generateContent([systemPrompt, message]);
     const text = result.response.text();
+=======
+
+    const result = await model.generateContent([
+      { parts: [{ text: context }] },
+      { parts: [{ text: String(prompt || "") }] },
+    ]);
+>>>>>>> 259c01a (fix: remove invalid 'role' field in generateContent)
 
     // ✅ Trả dữ liệu cho frontend (GeminiChat.tsx)
     return NextResponse.json({
