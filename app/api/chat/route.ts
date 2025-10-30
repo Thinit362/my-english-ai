@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const runtime = "edge"; // dùng Node runtime để đọc env, ổn định trên Vercel
+// Dùng Node.js runtime để có quyền truy cập process.env
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,16 +19,18 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Bạn có thể tuỳ biến "context" theo lớp/unit
+    // Tạo ngữ cảnh cho AI
     const context =
       `You are an English learning assistant for Vietnamese high-school students. ` +
       `Book: ${pageKey || "unknown"}, Units: ${(units || []).join(", ") || "N/A"}. ` +
       `Answer briefly and clearly, add examples when helpful.`;
 
+    // Gọi Gemini API (syntax mới)
     const result = await model.generateContent([
       context,
       String(prompt || "")
-  ]);
+    ]);
+
     const text = result.response.text() || "";
     return NextResponse.json({ text });
   } catch (err: any) {
