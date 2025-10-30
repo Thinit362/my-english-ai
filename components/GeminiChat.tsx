@@ -1,7 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 type Message = { role: "user" | "ai"; content: string };
-export default function GeminiChat({ pageKey, units }: { pageKey: "eng10" | "eng11" | "eng12"; units: number[] }) {
+export default function GeminiChat({
+  pageKey,
+  units,
+  fixedUnit = false, // ✅ thêm dòng này
+}: {
+  pageKey: "eng10" | "eng11" | "eng12";
+  units: number[];
+  fixedUnit?: boolean; // ✅ khai báo prop
+}) {
 const [unit, setUnit] = useState<number>(units[0] || 1);
 const [input, setInput] = useState("");
 const [messages, setMessages] = useState<Message[]>([]);
