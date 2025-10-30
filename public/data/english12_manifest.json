@@ -1,0 +1,1272 @@
+{
+  "book": {
+    "id": "eng12",
+    "title": "Tiếng Anh 12 – Global Success",
+    "grade": 12,
+    "slug": "english-12",
+    "source_pdf": "Sách học sinh Tiếng anh 12 - Global success.pdf",
+    "created_at": "2025-10-27T00:56:04.914519Z"
+  },
+  "units": [
+    {
+      "id": "eng12_u1",
+      "index": 1,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u1lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit1",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u1lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit1",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u1lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit1",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u2",
+      "index": 2,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u2lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit2",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u2lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit2",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u2lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit2",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u3",
+      "index": 3,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u3lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit3",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u3lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit3",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u3lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit3",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u4",
+      "index": 4,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u4lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit4",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u4lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit4",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u4lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit4",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u5",
+      "index": 5,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u5lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit5",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u5lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit5",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u5lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit5",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u6",
+      "index": 6,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u6lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit6",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u6lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit6",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u6lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit6",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u7",
+      "index": 7,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u7lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit7",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u7lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit7",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u7lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit7",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u8",
+      "index": 8,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u8lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit8",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u8lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit8",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u8lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit8",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u9",
+      "index": 9,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u9lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit9",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u9lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit9",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u9lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit9",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u10",
+      "index": 10,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u10lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit10",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u10lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit10",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u10lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit10",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u11",
+      "index": 11,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u11lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit11",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u11lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit11",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u11lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit11",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eng12_u12",
+      "index": 12,
+      "title": "",
+      "page_range": "",
+      "summary": "",
+      "lessons": [
+        {
+          "id": "eng12_u12lA",
+          "index": "A",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit12",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u12lB",
+          "index": "B",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit12",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "eng12_u12lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
+              "type": "learn",
+              "blocks": []
+            },
+            {
+              "type": "practice",
+              "blocks": []
+            },
+            {
+              "type": "gemini-assist",
+              "config": {
+                "namespace": "eng12/unit12",
+                "modes": [
+                  "teacher",
+                  "student"
+                ],
+                "rules": [
+                  "Ưu tiên nội dung SGK Global Success 12 trong namespace tương ứng.",
+                  "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
+                  "Nếu thiếu dữ liệu, báo thiếu thay vì suy đoán."
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

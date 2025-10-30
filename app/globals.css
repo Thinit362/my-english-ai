@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #fafafa; color: #111; }
+.container { max-width: 1080px; margin: 0 auto; padding: 16px; }
+.header { background: #ffffff; border-bottom: 1px solid #eee; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { height: 40px; width: 40px; border-radius: 6px; }
+.nav { display: flex; gap: 12px; }
+.nav a { text-decoration: none; color: #333; padding: 6px 10px; border-radius: 8px; }
+.nav a:hover { background: #f0f0f0; }
+.banner { background: #0a7; color: white; padding: 6px 12px; border-radius: 8px; font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.card { background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; }
+.card h3 { margin: 0; font-size: 18px; }
+.card p { margin: 0; color: #666; font-size: 14px; }
+.section { margin: 24px 0; }
+.footer { margin-top: 36px; padding: 24px 16px; text-align: center; color: #666; border-top: 1px solid #eee; }
+.select { padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; background: white; }
+.input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; }
+.button { padding: 10px 14px; border: none; background: #0a7; color: white; border-radius: 10px; cursor: pointer; }
+.button.secondary { background: #333; }
+.chatbox { background: white; border: 1px solid #eee; border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.msg { padding: 10px 12px; border-radius: 10px; }
+.msg.user { background: #eef7ff; }
+.msg.ai { background: #f5fff3; }
