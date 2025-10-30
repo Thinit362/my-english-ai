@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
       `Answer briefly and clearly, add examples when helpful.`;
 
     const result = await model.generateContent([
-      { parts: [{ text: context }] },
-      { parts: [{ text: String(prompt || "") }] },
-    ]);
+      context,
+      String(prompt || "")
+  ]);
     const text = result.response.text() || "";
     return NextResponse.json({ text });
   } catch (err: any) {
