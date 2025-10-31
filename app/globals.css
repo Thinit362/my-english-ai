@@ -10,6 +10,18 @@
   --text-muted: #666;
   --radius: 12px;
 }
+body {
+  @apply bg-sky-50 text-gray-800;
+  font-family: "Inter", sans-serif;
+}
+
+img {
+  user-select: none;
+}
+
+a {
+  transition: all 0.2s ease-in-out;
+}
 
 /* ⚙️ Reset cơ bản */
 * { box-sizing: border-box; margin: 0; padding: 0; }
