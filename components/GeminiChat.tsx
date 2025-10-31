@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import GeminiChat from "@/components/GeminiChat";
 export type Message = { role: "user" | "ai"; content: string };
 
 export default function GeminiChat({
