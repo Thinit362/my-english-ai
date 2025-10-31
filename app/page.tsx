@@ -1,88 +1,125 @@
+"use client";
+import Image from "next/image";
 import Link from "next/link";
+import GeminiChat from "@/components/GeminiChat";
 
 export default function HomePage() {
   return (
-    <div>
-      {/* --- Banner & Giới thiệu --- */}
-      <section className="section text-center">
-        <h2 className="text-3xl font-bold mb-4">
-          Ứng dụng Trí tuệ nhân tạo Gemini API – Đột phá trong học Tiếng Anh THPT
-        </h2>
-        <p className="text-lg leading-relaxed max-w-3xl mx-auto">
-          Chào mừng bạn đến với <strong>nền tảng học Tiếng Anh thông minh</strong> – nơi{" "}
-          <strong>Trí tuệ nhân tạo Gemini</strong> đồng hành cùng học sinh trong từng bài học!
-          Đây là sản phẩm KHKT sáng tạo của nhóm <strong>MCVT Innovators – THPT Hải An</strong>,
-          được xây dựng với mong muốn mang đến một cách học Tiếng Anh mới mẻ, sinh động và hiệu quả hơn bao giờ hết.
-        </p>
+    <main className="min-h-screen bg-blue-50 text-gray-800">
+      {/* SECTION 1: Sách lớp 10–11–12 */}
+      <section className="max-w-6xl mx-auto py-8 px-4 grid md:grid-cols-3 gap-6">
+        {[
+          {
+            title: "Tiếng Anh 10",
+            desc: "Truy cập bài học, kiểm tra và tài nguyên lớp 10.",
+            img: "/eng10.jpg",
+            href: "/english-10",
+          },
+          {
+            title: "Tiếng Anh 11",
+            desc: "Rèn luyện kỹ năng giao tiếp và ngữ pháp lớp 11.",
+            img: "/eng11.jpg",
+            href: "/english-11",
+          },
+          {
+            title: "Tiếng Anh 12",
+            desc: "Ôn tập, luyện đề thi THPT Quốc Gia và IELTS.",
+            img: "/eng12.jpg",
+            href: "/english-12",
+          },
+        ].map((b, i) => (
+          <Link
+            key={i}
+            href={b.href}
+            className="group border rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
+          >
+            <div className="h-60 w-full relative">
+              <Image
+                src={b.img}
+                alt={b.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform"
+              />
+            </div>
+            <div className="p-4">
+              <h3 className="font-semibold text-lg text-navy-900">{b.title}</h3>
+              <p className="text-sm opacity-80">{b.desc}</p>
+            </div>
+          </Link>
+        ))}
       </section>
 
-      {/* --- Danh sách các lớp học --- */}
-      <section className="grid section">
-        <Link href="/english-10" className="card">
-          <img src="/covers/eng10.jpg" alt="English 10" />
-          <h3>Tiếng Anh 10 – Global Success</h3>
-          <p>Khám phá từng Unit SGK, học và luyện tập cùng trợ lý AI Gemini.</p>
-        </Link>
-        <Link href="/english-11" className="card">
-          <img src="/covers/eng11.jpg" alt="English 11" />
-          <h3>Tiếng Anh 11 – Global Success</h3>
-          <p>Tương tác với AI – luyện kỹ năng, làm bài tập và khám phá nội dung học tập.</p>
-        </Link>
-        <Link href="/english-12" className="card">
-          <img src="/covers/eng12.jpg" alt="English 12" />
-          <h3>Tiếng Anh 12 – Global Success</h3>
-          <p>Học thông minh – luyện tập sáng tạo – chinh phục tiếng Anh cùng Gemini.</p>
-        </Link>
+      {/* SECTION 2: Giới thiệu song ngữ */}
+      <section className="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6 grid md:grid-cols-2 gap-6 mb-12">
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-[navy]">🎯 Mục tiêu của website</h2>
+          <p className="text-sm leading-relaxed">
+            Trang web <b>Ứng dụng Trí tuệ nhân tạo - Gemini API & Vercel</b> nhằm hỗ trợ học sinh
+            trung học phổ thông học Tiếng Anh hiệu quả hơn thông qua công nghệ AI.  
+            Học sinh có thể học từ vựng, ngữ pháp, kỹ năng nghe - nói - đọc - viết, và làm bài kiểm
+            tra tự động.  
+            Mục tiêu là giúp học sinh:
+          </p>
+          <ul className="list-disc list-inside text-sm mt-2">
+            <li>Nắm vững kiến thức trọng tâm từng bài học.</li>
+            <li>Rèn luyện kỹ năng thi THPT Quốc Gia.</li>
+            <li>Phát triển khả năng giao tiếp tiếng Anh tự nhiên.</li>
+          </ul>
+          <p className="text-sm mt-3">
+            Hệ thống trợ lý <b>Gemini AI</b> sẽ gợi ý lộ trình học, tạo bài tập, chấm bài viết và đưa
+            ra phản hồi chi tiết giúp học sinh tự học hiệu quả hơn.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-[navy]">🎯 Website Goals (English)</h2>
+          <p className="text-sm leading-relaxed">
+            This website integrates <b>Google Gemini API</b> and <b>Vercel</b> to help high school
+            students learn English more effectively with AI.  
+            Students can practice vocabulary, grammar, listening, speaking, reading, and writing
+            skills.  
+            The goals are:
+          </p>
+          <ul className="list-disc list-inside text-sm mt-2">
+            <li>Master key English knowledge for each grade.</li>
+            <li>Prepare for the national high school exam effectively.</li>
+            <li>Enhance English communication skills naturally.</li>
+          </ul>
+          <p className="text-sm mt-3">
+            The <b>Gemini Assistant</b> helps design personalized study plans, create exercises, and
+            give instant feedback — making self-study engaging and efficient.
+          </p>
+        </div>
       </section>
 
-      {/* --- Phần mô tả chi tiết dự án KHKT --- */}
-      <section className="section">
-        <h2 className="text-2xl font-semibold mb-4">🎯 Mục tiêu & Ý nghĩa dự án</h2>
-        <p>
-          Dự án nhằm ứng dụng <strong>Gemini API</strong> trong giảng dạy và học tập tiếng Anh,
-          giúp học sinh THPT có môi trường học mở, chủ động, hiện đại và hiệu quả.
-          Website được phát triển trên nền tảng <strong>Next.js</strong> và triển khai bởi{" "}
-          <strong>Vercel</strong>, đảm bảo tốc độ, tương thích tốt trên mọi thiết bị.
-        </p>
-        <ul className="list-disc ml-6 mt-2">
-          <li>💡 Tự động hóa việc học với Gemini – giải thích, luyện tập, phản hồi thông minh.</li>
-          <li>📘 Bám sát SGK Global Success lớp 10, 11, 12.</li>
-          <li>🤝 Hỗ trợ giáo viên tạo câu hỏi, hoạt động học tập sáng tạo.</li>
-        </ul>
+      {/* SECTION 3: Chatbot Gemini */}
+      <section className="max-w-6xl mx-auto px-4 mb-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="md:col-span-2 flex flex-col justify-center">
+          <h2 className="text-2xl font-semibold text-[navy] mb-3">
+            💬 Trợ lý học Tiếng Anh (Gemini)
+          </h2>
+          <p className="text-sm opacity-80 mb-4">
+            Bấm vào các gợi ý hoặc nhập câu hỏi, Gemini sẽ hướng dẫn bạn cách học tiếng Anh hiệu quả,
+            xây dựng lộ trình cá nhân và gợi ý bài tập luyện tập phù hợp.
+          </p>
+          <GeminiChat pageKey="advisor" units={[1]} />
+        </div>
+        <div className="hidden lg:block">
+          <Image
+            src="/study-ai.webp"
+            alt="Student learning English with AI"
+            width={500}
+            height={400}
+            className="rounded-lg shadow-md object-cover"
+          />
+        </div>
       </section>
 
-      {/* --- Hướng dẫn học --- */}
-      <section className="section">
-        <h2 className="text-2xl font-semibold mb-4">🚀 Cách tham gia học tập</h2>
-        <ol className="list-decimal ml-6">
-          <li>Chọn lớp học phù hợp (10, 11 hoặc 12) để xem danh sách các bài học (Unit).</li>
-          <li>
-            Trong mỗi Unit, bạn có thể chọn tab <strong>Learn</strong> để đọc nội dung,
-            <strong> Practice</strong> để làm bài tập,
-            và <strong>Gemini Assistant</strong> để trò chuyện với AI.
-          </li>
-          <li>Hỏi Gemini về ngữ pháp, từ vựng, bài tập hoặc yêu cầu hội thoại mẫu.</li>
-          <li>
-            Đăng nhập để lưu kết quả học và trò chuyện trong phiên – giúp bạn học liên tục, không mất dữ liệu.
-          </li>
-        </ol>
-      </section>
-
-      {/* --- Thông điệp và nhóm thực hiện --- */}
-      <section className="section text-center">
-        <h2 className="text-2xl font-semibold mb-2">💬 Thông điệp từ nhóm MCVT Innovators</h2>
-        <blockquote className="italic max-w-2xl mx-auto mb-4">
-          “Chúng em tin rằng học tiếng Anh không chỉ là học từ và ngữ pháp,
-          mà là hành trình khám phá thế giới. Với sự đồng hành của Trí tuệ nhân tạo Gemini,
-          mỗi giờ học sẽ trở nên thú vị, sáng tạo và hiệu quả hơn.”
-        </blockquote>
-        <p>
-          <strong>Nhóm thực hiện:</strong> MCVT Innovators – Trường THPT Hải An
-          <br />
-          <strong>Đề tài KHKT:</strong> Ứng dụng Trí tuệ nhân tạo Gemini API và nền tảng Vercel
-          tạo đột phá trong việc dạy và học Tiếng Anh THPT.
-        </p>
-      </section>
-    </div>
+      {/* FOOTER */}
+      <footer className="bg-[navy] text-white text-center py-4">
+        <p className="font-semibold">MCVT Innovators – THPT Hải An</p>
+        <p>Giáo viên hướng dẫn: Tô Thị Thìn – ĐT: 0936095362</p>
+      </footer>
+    </main>
   );
 }
