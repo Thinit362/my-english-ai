@@ -35,7 +35,7 @@ export default function Header() {
       </div>
 
       {/* Banner động */}
-      <div className="relative w-full h-[180px] sm:h-[220px] md:h-[260px] overflow-hidden">
+      <div className="relative w-full h-[100px] sm:h-[120px] md:h-[150px] overflow-hidden">
         {images.map((src, i) => (
           <img
             key={i}
