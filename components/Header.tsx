@@ -54,9 +54,9 @@ export default function Header() {
       <nav className="flex flex-wrap items-center justify-center gap-3 px-4 py-3 bg-sky-900">
         {[
           { href: "/", label: "Trang chủ" },
-          { href: "/eng10", label: "Tiếng Anh 10" },
-          { href: "/eng11", label: "Tiếng Anh 11" },
-          { href: "/eng12", label: "Tiếng Anh 12" },
+          { href: "/english-10", label: "Tiếng Anh 10" },
+          { href: "/english-11", label: "Tiếng Anh 11" },
+          { href: "/english-12", label: "Tiếng Anh 12" },
           { href: "/about", label: "Giới thiệu" },
         ].map((l) => (
           <a
