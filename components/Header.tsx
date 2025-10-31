@@ -1,86 +1,73 @@
 "use client";
+import { useState, useEffect } from "react";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-
-type NavItem = { href: string; label: string };
-
-export default function Header({
-  images = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"],
-  nav = [
-    { href: "/", label: "Trang chủ" },
-    { href: "/english-10", label: "Tiếng Anh 10" },
-    { href: "/english-11", label: "Tiếng Anh 11" },
-    { href: "/english-12", label: "Tiếng Anh 12" },
-    { href: "/about", label: "Giới thiệu" },
-  ],
-  showLogin = true,
-}: {
-  images?: string[];
-  nav?: NavItem[];
-  showLogin?: boolean;
-}) {
+export default function Header() {
+  const images = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (images.length <= 1) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % images.length), 3500);
+    const id = setInterval(() => setIndex((i) => (i + 1) % images.length), 4000);
     return () => clearInterval(id);
   }, [images.length]);
 
   return (
-    <header className="bg-white">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3">
-        <Link href="/" className="flex items-center gap-3">
+    <header className="w-full bg-white shadow-md border-b border-sky-100">
+      {/* Logo và tiêu đề */}
+      <div className="flex flex-wrap justify-between items-center px-6 py-3 bg-gradient-to-r from-sky-50 to-white">
+        <div className="flex items-center gap-3">
           <img
             src="/logo.png"
             alt="THPT Hải An Logo"
-            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+            className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md"
           />
-          <div className="leading-tight">
-            <div className="font-semibold text-xl sm:text-2xl">MCVT Innovators</div>
-            <div className="text-xs sm:text-sm opacity-70">THPT Hải An</div>
+          <div>
+            <h1 className="font-bold text-2xl text-sky-800">MCVT Innovators</h1>
+            <p className="text-sm text-gray-600">THPT Hải An</p>
           </div>
-        </Link>
+        </div>
 
-        {showLogin && (
-          <Link
-            href="/login"
-            className="px-3 sm:px-4 py-2 rounded bg-[navy] text-white text-sm sm:text-base hover:opacity-90"
-          >
-            Đăng nhập
-          </Link>
-        )}
+        <a
+          href="/login"
+          className="px-4 py-2 rounded-lg text-sm md:text-base bg-sky-700 text-white hover:bg-sky-800 shadow-sm transition"
+        >
+          Đăng nhập
+        </a>
       </div>
 
-      {/* Banner cao 210px (desktop), tự co trên mobile */}
-      <div className="relative w-full h-[90px] sm:h-[150px] md:h-[180px] overflow-hidden">
+      {/* Banner động */}
+      <div className="relative w-full h-[180px] sm:h-[220px] md:h-[260px] overflow-hidden">
         {images.map((src, i) => (
           <img
-            key={src}
+            key={i}
             src={src}
             alt={`Banner ${i + 1}`}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
               i === index ? "opacity-100" : "opacity-0"
             }`}
-            loading={i === 0 ? "eager" : "lazy"}
           />
         ))}
+        {/* overlay mờ nhẹ */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex flex-wrap items-center justify-center gap-2 md:gap-3 px-4 sm:px-6 py-3 border-t bg-[navy]">
-  {nav.map((l) => (
-    <Link
-      key={l.href}
-      href={l.href}
-      className="px-3 md:px-4 py-2 rounded bg-blue-100 text-[navy] font-medium text-sm md:text-base hover:bg-blue-200 hover:scale-105 transition-transform"
-    >
-      {l.label}
-    </Link>
-  ))}
-</nav>
+      {/* Thanh điều hướng */}
+      <nav className="flex flex-wrap items-center justify-center gap-3 px-4 py-3 bg-sky-900">
+        {[
+          { href: "/", label: "Trang chủ" },
+          { href: "/eng10", label: "Tiếng Anh 10" },
+          { href: "/eng11", label: "Tiếng Anh 11" },
+          { href: "/eng12", label: "Tiếng Anh 12" },
+          { href: "/about", label: "Giới thiệu" },
+        ].map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            className="px-4 py-2 rounded-md text-sm md:text-base font-medium bg-sky-200 text-sky-900 hover:bg-sky-300 transition"
+          >
+            {l.label}
+          </a>
+        ))}
+      </nav>
     </header>
   );
 }
