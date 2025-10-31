@@ -12,19 +12,19 @@ export default function HomePage() {
           {
             title: "Tiếng Anh 10",
             desc: "Truy cập bài học, kiểm tra và tài nguyên lớp 10.",
-            img: "/eng10.jpg",
+            img: "/covers/eng10.jpg",
             href: "/english-10",
           },
           {
             title: "Tiếng Anh 11",
             desc: "Rèn luyện kỹ năng giao tiếp và ngữ pháp lớp 11.",
-            img: "/eng11.jpg",
+            img: "/covers/eng11.jpg",
             href: "/english-11",
           },
           {
             title: "Tiếng Anh 12",
             desc: "Ôn tập, luyện đề thi THPT Quốc Gia và IELTS.",
-            img: "/eng12.jpg",
+            img: "/covers/eng12.jpg",
             href: "/english-12",
           },
         ].map((b, i) => (
