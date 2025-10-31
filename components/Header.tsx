@@ -55,7 +55,7 @@ export default function Header({
       </div>
 
       {/* Banner cao 210px (desktop), tự co trên mobile */}
-      <div className="relative w-full h-[150px] sm:h-[180px] md:h-[210px] overflow-hidden">
+      <div className="relative w-full h-[90px] sm:h-[150px] md:h-[180px] overflow-hidden">
         {images.map((src, i) => (
           <img
             key={src}
@@ -70,17 +70,17 @@ export default function Header({
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-wrap items-center justify-center gap-2 md:gap-3 px-4 sm:px-6 py-3 border-t">
-        {nav.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="px-3 md:px-4 py-2 rounded bg-[navy] text-white text-sm md:text-base hover:opacity-90"
-          >
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+      <nav className="flex flex-wrap items-center justify-center gap-2 md:gap-3 px-4 sm:px-6 py-3 border-t bg-[navy]">
+  {nav.map((l) => (
+    <Link
+      key={l.href}
+      href={l.href}
+      className="px-3 md:px-4 py-2 rounded bg-blue-100 text-[navy] font-medium text-sm md:text-base hover:bg-blue-200 hover:scale-105 transition-transform"
+    >
+      {l.label}
+    </Link>
+  ))}
+</nav>
     </header>
   );
 }
