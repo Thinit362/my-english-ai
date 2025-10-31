@@ -1,39 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// (Tuỳ chọn) cho phép override qua .env.local: GEMINI_MODEL=gemini-2.5-flash
-const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-
+/**
+ * API handler cho Gemini Chat – chạy ổn định trên local & Vercel.
+ * Model: gemini-2.5-flash
+ */
 export async function POST(req: NextRequest) {
   try {
     const { pageKey, unit, message } = await req.json();
 
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    // 🔑 Lấy API Key từ biến môi trường
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
+      console.error("❌ Thiếu GOOGLE_GEMINI_API_KEY trong .env.local hoặc Vercel Environment Variables");
       return NextResponse.json(
-        { error: "Missing GOOGLE_GEMINI_API_KEY (add it in .env.local & Vercel Project Settings)" },
+        { error: "Thiếu API key Gemini. Vui lòng thêm GOOGLE_GEMINI_API_KEY trong .env.local và Vercel." },
         { status: 500 }
       );
     }
+
     if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Missing 'message' in request body" }, { status: 400 });
+      return NextResponse.json({ error: "Thiếu nội dung message trong body request." }, { status: 400 });
     }
 
+    // 🔗 Khởi tạo Gemini 2.5 Flash
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: MODEL });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const systemPrompt = `Bạn là trợ lý học Tiếng Anh THPT (Gemini).
+    // 🧠 Prompt hệ thống để hướng dẫn cách phản hồi
+    const systemPrompt = `
+Bạn là trợ lý học tiếng Anh THPT (Gemini Assistant).
 Namespace: ${pageKey}/unit${unit}.
-Trả lời ngắn gọn, rõ ràng, dễ hiểu; có ví dụ/bài tập khi phù hợp; ưu tiên tiếng Việt.`;
+Hướng dẫn: Giải thích ngắn gọn, dễ hiểu, có ví dụ minh họa thực tế.
+Nếu học sinh hỏi về kỹ năng (nghe, nói, đọc, viết, ngữ pháp, từ vựng), hãy gợi ý hoạt động luyện tập cụ thể.
+Trả lời bằng tiếng Việt thân thiện, dễ hiểu.
+    `;
 
+    // 💬 Gọi model sinh phản hồi
     const result = await model.generateContent([systemPrompt, message]);
     const text = result.response.text();
 
-    return NextResponse.json({ answer: text, model: MODEL });
+    // ✅ Trả dữ liệu cho frontend (GeminiChat.tsx)
+    return NextResponse.json({
+      answer: text || "(Không có phản hồi từ Gemini 2.5 Flash)",
+      model: "gemini-2.5-flash",
+    });
   } catch (err: any) {
-    console.error("🔥 Gemini 2.5 Flash error:", err?.message || err);
+    console.error("🔥 Lỗi gọi Gemini 2.5 Flash:", err?.message || err);
     return NextResponse.json(
-      { error: "Server error calling Gemini 2.5 Flash. Check model access & API key." },
+      { error: "Lỗi server khi xử lý yêu cầu Gemini 2.5 Flash." },
       { status: 500 }
     );
   }
