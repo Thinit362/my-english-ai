@@ -1,42 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Dùng Node.js runtime để có quyền truy cập process.env
-export const runtime = "nodejs";
+// (Tuỳ chọn) cho phép override qua .env.local: GEMINI_MODEL=gemini-2.5-flash
+const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, pageKey, units } = await req.json();
+    const { pageKey, unit, message } = await req.json();
 
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing GOOGLE_API_KEY" },
+        { error: "Missing GOOGLE_GEMINI_API_KEY (add it in .env.local & Vercel Project Settings)" },
         { status: 500 }
       );
     }
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "Missing 'message' in request body" }, { status: 400 });
+    }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: MODEL });
 
-    // Tạo ngữ cảnh cho AI
-    const context =
-      `You are an English learning assistant for Vietnamese high-school students. ` +
-      `Book: ${pageKey || "unknown"}, Units: ${(units || []).join(", ") || "N/A"}. ` +
-      `Answer briefly and clearly, add examples when helpful.`;
+    const systemPrompt = `Bạn là trợ lý học Tiếng Anh THPT (Gemini).
+Namespace: ${pageKey}/unit${unit}.
+Trả lời ngắn gọn, rõ ràng, dễ hiểu; có ví dụ/bài tập khi phù hợp; ưu tiên tiếng Việt.`;
 
-    // Gọi Gemini API (syntax mới)
-    const result = await model.generateContent([
-      context,
-      String(prompt || "")
-    ]);
+    const result = await model.generateContent([systemPrompt, message]);
+    const text = result.response.text();
 
-    const text = result.response.text() || "";
-    return NextResponse.json({ text });
+    return NextResponse.json({ answer: text, model: MODEL });
   } catch (err: any) {
-    console.error("Gemini API error:", err?.message || err);
+    console.error("🔥 Gemini 2.5 Flash error:", err?.message || err);
     return NextResponse.json(
-      { error: "Gemini API call failed" },
+      { error: "Server error calling Gemini 2.5 Flash. Check model access & API key." },
       { status: 500 }
     );
   }
