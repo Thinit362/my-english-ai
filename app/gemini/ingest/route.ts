@@ -36,4 +36,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: e?.message || "Parse error" }, { status: 500 });
   }
 }
-rename ingest route to ingest__off to disable for build
