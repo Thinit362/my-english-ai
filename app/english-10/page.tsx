@@ -1,20 +1,6 @@
-// app/english-10/page.tsx
-import Image from 'next/image';
-import Link from 'next/link';
-
-// import manifest ảnh Unit/Review (bạn chỉnh file JSON theo nhu cầu)
-import manifest from '../../public/data/english10_manifest.json';
-
-// ====== Trợ lý song ngữ (VI/EN) dùng Gemini Flash ======
-import GeminiChat from '@/components/GeminiChat';
-
-type Item = { title: string; slug: string; imageUrl?: string; type?: 'unit'|'review' };
-
-export const metadata = { title: 'Tiếng Anh 10 – Global Success' };
+import DualLessonAssistant from '@/components/DualLessonAssistant';
 
 export default async function Page() {
-  const items = (manifest as Item[]);
-
   return (
     <>
       {/* PHẦN 1: LƯỚI KHÓA HỌC */}
@@ -51,21 +37,7 @@ export default async function Page() {
       </section>
 
       {/* PHẦN 2: TRỢ LÝ SONG NGỮ */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Trợ lý học tập</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <GeminiChat
-            grade={10}
-            lang="vi"
-            systemPrompt={`Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp 10. Trả lời bằng tiếng Việt, ngắn gọn, có ví dụ, gợi ý luyện từ vựng/ngữ pháp/nghe nói theo từng Unit/Review.`}
-          />
-          <GeminiChat
-            grade={10}
-            lang="en"
-            systemPrompt={`You are a tutor for English Grade 10. Answer in English, concise, with examples and practice tips per Unit/Review.`}
-          />
-        </div>
-      </section>
+      <DualLessonAssistant grade={10} /* endpoint="/api/chat" model="gemini-2.5-flash" */ />
     </>
   );
 }
