@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pdf-parse": "^1.1.1"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -24,4 +25,3 @@
     "typescript": "^5.9.3"
   }
 }
-"pdf-parse": "^1.1.1"
