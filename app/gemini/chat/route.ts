@@ -1,69 +1,105 @@
-// app/gemini/grade/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { z } from "zod";
+import { NextRequest } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // bắt buộc để dùng stream
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-const Body = z.object({
-  skill: z.enum(["reading", "writing", "listening"]),
-  lessonContent: z.string().min(10),
-  studentAnswer: z.string().min(1),
-  rubric: z.array(z.string()).optional()
-});
-
+// Hàm stream phản hồi từ Gemini 2.5 Flash
 export async function POST(req: NextRequest) {
   try {
-    const parsed = Body.parse(await req.json());
-    const { skill, lessonContent, studentAnswer, rubric } = parsed;
+    const { prompt, systemPrompt, context } = await req.json();
 
-    const defaultRubric: Record<string, string[]> = {
-      reading: ["Ý chính", "Chi tiết hỗ trợ", "Suy luận", "Bằng chứng trích dẫn"],
-      writing: ["Ngữ pháp", "Từ vựng", "Mạch lạc", "Bố cục", "Bám đề"],
-      listening: ["Ý chính", "Từ khóa", "Suy luận", "Thông tin chi tiết/số liệu"]
+    // 🧠 Xây dựng nội dung gửi tới Gemini API
+    const model = "gemini-2.5-flash";
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return new Response("Missing GEMINI_API_KEY", { status: 500 });
+    }
+
+    const body = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text:
+                (systemPrompt ? `Hệ thống: ${systemPrompt}\n\n` : "") +
+                (context ? `Ngữ cảnh: ${context}\n\n` : "") +
+                prompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: { temperature: 0.7 },
+      safetySettings: [],
     };
-    const useRubric = rubric ?? defaultRubric[skill];
 
-    const system = `
-Bạn là giám khảo. Trả về JSON:
-{
-  "score": 0-10,
-  "criteria": [{"name": string, "score": 0-10, "feedback": string}],
-  "overall": string,
-  "next_steps": [string]
-}
-- Chấm dựa trên TÀI LIỆU BÀI HỌC.
-- Ngắn gọn, có ví dụ sửa mẫu.
-`;
+    // 🔥 Gọi Gemini API ở chế độ stream
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
 
-    const res = await model.generateContent({
-      systemInstruction: { role: "system", parts: [{ text: system }] },
-      contents: [{
-        role: "user",
-        parts: [{
-          text:
-`KỸ NĂNG: ${skill}
-TIÊU CHÍ: ${useRubric.join(", ")}
+    if (!resp.ok || !resp.body) {
+      const errText = await resp.text();
+      throw new Error(`Gemini API error: ${resp.status} ${errText}`);
+    }
 
-TÀI LIỆU BÀI HỌC:
-${lessonContent}
+    // 🧩 Tạo stream trả về từng chunk để UI hiển thị dần
+    const stream = new ReadableStream({
+      async start(controller) {
+        const decoder = new TextDecoder("utf-8");
+        const reader = resp.body!.getReader();
+        let buffer = "";
 
-BÀI LÀM HỌC SINH:
-${studentAnswer}`
-        }]
-      }]
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          // Gemini stream gửi JSON lines → tách từng dòng theo newline
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const data = JSON.parse(line);
+              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) controller.enqueue(text);
+            } catch {
+              // bỏ qua dòng lỗi
+            }
+          }
+        }
+
+        // phần cuối
+        if (buffer.trim()) {
+          try {
+            const data = JSON.parse(buffer);
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) controller.enqueue(text);
+          } catch {}
+        }
+
+        controller.close();
+      },
     });
 
-    let data: any;
-    const raw = res.response.text();
-    try { data = JSON.parse(raw); }
-    catch { data = { raw }; }
-
-    return NextResponse.json(data);
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Grade error" }, { status: 400 });
+    // 🚀 Trả về streaming response
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (err: any) {
+    console.error("Chat route error:", err);
+    return new Response(`Error: ${err.message}`, { status: 500 });
   }
 }
