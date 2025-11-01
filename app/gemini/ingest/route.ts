@@ -1,38 +1,68 @@
 // app/gemini/ingest/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import pdfParse from "pdf-parse";
+import { NextResponse } from 'next/server';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';            // BẮT BUỘC: chạy Serverless Node, không phải Edge
+export const dynamic = 'force-dynamic';     // Tránh bị static hóa
+export const preferredRegion = 'iad1';      // Tùy chọn: gần log Vercel bạn đưa
+// export const maxDuration = 60;           // Tùy chọn cho tác vụ PDF lớn
 
-export async function POST(req: NextRequest) {
+// Util: cắt text thành các đoạn nhỏ (để hiển thị/nhét vào LLM)
+function chunkText(text: string, chunkSize = 2000, overlap = 200) {
+  const out: { idx: number; start: number; end: number; text: string }[] = [];
+  let i = 0, start = 0;
+  while (start < text.length) {
+    const end = Math.min(start + chunkSize, text.length);
+    out.push({ idx: i++, start, end, text: text.slice(start, end) });
+    start = end - overlap;
+    if (start < 0) start = 0;
+    if (start >= text.length) break;
+  }
+  return out;
+}
+
+export async function POST(req: Request) {
   try {
+    // import động, chỉ load khi chạy trên server
+    const pdfParse = (await import('pdf-parse')).default;
+
     const form = await req.formData();
-    const file = form.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
-
-    const buf = Buffer.from(await file.arrayBuffer());
-    const pdf = await pdfParse(buf);
-    const text = (pdf.text || "").replace(/\u0000/g, "").trim();
-    if (!text) return NextResponse.json({ error: "Empty PDF text" }, { status: 400 });
-
-    // Cắt theo heading viết hoa/ngắn dòng, rồi chia nhỏ theo ~8000 ký tự để an toàn token
-    const sections = text.split(/\n(?=[A-ZĐƠƯÂÊÔ][^\n]{0,80}\n)/g);
-    const lessons: { id: string; title: string; content: string }[] = [];
-    let c = 0;
-    for (const s of sections) {
-      const title = s.split("\n")[0]?.trim().slice(0, 80) || `Bài ${c + 1}`;
-      const parts = s.match(/[\s\S]{1,8000}/g) || [s];
-      for (const part of parts) {
-        lessons.push({
-          id: `L${Date.now()}_${c++}`,
-          title,
-          content: part.trim(),
-        });
-      }
+    const files = form.getAll('file') as File[];
+    if (!files.length) {
+      return NextResponse.json({ ok: false, error: 'No file provided' }, { status: 400 });
     }
 
-    return NextResponse.json({ lessons });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Parse error" }, { status: 500 });
+    // Cho phép nhiều file, parse tuần tự (đơn giản, ít tốn RAM)
+    const results: any[] = [];
+    for (const f of files) {
+      if (f.type !== 'application/pdf' && !f.name?.toLowerCase().endsWith('.pdf')) {
+        results.push({ name: f.name, ok: false, error: 'Unsupported file type (PDF only)' });
+        continue;
+      }
+
+      const ab = await f.arrayBuffer();
+      const buf = Buffer.from(ab);
+
+      const parsed = await pdfParse(buf); // { text, numpages, info, metadata, version }
+      const rawText = (parsed.text || '').replace(/\u0000/g, '').trim(); // sạch null chars
+
+      // Cắt nhỏ để client/LLM dùng dễ hơn
+      const chunks = chunkText(rawText, 2200, 200);
+
+      results.push({
+        ok: true,
+        name: f.name,
+        numPages: parsed.numpages ?? null,
+        info: parsed.info ?? null,
+        metadata: parsed.metadata ? String(parsed.metadata) : null,
+        bytes: buf.byteLength,
+        preview: rawText.slice(0, 800), // xem nhanh
+        chunks,                          // mảng {idx,start,end,text}
+      });
+    }
+
+    return NextResponse.json({ ok: true, results });
+  } catch (err: any) {
+    console.error('INGEST_ERROR', err);
+    return NextResponse.json({ ok: false, error: err?.message ?? 'Unknown error' }, { status: 500 });
   }
 }
