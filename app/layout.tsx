@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
 };
-
+{/*
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 © {new Date().getFullYear()} MCVT Innovators
               </div>
             </div>
-          </footer>
+          </footer> */}
         </div>
       </body>
     </html>
