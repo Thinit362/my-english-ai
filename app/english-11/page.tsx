@@ -1,42 +1,51 @@
-import Link from "next/link";
-import GeminiChat from "@/components/GeminiChat";
-import { getManifest } from "@/lib/manifests";
+import Image from 'next/image';
+import Link from 'next/link';
+import DualLessonAssistant from '@/components/DualLessonAssistant';
 
-export default async function English11Page() {
-  const manifest = await getManifest(11);
-  const units =
-    manifest.units?.map((u: any) => u.index) ||
-    Array.from({ length: 12 }, (_, i) => i + 1);
+type Item = { title: string; slug: string; imageUrl?: string; type?: 'unit'|'review' };
+export const metadata = { title: 'Tiếng Anh 11 – Global Success' };
+
+export default async function Page() {
+  const mod = await import('../../public/data/english11_manifest.json');
+  const m: any = mod.default ?? {};
+  const units: Item[] = (m.units ?? []).map((u: any) => ({
+    title: u.title ? `Unit ${u.index}: ${u.title}` : `Unit ${u.index}`,
+    slug: `unit/${u.index}`,
+    imageUrl: u.imageUrl || `https://www.ai-english-c3.cloud/images/eng11/unit${u.index}.jpg`,
+    type: 'unit',
+  }));
+  const reviews: Item[] = (m.reviews ?? []).map((r: any) => ({
+    title: r.title || `Review ${r.index}`,
+    slug: `review/${r.index}`,
+    imageUrl: r.imageUrl || `https://www.ai-english-c3.cloud/images/eng11/review${r.index}.jpg`,
+    type: 'review',
+  }));
+  const items: Item[] = [...units, ...reviews];
 
   return (
-    <div>
-      {/* Banner / hình ảnh khóa học */}
-      <div className="section" style={{ display: "grid", gap: 8 }}>
-     <h1>Tiếng Anh 11 – Global Success</h1>
-        <p>Chọn Unit để vào bài học chi tiết, hoặc dùng trợ lý Gemini ngay bên dưới.</p>
-      </div>
-
-      {/* Lưới Unit với ảnh + link */}
-      <div className="grid section">
-        {(manifest.units || units.map((i:number)=>({id:`eng11_u${i}`, index:i}))).map((u: any) => (
-          <Link
-            key={u.id || `u${u.index}`}
-            className="card"
-            href={`/english-11/unit/${u.index}`}
-          >
-            {/* Ảnh: đặt tại public/data/images/unit-11-<index>.jpg */}
-            <img
-              src={`/data/images/unit-11-${u.index}.jpg`}
-              alt={`English 11 - Unit ${u.index}`}
-            />
-            <h3>Unit {u.index}{u.title ? `: ${u.title}` : ""}</h3>
-            <p>{u.summary || "Bấm để mở bài học (Học / Luyện tập / Trợ lý Gemini)."}</p>
-          </Link>
-        ))}
-      </div>
-
-      {/* Chat Gemini (chọn Unit ngay tại đây nếu muốn) */}
-      <GeminiChat pageKey="eng11" units={units} />
-    </div>
+    <>
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Khóa học Tiếng Anh 11</h2>
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {items.map((it, idx) => (
+            <Link key={idx} href={`/english-11/${it.slug}`}
+              className="group rounded-2xl overflow-hidden shadow-sm ring-1 ring-gray-200 hover:shadow-lg transition">
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <Image src={it.imageUrl || '/data/images/unit-11-${u.index}.jpg'} alt={it.title} fill
+                       className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
+                       sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw"
+                       priority={idx<4}/>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"/>
+              </div>
+              <div className="p-4">
+                <p className="text-xs text-gray-500 tracking-wide">{(it.type ?? '').toUpperCase()}</p>
+                <h3 className="mt-1 font-medium group-hover:text-blue-600">{it.title}</h3>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+      <DualLessonAssistant grade={11} />
+    </>
   );
 }
