@@ -34,9 +34,9 @@ export default async function Page() {
             <Link key={idx} href={`/english-10/${it.slug}`}
               className="group rounded-2xl overflow-hidden shadow-sm ring-1 ring-gray-200 hover:shadow-lg transition">
               <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={it.imageUrl || '/data/images/unit-11-${u.index}.jpg'}
-                  alt={it.title}
+                <img
+                  src={'/data/images/unit-10-${u.index}.jpg'}
+                  alt={`English 10 - Unit ${u.index}`}
                   fill
                   className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
                   sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw"
