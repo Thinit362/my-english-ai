@@ -1,7 +1,7 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import Header from "@/components/Header";
+export { default } from '@/components/EnglishLayout';
 export const metadata: Metadata = {
   title: "Ứng dụng Gemini & Vercel – Tiếng Anh THPT",
   description: "Học tiếng Anh THPT với Gemini API và Vercel",
