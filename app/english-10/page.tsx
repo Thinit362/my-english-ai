@@ -35,7 +35,7 @@ export default async function Page() {
               className="group rounded-2xl overflow-hidden shadow-sm ring-1 ring-gray-200 hover:shadow-lg transition">
               <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
-                  src={it.imageUrl || '/placeholder.svg'}
+                  src={it.imageUrl || '/data/images/unit-11-${u.index}.jpg'}
                   alt={it.title}
                   fill
                   className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
