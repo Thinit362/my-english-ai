@@ -7,9 +7,11 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Gọi Gemini API (text -> text)
+  // ❌ (fix) không dùng kiểu SpeechRecognition để tránh lỗi TS khi build
+  const recognitionRef = useRef<any>(null);
+
+  // gọi Gemini (text → text)
   const callGeminiText = async (prompt: string): Promise<string> => {
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -24,7 +26,7 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
     return data.output || data.text || data.result || '';
   };
 
-  // Gọi Gemini API (text -> speech)
+  // gọi Gemini (text → voice)
   const callGeminiAudio = async (prompt: string) => {
     try {
       setIsLoading(true);
@@ -34,26 +36,28 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
         body: JSON.stringify({
           prompt,
           model: 'gemini-2.5-flash',
-          audio: true, // bật chế độ trả về âm thanh
+          audio: true,
         }),
       });
       const data = await res.json();
       const text = data.output || data.text || 'Không có phản hồi từ Gemini.';
       setResponse(text);
 
-      // Text-to-Speech
+      // TTS
       const synth = window.speechSynthesis;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'en-US'; // có thể thay bằng 'vi-VN' nếu muốn phản hồi tiếng Việt
-      synth.speak(utter);
-    } catch (err) {
+      if (synth) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US'; // đổi 'vi-VN' nếu muốn trả lời bằng tiếng Việt
+        synth.cancel();
+        synth.speak(u);
+      }
+    } catch {
       setResponse('⚠️ Lỗi khi phát âm thanh.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Khi người dùng gửi văn bản
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input.trim()) return;
@@ -69,31 +73,30 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
     }
   };
 
-  // Khi người dùng nói (Voice input)
   const handleVoice = () => {
-    if (!('webkitSpeechRecognition' in window)) {
+    // lấy constructor từ window để an toàn khi build
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
       alert('Trình duyệt không hỗ trợ nhận diện giọng nói.');
       return;
     }
 
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
     if (!recognitionRef.current) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.lang = 'vi-VN';
-      recognitionRef.current.interimResults = false;
+      const r = new SR();
+      r.lang = 'vi-VN';
+      r.interimResults = false;
+      r.maxAlternatives = 1;
 
-      recognitionRef.current.onresult = async (e: any) => {
+      r.onresult = async (e: any) => {
         const transcript = e.results[0][0].transcript;
         setInput(transcript);
         setIsListening(false);
         await callGeminiAudio(`Tư vấn học tiếng Anh ${grade}: ${transcript}`);
       };
+      r.onerror = () => setIsListening(false);
+      r.onend = () => setIsListening(false);
 
-      recognitionRef.current.onerror = () => {
-        setIsListening(false);
-      };
+      recognitionRef.current = r;
     }
 
     if (isListening) {
@@ -105,13 +108,14 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
     }
   };
 
-  // Cho phép người dùng bấm để nghe lại phản hồi
   const replayVoice = () => {
     if (!response) return;
     const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(response);
-    utter.lang = 'en-US';
-    synth.speak(utter);
+    if (!synth) return;
+    const u = new SpeechSynthesisUtterance(response);
+    u.lang = 'en-US';
+    synth.cancel();
+    synth.speak(u);
   };
 
   return (
@@ -120,7 +124,6 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
         🤖 Trợ lý học tập tiếng Anh {grade}
       </h2>
 
-      {/* Khu nhập */}
       <form
         onSubmit={handleSubmit}
         className="flex items-center gap-2 bg-white border border-gray-300 rounded-full px-4 py-2 shadow-sm"
@@ -150,12 +153,8 @@ export default function DualLessonAssistant({ grade }: { grade: number }) {
         </button>
       </form>
 
-      {/* Khu phản hồi */}
       <div className="mt-6 bg-sky-50 border border-sky-200 rounded-2xl p-4 min-h-[120px] whitespace-pre-line relative">
-        {isLoading
-          ? '⏳ Đang xử lý câu hỏi của bạn...'
-          : response || '💬 Chưa có phản hồi.'}
-
+        {isLoading ? '⏳ Đang xử lý câu hỏi của bạn...' : response || '💬 Chưa có phản hồi.'}
         {response && (
           <button
             onClick={replayVoice}
