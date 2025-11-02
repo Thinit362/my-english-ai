@@ -1,55 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// app/api/chat/route.ts
+import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-/**
- * API handler cho Gemini Chat – chạy ổn định trên local & Vercel.
- * Model: gemini-2.5-flash
- */
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { pageKey, unit, message } = await req.json();
+    // 1) Đọc body và kiểm tra
+    const body = await req.json().catch(() => ({}));
+    const prompt: string = body?.prompt ?? '';
+    const model: string = body?.model ?? 'gemini-2.5-flash';
+    const system: string | undefined = body?.system; // nếu muốn truyền system riêng
 
-    // 🔑 Lấy API Key từ biến môi trường
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("❌ Thiếu GOOGLE_GEMINI_API_KEY trong .env.local hoặc Vercel Environment Variables");
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "Thiếu API key Gemini. Vui lòng thêm GOOGLE_GEMINI_API_KEY trong .env.local và Vercel." },
+        { error: 'Missing GEMINI_API_KEY (check Vercel → Settings → Environment Variables)' },
         { status: 500 }
       );
     }
-
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Thiếu nội dung message trong body request." }, { status: 400 });
+    if (!prompt || typeof prompt !== 'string') {
+      return NextResponse.json({ error: 'Invalid "prompt" (must be a non-empty string)' }, { status: 400 });
     }
 
-    // 🔗 Khởi tạo Gemini 2.5 Flash
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // 2) Khởi tạo Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const gemini = genAI.getGenerativeModel({ model });
 
-    // 🧠 Prompt hệ thống để hướng dẫn cách phản hồi
-    const systemPrompt = `
-Bạn là trợ lý học tiếng Anh THPT (Gemini Assistant).
-Namespace: ${pageKey}/unit${unit}.
-Hướng dẫn: Giải thích ngắn gọn, dễ hiểu, có ví dụ minh họa thực tế.
-Nếu học sinh hỏi về kỹ năng (nghe, nói, đọc, viết, ngữ pháp, từ vựng), hãy gợi ý hoạt động luyện tập cụ thể.
-Trả lời bằng tiếng Việt thân thiện, dễ hiểu.
-    `;
+    // 3) Ghép system + prompt (nếu có system)
+    const finalPrompt = system ? `${system}\n\n${prompt}` : prompt;
 
-    // 💬 Gọi model sinh phản hồi
-    const result = await model.generateContent([systemPrompt, message]);
-    const text = result.response.text();
+    // 4) Gọi model
+    const result = await gemini.generateContent(finalPrompt);
+    const text = result?.response?.text?.() ?? '';
 
-    // ✅ Trả dữ liệu cho frontend (GeminiChat.tsx)
-    return NextResponse.json({
-      answer: text || "(Không có phản hồi từ Gemini 2.5 Flash)",
-      model: "gemini-2.5-flash",
-    });
+    // 5) Trả về JSON cho FE (FlashBox đọc các field này)
+    return NextResponse.json({ output: text });
   } catch (err: any) {
-    console.error("🔥 Lỗi gọi Gemini 2.5 Flash:", err?.message || err);
-    return NextResponse.json(
-      { error: "Lỗi server khi xử lý yêu cầu Gemini 2.5 Flash." },
-      { status: 500 }
-    );
+    // In log server để debug trong Vercel Logs
+    console.error('Gemini API Error:', err);
+    // Một số lỗi SDK có dạng { status: 400, message: ... }
+    const status = Number(err?.status) || 500;
+    const message = err?.message || 'Unknown error';
+    return NextResponse.json({ error: message }, { status });
   }
+}
+
+// (tuỳ chọn) GET để kiểm tra nhanh API sống
+export async function GET() {
+  return NextResponse.json({ ok: true, model: 'gemini-2.5-flash' });
 }
