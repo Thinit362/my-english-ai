@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Mic, Send, Volume2 } from 'lucide-react';
+import { Mic, Send, Volume2, Square } from 'lucide-react';
 
 type Lang = 'vi' | 'en';
 
@@ -23,22 +23,24 @@ export default function FlashBox({
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const ttsUtterRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
   const ttsLang = lang === 'vi' ? 'vi-VN' : 'en-US';
 
+  // ------------------ GỌI API GEMINI ------------------
   async function callGemini(prompt: string) {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // Giữ schema đơn giản để hợp với route.ts hiện tại của bạn
       body: JSON.stringify({ prompt, model }),
     });
     if (!res.ok) throw new Error(`API ${res.status}`);
     const data = await res.json();
-    return data.output || data.text || data.result || '';
+    return data.output || data.text || data.result || data.answer || '';
   }
 
+  // ------------------ GỬI VĂN BẢN ------------------
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     const q = input.trim();
@@ -48,11 +50,14 @@ export default function FlashBox({
     try {
       const sys =
         lang === 'vi'
-          ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}. Trả lời bằng tiếng Việt, ngắn gọn, có ví dụ.`
-          : `You are a helpful tutor for English Grade ${grade}. Answer in English, concise, with examples.`;
+          ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}. 
+             Trả lời NGẮN GỌN (dưới 80 từ) bằng tiếng Việt, có ví dụ nhỏ nếu cần, 
+             và thêm 1-2 mẹo phát âm (IPA + trọng âm) cho từ/cụm quan trọng.`
+          : `You are a helpful tutor for English Grade ${grade}. 
+             Answer concisely in English with small examples if helpful.`;
+
       const text = await callGemini(`${sys}\n\nUser: ${q}`);
       setResponse(text || (lang === 'vi' ? 'Chưa có phản hồi.' : 'No response.'));
-      // 👉 Gõ text thì chỉ hiển thị, KHÔNG phát tiếng
     } catch (err: any) {
       setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + err.message);
     } finally {
@@ -60,19 +65,38 @@ export default function FlashBox({
     }
   }
 
+  // ------------------ TTS ------------------
   function speak(t: string) {
     const synth = window.speechSynthesis;
     if (!synth || !t) return;
+
+    // dừng phát cũ
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = ttsLang;
-    synth.speak(u);
+    const utter = new SpeechSynthesisUtterance(t);
+
+    // tự phát hiện text tiếng Anh trong phần tiếng Việt để chọn giọng chuẩn
+    const isEnglishText = /[A-Za-z]/.test(t);
+    utter.lang = isEnglishText ? 'en-US' : ttsLang;
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+
+    // lưu để dừng sau này
+    ttsUtterRef.current = utter;
+    synth.speak(utter);
+  }
+
+  function stopSpeak() {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    synth.cancel();
+    ttsUtterRef.current = null;
   }
 
   function replay() {
     if (response) speak(response);
   }
 
+  // ------------------ GIỌNG NÓI ------------------
   async function handleVoice() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -88,16 +112,18 @@ export default function FlashBox({
         const transcript = e.results[0][0].transcript || '';
         setInput(transcript);
         setListening(false);
-        // 🎤 Voice → gọi Gemini rồi PHÁT ÂM + hiển thị text
         try {
           setBusy(true);
           const sys =
             lang === 'vi'
-              ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}. Trả lời bằng tiếng Việt, ngắn gọn, có ví dụ.`
-              : `You are a helpful tutor for English Grade ${grade}. Answer in English, concise, with examples.`;
+              ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}. 
+                 Trả lời NGẮN GỌN (dưới 80 từ) bằng tiếng Việt, 
+                 và thêm mẹo phát âm (IPA + trọng âm) cho từ chính.`
+              : `You are a helpful tutor for English Grade ${grade}. 
+                 Answer concisely in English with small examples.`;
           const text = await callGemini(`${sys}\n\nUser (voice): ${transcript}`);
           setResponse(text);
-          speak(text); // 🔊 phát tiếng
+          speak(text);
         } catch (err: any) {
           setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + err.message);
         } finally {
@@ -117,38 +143,53 @@ export default function FlashBox({
     }
   }
 
+  // ------------------ GIAO DIỆN ------------------
   return (
     <div className="flex flex-col h-full rounded-2xl border border-gray-200 bg-white">
+      {/* Header */}
       <div className="px-4 py-3 border-b flex items-center justify-between">
         <h3 className="font-semibold">{title}</h3>
-        {response && (
-          <button
-            onClick={replay}
-            className="text-xs px-3 py-1.5 rounded-md border hover:bg-gray-50 flex items-center gap-1"
-            title={lang === 'vi' ? 'Nghe lại' : 'Replay'}
-          >
-            <Volume2 size={16} /> {lang === 'vi' ? 'Nghe lại' : 'Replay'}
-          </button>
-        )}
+        <div className="flex gap-2">
+          {response && (
+            <>
+              <button
+                onClick={replay}
+                className="text-xs px-3 py-1.5 rounded-md border hover:bg-gray-50 flex items-center gap-1"
+                title={lang === 'vi' ? 'Nghe lại' : 'Replay'}
+              >
+                <Volume2 size={16} /> {lang === 'vi' ? 'Nghe lại' : 'Replay'}
+              </button>
+              <button
+                onClick={stopSpeak}
+                className="text-xs px-3 py-1.5 rounded-md border hover:bg-gray-50 flex items-center gap-1"
+                title={lang === 'vi' ? 'Dừng nói' : 'Stop speaking'}
+              >
+                <Square size={14} /> {lang === 'vi' ? 'Dừng' : 'Stop'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Nội dung phản hồi */}
+      <div className="flex-1 overflow-y-auto px-5 py-4">
         {busy ? (
           <div className="text-sm opacity-70">{lang === 'vi' ? 'Đang xử lý…' : 'Processing…'}</div>
         ) : response ? (
-          <p className="whitespace-pre-wrap text-sm">{response}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{response}</p>
         ) : (
           <p className="text-sm opacity-60">{lang === 'vi' ? `Hỏi trợ lý bằng ${langName}…` : `Ask in ${langName}…`}</p>
         )}
       </div>
 
+      {/* Ô nhập */}
       <form onSubmit={handleSubmit} className="p-3 border-t">
         <div className="flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={lang === 'vi' ? 'Nhập câu hỏi…' : 'Type your question…'}
-            className="flex-1 rounded-xl border px-3 py-2 text-sm"
+            className="flex-1 rounded-xl border px-4 py-2 text-sm"
             disabled={busy}
           />
           <button
