@@ -9,27 +9,33 @@
   --text-main: #222;
   --text-muted: #666;
   --radius: 12px;
-}
-body {
-  @apply bg-sky-50 text-gray-800;
-  font-family: "Inter", sans-serif;
+
+  /* Đệm ngang mặc định cho layout */
+  --container-inline: clamp(16px, 4vw, 32px);
 }
 
-img {
-  user-select: none;
-}
-
-a {
-  transition: all 0.2s ease-in-out;
-}
-
-/* ⚙️ Reset cơ bản */
-* { box-sizing: border-box; margin: 0; padding: 2; }
 html, body {
   font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
   background: var(--bg-page);
   color: var(--text-main);
   scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-sky-50 text-gray-800;
+  font-family: "Inter", sans-serif;
+}
+
+/* ⚙️ Reset cơ bản (đã vá: bỏ padding:2 toàn cục) */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+img { user-select: none; }
+a { transition: all 0.2s ease-in-out; }
+
+/* Lớp bọc trang để tránh dính lề trên thiết bị có safe-area */
+.page-shell, body {
+  padding-inline: max(var(--container-inline), env(safe-area-inset-left));
+  padding-inline: max(var(--container-inline), env(safe-area-inset-right));
 }
 
 /* 🔝 Header */
@@ -38,6 +44,13 @@ header {
   border-bottom: 2px solid var(--light-navy);
   box-shadow: 0 2px 6px rgba(0,0,0,.05);
 }
+/* Nội dung bên trong header */
+header > .container-max {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 10px;
+}
 
 /* 🌊 NAV: nền xanh đậm + nút xanh nhạt chữ navy */
 .nav-dark { background: var(--navy); }
@@ -45,14 +58,21 @@ header {
   @apply rounded font-medium text-sm md:text-base px-3 md:px-4 py-2 transition;
   background: #dbeafe;          /* blue-100 */
   color: var(--navy);
+  margin: 0 2px;
 }
 .nav-chip:hover { background: #bfdbfe; transform: scale(1.05); } /* blue-200 */
 
-/* 🧭 Container tối đa */
-.container-max { @apply mx-auto w-full max-w-7xl; }
+/* 🧭 Container tối đa (đã thêm padding-inline) */
+.container-max { 
+  @apply mx-auto w-full max-w-7xl; 
+  padding-inline: var(--container-inline);
+}
 
 /* 🪄 Nút dùng chung */
-.btn-navy { @apply bg-[var(--navy)] text-white rounded-lg font-semibold py-2 px-4 transition hover:opacity-90; }
+.btn-navy { 
+  @apply bg-[var(--navy)] text-white rounded-lg font-semibold py-2 px-4 transition hover:opacity-90; 
+  min-height: 44px; min-width: 44px; line-height: 1.2;
+}
 .btn-outline {
   border: 1px solid var(--navy);
   color: var(--navy);
@@ -61,8 +81,12 @@ header {
   padding: 8px 16px;
   font-weight: 500;
   transition: .2s;
+  min-height: 44px; min-width: 44px; line-height: 1.2;
 }
 .btn-outline:hover { background: var(--light-navy); }
+/* Biến thể kích thước */
+.btn-sm { padding: 6px 12px; font-size: 0.9rem; }
+.btn-lg { padding: 12px 18px; font-size: 1.05rem; }
 
 /* 🧩 Card sách */
 .card {
@@ -74,36 +98,45 @@ header {
   box-shadow: 0 3px 10px rgba(0,0,0,.05);
 }
 .card:hover { transform: translateY(-4px); box-shadow: 0 5px 16px rgba(0,0,0,.1); }
-.card img { width: 100%; height: 240px; object-fit: cover; }
-.card-content { padding: 1rem; }
+.card img { width: 100%; height: clamp(200px, 28vw, 240px); object-fit: cover; }
+.card-content { padding: 1rem 1.25rem; }
 .card-content h3 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: .3rem; }
 .card-content p { font-size: .9rem; color: var(--text-muted); }
 
-/* 📘 Section padding */
-section { padding: 2rem 1rem; }
+/* 📘 Section padding (đã vá để không dính mép) */
+section { 
+  padding-block: clamp(24px, 5vw, 56px);
+  padding-inline: var(--container-inline);
+}
 
 /* 💬 Chatbox */
 .chatbox {
   background: #fff;
   border: 1px solid #eaeaea;
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 18px;
   display: flex; flex-direction: column; gap: 10px;
   box-shadow: 0 3px 12px rgba(0,0,0,.08);
 }
-.msg { padding: 10px 12px; border-radius: var(--radius); max-width: 85%; word-wrap: break-word; line-height: 1.4; }
+.msg { 
+  padding: 10px 12px; 
+  border-radius: var(--radius); 
+  max-width: 80%; 
+  word-wrap: break-word; 
+  line-height: 1.4; 
+}
 .msg.user { background: #e8f0ff; align-self: flex-end; border: 1px solid #c7dcff; }
-.msg.ai { background: #f6f9ff; border: 1px solid #dde5ff; align-self: flex-start; }
+.msg.ai { background: #f6f9ff; border: 1px solid #dde5ff; }
 
 /* ✍️ Input chat */
-.chat-input { display: flex; gap: 8px; }
+.chat-input { display: flex; gap: 10px; }
 .chat-input input {
   flex: 1; border: 1px solid #ccc; border-radius: var(--radius);
-  padding: 8px 10px; font-size: .95rem;
+  padding: 10px 12px; font-size: .95rem;
 }
 .chat-input button {
   background: var(--navy); color: #fff; border: none; border-radius: var(--radius);
-  padding: 8px 16px; cursor: pointer; transition: .2s;
+  padding: 10px 16px; cursor: pointer; transition: .2s; min-height: 44px;
 }
 .chat-input button:hover { opacity: .9; }
 
@@ -111,7 +144,8 @@ section { padding: 2rem 1rem; }
 .intro {
   display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
   background: #fff; border-radius: var(--radius);
-  padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,.06);
+  padding: clamp(16px, 4vw, 24px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
 }
 .intro h2 { color: var(--navy); margin-bottom: .5rem; }
 .intro p { font-size: .95rem; color: var(--text-muted); line-height: 1.6; }
