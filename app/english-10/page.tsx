@@ -15,7 +15,7 @@ export default async function Page() {
   const units: Item[] = (m.units ?? []).map((u: any) => ({
     title: u.title ? `Unit ${u.index}: ${u.title}` : `Unit ${u.index}`,
     slug: `unit/${u.index}`,
-    imageUrl: `/images/unit-10-${u.index}.jpg`, // ảnh local trong public/images
+    imageUrl: `/data/images/unit-10-${u.index}.jpg`, // ảnh local trong public/images
     type: 'unit',
   }));
 
@@ -23,7 +23,7 @@ export default async function Page() {
   const reviews: Item[] = (m.reviews ?? []).map((r: any) => ({
     title: r.title || `Review ${r.index}`,
     slug: `review/${r.index}`,
-    imageUrl: `/images/review-10-${r.index}.jpg`, // bạn có thể thay theo pattern ảnh của bạn
+    imageUrl: `/data/images/review-10-${r.index}.jpg`, // bạn có thể thay theo pattern ảnh của bạn
     type: 'review',
   }));
 
@@ -44,7 +44,7 @@ export default async function Page() {
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
-                  src={it.imageUrl || `/images/unit-10-${idx + 1}.jpg`} // ✅ không dùng 'u' nữa
+                  src={it.imageUrl || `/data/images/unit-10-${idx + 1}.jpg`} // ✅ không dùng 'u' nữa
                   alt={it.title}
                   fill
                   className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
