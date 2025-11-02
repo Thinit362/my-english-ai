@@ -1,12 +1,16 @@
-"use client";
+// app/page.tsx
 import Image from "next/image";
 import Link from "next/link";
-import Header from "@/components/Header";
-import GeminiChat from "@/components/GeminiChat";
+import dynamic from "next/dynamic";
+
+// Render phía client để tránh lỗi "use client" ở page và các vấn đề hydration
+const GeminiChat = dynamic(() => import("@/components/GeminiChat"), {
+  ssr: false,
+});
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-blue-50 text-gray-800">
+    <>
       {/* SECTION 1: Sách lớp 10–11–12 */}
       <section className="max-w-6xl mx-auto py-8 px-4 grid md:grid-cols-3 gap-6">
         {[
@@ -43,7 +47,7 @@ export default function HomePage() {
               />
             </div>
             <div className="p-4">
-              <h3 className="font-semibold text-lg text-navy-900">{b.title}</h3>
+              <h3 className="font-semibold text-lg text-[var(--navy)]">{b.title}</h3>
               <p className="text-sm opacity-80">{b.desc}</p>
             </div>
           </Link>
@@ -53,12 +57,12 @@ export default function HomePage() {
       {/* SECTION 2: Giới thiệu song ngữ */}
       <section className="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6 grid md:grid-cols-2 gap-6 mb-12">
         <div>
-          <h2 className="text-xl font-semibold mb-2 text-[navy]">🎯 Mục tiêu của website</h2>
+          <h2 className="text-xl font-semibold mb-2 text-[var(--navy)]">🎯 Mục tiêu của website</h2>
           <p className="text-sm leading-relaxed">
             Trang web <b>Ứng dụng Trí tuệ nhân tạo - Gemini API & Vercel</b> nhằm hỗ trợ học sinh
-            trung học phổ thông học Tiếng Anh hiệu quả hơn thông qua công nghệ AI.  
+            trung học phổ thông học Tiếng Anh hiệu quả hơn thông qua công nghệ AI.
             Học sinh có thể học từ vựng, ngữ pháp, kỹ năng nghe - nói - đọc - viết, và làm bài kiểm
-            tra tự động.  
+            tra tự động.
             Mục tiêu là giúp học sinh:
           </p>
           <ul className="list-disc list-inside text-sm mt-2">
@@ -73,12 +77,12 @@ export default function HomePage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2 text-[navy]">🎯 Website Goals (English)</h2>
+          <h2 className="text-xl font-semibold mb-2 text-[var(--navy)]">🎯 Website Goals (English)</h2>
           <p className="text-sm leading-relaxed">
             This website integrates <b>Google Gemini API</b> and <b>Vercel</b> to help high school
-            students learn English more effectively with AI.  
+            students learn English more effectively with AI.
             Students can practice vocabulary, grammar, listening, speaking, reading, and writing
-            skills.  
+            skills.
             The goals are:
           </p>
           <ul className="list-disc list-inside text-sm mt-2">
@@ -96,15 +100,18 @@ export default function HomePage() {
       {/* SECTION 3: Chatbot Gemini */}
       <section className="max-w-6xl mx-auto px-4 mb-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="md:col-span-2 flex flex-col justify-center">
-          <h2 className="text-2xl font-semibold text-[navy] mb-3">
+          <h2 className="text-2xl font-semibold text-[var(--navy)] mb-3">
             💬 Trợ lý học Tiếng Anh (Gemini)
           </h2>
           <p className="text-sm opacity-80 mb-4">
             Bấm vào các gợi ý hoặc nhập câu hỏi, Gemini sẽ hướng dẫn bạn cách học tiếng Anh hiệu quả,
             xây dựng lộ trình cá nhân và gợi ý bài tập luyện tập phù hợp.
           </p>
+
+          {/* Chạy phía client, không chặn SSR của toàn trang */}
           <GeminiChat pageKey="advisor" units={[1]} />
         </div>
+
         <div className="hidden lg:block">
           <Image
             src="/study-ai.webp"
@@ -115,12 +122,6 @@ export default function HomePage() {
           />
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="bg-[navy] text-white text-center py-4">
-        <p className="font-semibold">MCVT Innovators – THPT Hải An</p>
-        <p>Giáo viên hướng dẫn: Tô Thị Thìn – ĐT: 0936095362</p>
-      </footer>
-    </main>
+    </>
   );
 }
