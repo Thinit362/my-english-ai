@@ -31,10 +31,14 @@ export default async function Page() {
             <Link key={idx} href={`/english-11/${it.slug}`}
               className="group rounded-2xl overflow-hidden shadow-sm ring-1 ring-gray-200 hover:shadow-lg transition">
               <div className="relative aspect-[4/3] overflow-hidden">
-                <Image src={it.imageUrl || '/data/images/unit-11-${u.index}.jpg'} alt={it.title} fill
-                       className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
-                       sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw"
-                       priority={idx<4}/>
+                <Image
+                  src={it.imageUrl || `/data/images/unit-11-${idx + 1}.jpg`} // ✅ không dùng 'u' nữa
+                  alt={it.title}
+                  fill
+                  className="object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-300"
+                  sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw"
+                  priority={idx < 4}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"/>
               </div>
               <div className="p-4">
