@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+
 export type Message = { role: "user" | "ai"; content: string };
 
 export default function GeminiChat({
@@ -24,7 +25,7 @@ export default function GeminiChat({
 
   const storageKey = `gemini:chat:${pageKey}:unit${unit}`;
 
-  // cuộn xuống khi có tin nhắn mới + lưu lịch sử
+  // Cuộn xuống khi có tin nhắn mới và lưu lịch sử
   useEffect(() => {
     viewRef.current?.scrollTo({ top: viewRef.current.scrollHeight, behavior: "smooth" });
     try {
@@ -32,7 +33,7 @@ export default function GeminiChat({
     } catch {}
   }, [messages, storageKey]);
 
-  // khôi phục lịch sử theo namespace
+  // Khôi phục lịch sử theo namespace
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -53,7 +54,7 @@ export default function GeminiChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
-  // Prompt gợi ý “chuẩn THPT”
+  // Prompt gợi ý mặc định
   const prompts =
     suggestions && suggestions.length > 0
       ? suggestions
@@ -70,19 +71,19 @@ export default function GeminiChat({
           "🤖 Cách dùng Gemini để chấm bài viết, gợi ý sửa lỗi và tạo đề ôn theo Unit hiện tại.",
         ];
 
-  // ✅ ĐÃ SỬA: Gửi đúng endpoint và format prompt
+  // ✅ Hàm gọi API đã fix: dùng endpoint /api/gemini/chat và gửi prompt hợp lệ
   async function sendToApi(content: string) {
     setBusy(true);
     try {
       const res = await fetch("/api/gemini/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pageKey, unit, prompt: content }), // ✅ đổi "message" → "prompt"
+        body: JSON.stringify({ pageKey, unit, prompt: content }),
       });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
 
-      // Nhận nhiều kiểu phản hồi
       const reply =
         data?.answer ||
         data?.text ||
@@ -100,6 +101,7 @@ export default function GeminiChat({
     }
   }
 
+  // Hàm gửi tin nhắn người dùng
   async function send(preset?: string) {
     const content = (preset ?? input).trim();
     if (!content || busy) return;
@@ -108,6 +110,7 @@ export default function GeminiChat({
     await sendToApi(content);
   }
 
+  // Xóa hội thoại
   function clearChat() {
     const welcome =
       autoWelcome
@@ -165,7 +168,7 @@ export default function GeminiChat({
             key={i}
             onClick={() => send(p)}
             disabled={busy}
-            className="text-left text-sm border rounded px-3 py-2 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-[navy] disabled:opacity-60 transition"
+            className="text-left text-sm border rounded px-3 py-2 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-[var(--navy)] disabled:opacity-60 transition"
             type="button"
           >
             {p}
