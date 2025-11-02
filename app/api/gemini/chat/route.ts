@@ -11,9 +11,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY || "";
   if (!apiKey) {
-    return NextResponse.json({ error: "Missing GEMINI_API_KEY" }, { status: 500 });
+    return NextResponse.json({ error: "Missing GOOGLE_GEMINI_API_KEY" }, { status: 500 });
   }
 
   try {
