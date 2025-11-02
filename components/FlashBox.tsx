@@ -11,18 +11,20 @@ type FlashBoxProps = {
   endpoint?: string; // ví dụ: '/api/chat'
   model?: string;    // ví dụ: 'gemini-2.5-flash'
   aiStyle?: {
-    concise?: boolean;          // ép ngắn gọn
-    maxWords?: number;          // giới hạn số từ
-    pronunciationTips?: boolean;// thêm mẹo phát âm (IPA + trọng âm)
+    concise?: boolean;           // ép ngắn gọn
+    maxWords?: number;           // giới hạn số từ
+    pronunciationTips?: boolean; // thêm mẹo phát âm (IPA + trọng âm)
   };
   tts?: {
-    enabled?: boolean;                    // bật TTS
-    allowStop?: boolean;                  // hiển thị nút Dừng
-    preferEnglishVoiceForExamples?: boolean; // panel VI: đoạn EN đọc bằng en-US
-    viVoiceHint?: string;                 // gợi ý giọng Việt (vd: 'vi-VN')
-    enVoiceHint?: string;                 // gợi ý giọng Anh (vd: 'en-US')
-    rate?: number;                        // tốc độ đọc
-    pitch?: number;                       // cao độ
+    enabled?: boolean;                     // bật TTS
+    allowStop?: boolean;                   // hiển thị nút Dừng
+    // ❗ Mới: ép panel VI luôn dùng giọng Việt (không tự chuyển EN)
+    forceVietnameseVoice?: boolean;        // default: true nếu lang='vi'
+    // Gợi ý giọng:
+    viVoiceHint?: string;                  // 'vi-VN'
+    enVoiceHint?: string;                  // 'en-US'
+    rate?: number;                         // tốc độ đọc
+    pitch?: number;                        // cao độ
   };
 };
 
@@ -155,7 +157,7 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ TTS IMPROVED ------------------
+  // ------------------ TTS IMPROVED (FORCE VIETNAMESE) ------------------
 
   // Load voices một lần (Chrome cần onvoiceschanged)
   useEffect(() => {
@@ -206,51 +208,34 @@ export default function FlashBox({
       .filter(Boolean);
   }
 
-  function isEnglishy(t: string) {
-    // Câu có nhiều ASCII chữ cái -> xem là EN
-    const letters = t.match(/[A-Za-z]/g)?.length || 0;
-    const nonAscii = t.match(/[^\x00-\x7F]/g)?.length || 0;
-    return letters > 0 && letters >= nonAscii;
-  }
-
-  function pickVoice(langPref: 'vi' | 'en'): SpeechSynthesisVoice | null {
+  // ❗ Ưu tiên các voice Việt nữ chất lượng
+  function pickVietnameseVoice(): SpeechSynthesisVoice | null {
     const voices = voicesRef.current || [];
     if (!voices.length) return null;
 
-    const wanted = langPref === 'vi'
-      ? (tts?.viVoiceHint || 'vi-VN')
-      : (tts?.enVoiceHint || 'en-US');
+    const preferredByName = [
+      // Microsoft Natural female Vietnamese (Edge/Windows thường có)
+      'Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)',
+      'Microsoft An Online (Natural) - Vietnamese (Vietnam)',
+      'Microsoft Vi Online (Natural) - Vietnamese (Vietnam)',
+      // Google Vietnamese (thường là female)
+      'Google Vietnamese',
+    ];
 
-    // 1) Ưu tiên exact match by name (Google/Microsoft high quality)
-    const preferredNames = langPref === 'vi'
-      ? [
-          'Google Vietnamese',
-          'Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)',
-          'Microsoft An Online (Natural) - Vietnamese (Vietnam)',
-          'Microsoft Vi Online (Natural) - Vietnamese (Vietnam)',
-        ]
-      : [
-          'Google US English',
-          'Microsoft Aria Online (Natural) - English (United States)',
-          'Microsoft Jenny Online (Natural) - English (United States)',
-        ];
-
-    const byName = voices.find(v =>
-      preferredNames.some(name => v.name?.toLowerCase() === name.toLowerCase())
-    );
+    // 1) match theo tên ưa thích
+    const byName = voices.find(v => preferredByName.some(n => v.name?.toLowerCase() === n.toLowerCase()));
     if (byName) return byName;
 
-    // 2) Ưu tiên theo hint lang
-    const byHint = voices.find(v => v.lang?.toLowerCase().startsWith(wanted.toLowerCase()));
+    // 2) match theo hint 'vi-VN'
+    const hint = (tts?.viVoiceHint || 'vi-VN').toLowerCase();
+    const byHint = voices.find(v => v.lang?.toLowerCase().startsWith(hint));
     if (byHint) return byHint;
 
-    // 3) Fallback theo prefix
-    const byPrefix = voices.find(v =>
-      langPref === 'vi' ? v.lang?.toLowerCase().startsWith('vi') : v.lang?.toLowerCase().startsWith('en')
-    );
+    // 3) prefix 'vi'
+    const byPrefix = voices.find(v => v.lang?.toLowerCase().startsWith('vi'));
     if (byPrefix) return byPrefix;
 
-    // 4) fallback đầu tiên
+    // 4) fallback
     return voices[0] || null;
   }
 
@@ -296,18 +281,29 @@ export default function FlashBox({
     const cleaned = sanitizeForSpeech(text);
     const parts = splitSentences(cleaned);
 
+    // ❗ Nếu panel VI và forceVietnameseVoice (default true) → luôn dùng vi-VN
+    const forceVI = lang === 'vi' ? (tts?.forceVietnameseVoice ?? true) : false;
+    const viVoice = forceVI ? pickVietnameseVoice() : null;
+
     for (const sentence of parts) {
-      const useEN = (lang === 'vi' && tts?.preferEnglishVoiceForExamples && isEnglishy(sentence)) || lang === 'en';
-      const voice = pickVoice(useEN ? 'en' : 'vi');
-
       const u = new SpeechSynthesisUtterance(sentence);
-      if (voice) u.voice = voice;
-      u.lang = voice?.lang || (useEN ? 'en-US' : 'vi-VN');
 
-      // mặc định: VI hơi chậm xíu sẽ tự nhiên hơn
-      const baseRate = useEN ? 1.0 : 0.95;
-      u.rate = tts?.rate ?? baseRate;
-      u.pitch = tts?.pitch ?? 1.0;
+      if (forceVI && viVoice) {
+        u.voice = viVoice;
+        u.lang = viVoice.lang || 'vi-VN';
+        u.rate = tts?.rate ?? 0.92;   // chậm nhẹ cho tự nhiên
+        u.pitch = tts?.pitch ?? 1.05; // hơi cao một chút, cảm giác nữ tính hơn
+      } else {
+        // Panel EN hoặc bạn muốn tự chọn giọng khác
+        const voices = voicesRef.current;
+        const en = voices.find(v => v.lang?.toLowerCase().startsWith((tts?.enVoiceHint || 'en-US').toLowerCase()))
+               || voices.find(v => v.lang?.toLowerCase().startsWith('en'))
+               || voices[0];
+        if (en) u.voice = en;
+        u.lang = u.voice?.lang || (lang === 'en' ? 'en-US' : 'vi-VN');
+        u.rate = tts?.rate ?? (lang === 'en' ? 1.0 : 0.95);
+        u.pitch = tts?.pitch ?? 1.0;
+      }
 
       enqueueSpeak(u);
     }
@@ -357,7 +353,7 @@ export default function FlashBox({
         </div>
       </div>
 
-      {/* Nội dung phản hồi — thêm padding để không sát mép */}
+      {/* Nội dung phản hồi — padding thoáng, dễ đọc */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {busy ? (
           <div className="text-sm opacity-70">
