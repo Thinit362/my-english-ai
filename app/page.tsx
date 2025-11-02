@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import Header from "@/components/Header";
 import GeminiChat from "@/components/GeminiChat";
 
 export default function HomePage() {
