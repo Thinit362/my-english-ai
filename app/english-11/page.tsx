@@ -9,7 +9,7 @@ export const metadata = { title: 'Tiếng Anh 11 – Global Success' };
 
 export default async function Page() {
   // manifest dạng { book, units, reviews? }
-  const mod = await import('../../public/data/english10_manifest.json');
+  const mod = await import('../../public/data/english11_manifest.json');
   const m: any = mod.default ?? {};
 
   // Danh sách Unit
