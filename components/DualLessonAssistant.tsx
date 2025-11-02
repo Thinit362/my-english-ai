@@ -23,22 +23,45 @@ export default function DualLessonAssistant({
 
       {/* Lưới 2 cột: trái = VI, phải = EN */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Cột Tiếng Việt */}
+
+        {/* Cột Tiếng Việt: trả lời ngắn + mẹo phát âm; TTS có STOP */}
         <FlashBox
           grade={grade}
           lang="vi"
           title="Trợ lý (Tiếng Việt)"
           endpoint={endpoint}
           model={model}
+          aiStyle={{
+            concise: true,            // ép ngắn gọn
+            maxWords: 80,             // ≤80 từ
+            pronunciationTips: true,  // kèm 1–2 mẹo IPA + trọng âm
+          }}
+          tts={{
+            enabled: true,
+            allowStop: true,          // ➕ nút Dừng
+            // Khi text chứa ví dụ tiếng Anh, đọc bằng giọng en-US cho chuẩn âm:
+            preferEnglishVoiceForExamples: true,
+            viVoiceHint: 'vi-VN',
+            enVoiceHint: 'en-US',
+            rate: 0.95,
+            pitch: 1.0,
+          }}
         />
 
-        {/* Cột English */}
+        {/* Cột English: giữ nguyên, chỉ thêm allowStop cho đồng bộ trải nghiệm */}
         <FlashBox
           grade={grade}
           lang="en"
           title="Assistant (English)"
           endpoint={endpoint}
           model={model}
+          tts={{
+            enabled: true,
+            allowStop: true, // ➕ nút Dừng
+            enVoiceHint: 'en-US',
+            rate: 1.0,
+            pitch: 1.0,
+          }}
         />
       </div>
 
