@@ -41,7 +41,11 @@ export default function FlashBox({
   const [listening, setListening] = useState(false);
 
   const recognitionRef = useRef<any>(null);
-  const ttsUtterRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // ==== TTS STATE ====
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const queueRef = useRef<SpeechSynthesisUtterance[]>([]);
+  const isSpeakingRef = useRef(false);
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
 
@@ -151,36 +155,162 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ TTS ------------------
+  // ------------------ TTS IMPROVED ------------------
+
+  // Load voices một lần (Chrome cần onvoiceschanged)
+  useEffect(() => {
+    if (!tts?.enabled) return;
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+
+    function loadVoices() {
+      const v = synth.getVoices();
+      if (v && v.length) {
+        voicesRef.current = v;
+      }
+    }
+
+    loadVoices();
+    const handler = () => loadVoices();
+    synth.onvoiceschanged = handler;
+
+    // Warm up
+    const timer = setTimeout(() => synth.getVoices(), 200);
+    return () => {
+      clearTimeout(timer);
+      if (synth.onvoiceschanged === handler) synth.onvoiceschanged = null as any;
+    };
+  }, [tts?.enabled]);
+
+  function sanitizeForSpeech(text: string) {
+    let s = text;
+
+    // Bỏ markdown cơ bản
+    s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
+    // Bỏ IPA giữa /.../ hoặc [...], ví dụ /ˈfəʊ.təʊ/
+    s = s.replace(/\/[^\/]{1,40}\//g, '');
+    s = s.replace(/\[[^\]]{1,40}\]/g, '');
+
+    // Một số ký hiệu
+    s = s.replace(/•/g, '• ').replace(/\s{2,}/g, ' ').trim();
+
+    return s;
+  }
+
+  function splitSentences(text: string): string[] {
+    // Tách câu theo dấu kết thúc, giữ đơn giản
+    return text
+      .split(/(?<=[\.\!\?\…])\s+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+
+  function isEnglishy(t: string) {
+    // Câu có nhiều ASCII chữ cái -> xem là EN
+    const letters = t.match(/[A-Za-z]/g)?.length || 0;
+    const nonAscii = t.match(/[^\x00-\x7F]/g)?.length || 0;
+    return letters > 0 && letters >= nonAscii;
+  }
+
+  function pickVoice(langPref: 'vi' | 'en'): SpeechSynthesisVoice | null {
+    const voices = voicesRef.current || [];
+    if (!voices.length) return null;
+
+    const wanted = langPref === 'vi'
+      ? (tts?.viVoiceHint || 'vi-VN')
+      : (tts?.enVoiceHint || 'en-US');
+
+    // 1) Ưu tiên exact match by name (Google/Microsoft high quality)
+    const preferredNames = langPref === 'vi'
+      ? [
+          'Google Vietnamese',
+          'Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)',
+          'Microsoft An Online (Natural) - Vietnamese (Vietnam)',
+          'Microsoft Vi Online (Natural) - Vietnamese (Vietnam)',
+        ]
+      : [
+          'Google US English',
+          'Microsoft Aria Online (Natural) - English (United States)',
+          'Microsoft Jenny Online (Natural) - English (United States)',
+        ];
+
+    const byName = voices.find(v =>
+      preferredNames.some(name => v.name?.toLowerCase() === name.toLowerCase())
+    );
+    if (byName) return byName;
+
+    // 2) Ưu tiên theo hint lang
+    const byHint = voices.find(v => v.lang?.toLowerCase().startsWith(wanted.toLowerCase()));
+    if (byHint) return byHint;
+
+    // 3) Fallback theo prefix
+    const byPrefix = voices.find(v =>
+      langPref === 'vi' ? v.lang?.toLowerCase().startsWith('vi') : v.lang?.toLowerCase().startsWith('en')
+    );
+    if (byPrefix) return byPrefix;
+
+    // 4) fallback đầu tiên
+    return voices[0] || null;
+  }
+
+  function enqueueSpeak(u: SpeechSynthesisUtterance) {
+    queueRef.current.push(u);
+    if (!isSpeakingRef.current) {
+      playNext();
+    }
+  }
+
+  function playNext() {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+
+    const next = queueRef.current.shift();
+    if (!next) {
+      isSpeakingRef.current = false;
+      return;
+    }
+    isSpeakingRef.current = true;
+
+    next.onend = () => {
+      // chèn khoảng nghỉ ngắn giữa câu
+      setTimeout(() => playNext(), 120);
+    };
+    next.onerror = () => {
+      setTimeout(() => playNext(), 120);
+    };
+
+    synth.speak(next);
+  }
 
   function speak(text: string) {
     if (!tts?.enabled || !text) return;
     const synth = window.speechSynthesis;
     if (!synth) return;
 
-    // dừng bất kỳ phát nào đang chạy
+    // dừng & xoá hàng đợi cũ
     synth.cancel();
+    queueRef.current = [];
+    isSpeakingRef.current = false;
 
-    const u = new SpeechSynthesisUtterance(text);
+    const cleaned = sanitizeForSpeech(text);
+    const parts = splitSentences(cleaned);
 
-    // Chọn voice: với panel VI nếu text có tiếng Anh, ưu tiên en-US
-    const hasLatin = /[A-Za-z]/.test(text);
-    const wantsEN = (lang === 'vi' && tts?.preferEnglishVoiceForExamples && hasLatin) || lang === 'en';
+    for (const sentence of parts) {
+      const useEN = (lang === 'vi' && tts?.preferEnglishVoiceForExamples && isEnglishy(sentence)) || lang === 'en';
+      const voice = pickVoice(useEN ? 'en' : 'vi');
 
-    const voices = synth.getVoices();
-    const hint = wantsEN ? (tts?.enVoiceHint || 'en-US') : (tts?.viVoiceHint || 'vi-VN');
-    const pick =
-      (hint && voices.find((v) => v.lang?.toLowerCase().startsWith(hint.toLowerCase()))) ||
-      voices.find((v) => wantsEN ? v.lang?.startsWith('en') : v.lang?.startsWith('vi')) ||
-      voices[0];
+      const u = new SpeechSynthesisUtterance(sentence);
+      if (voice) u.voice = voice;
+      u.lang = voice?.lang || (useEN ? 'en-US' : 'vi-VN');
 
-    if (pick) u.voice = pick;
-    u.lang = pick?.lang || (wantsEN ? 'en-US' : 'vi-VN');
-    u.rate = tts?.rate ?? 1.0;
-    u.pitch = tts?.pitch ?? 1.0;
+      // mặc định: VI hơi chậm xíu sẽ tự nhiên hơn
+      const baseRate = useEN ? 1.0 : 0.95;
+      u.rate = tts?.rate ?? baseRate;
+      u.pitch = tts?.pitch ?? 1.0;
 
-    ttsUtterRef.current = u;
-    synth.speak(u);
+      enqueueSpeak(u);
+    }
   }
 
   function stopSpeak() {
@@ -188,24 +318,13 @@ export default function FlashBox({
     const synth = window.speechSynthesis;
     if (!synth) return;
     synth.cancel();
-    ttsUtterRef.current = null;
+    queueRef.current = [];
+    isSpeakingRef.current = false;
   }
 
   function replay() {
     if (response) speak(response);
   }
-
-  // Một số trình duyệt cần load voices trước
-  useEffect(() => {
-    if (!tts?.enabled) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    // trigger load voices
-    const timer = setTimeout(() => {
-      synth.getVoices();
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [tts?.enabled]);
 
   // ------------------ UI ------------------
 
