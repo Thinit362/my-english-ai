@@ -2,13 +2,11 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// (tuỳ chọn) nếu bạn dùng src/ cấu trúc, đường dẫn là: src/app/api/gemini/chat/route.ts
-
-export const runtime = "nodejs";               // hoặc "edge" nếu bạn muốn Edge runtime
-export const dynamic = "force-dynamic";        // tránh bị static hoá trên Vercel
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function OPTIONS() {
-  // Phòng trường hợp có preflight; trả 200 để không dính 405
+  // Cho preflight (nếu có) để tránh 405
   return NextResponse.json({ ok: true });
 }
 
@@ -23,7 +21,7 @@ export async function POST(req: Request) {
     const pageKey = body?.pageKey ?? "advisor";
     const unit = Number(body?.unit ?? 1);
 
-    // Hỗ trợ cả prompt/message/messages
+    // Chấp nhận nhiều kiểu payload: prompt / message / messages[]
     let prompt: string | undefined =
       (typeof body?.prompt === "string" && body.prompt) ||
       (typeof body?.message === "string" && body.message) ||
@@ -41,28 +39,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const sys =
+      `Bạn là trợ lý học Tiếng Anh THPT. Bối cảnh: pageKey=${pageKey}, unit=${unit}. ` +
+      `Ưu tiên câu trả lời ngắn gọn, có ví dụ/bài tập cụ thể khi phù hợp.`;
+
+    // ✅ Gọi bằng chuỗi để tránh lỗi type với {role, parts}
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const finalPrompt = `${sys}\n\nCâu hỏi: ${prompt}`;
+    const r = await model.generateContent(finalPrompt);
 
-    const sys =
-      `Bạn là trợ lý học Tiếng Anh THPT. bối cảnh: pageKey=${pageKey}, unit=${unit}. ` +
-      `Ưu tiên câu trả lời ngắn gọn và có ví dụ/bài tập.`;
-
-    const r = await model.generateContent([
-      { role: "user", parts: [{ text: `${sys}\n\nCâu hỏi: ${prompt}` }] },
-    ]);
-
-    const text =
-      r?.response?.text?.() ||
-      r?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "";
-
+    const text = (typeof r?.response?.text === "function" ? r.response.text() : "") || "";
     return NextResponse.json({ answer: text || "(Không có phản hồi từ Gemini)" });
   } catch (err: any) {
     console.error("[/api/gemini/chat] error:", err);
-    return NextResponse.json(
-      { error: err?.message || "Gemini error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || "Gemini error" }, { status: 500 });
   }
 }
