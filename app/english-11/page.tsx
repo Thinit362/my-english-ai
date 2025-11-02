@@ -34,7 +34,7 @@ export default async function Page() {
     <>
       {/* PHẦN 1: Lưới khóa học */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Khóa học Tiếng Anh 10</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Khóa học Tiếng Anh 11</h2>
 
         <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {items.map((it, idx) => (
