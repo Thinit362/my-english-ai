@@ -70,19 +70,31 @@ export default function GeminiChat({
           "🤖 Cách dùng Gemini để chấm bài viết, gợi ý sửa lỗi và tạo đề ôn theo Unit hiện tại.",
         ];
 
+  // ✅ ĐÃ SỬA: Gửi đúng endpoint và format prompt
   async function sendToApi(content: string) {
     setBusy(true);
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/gemini/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pageKey, unit, message: content }),
+        body: JSON.stringify({ pageKey, unit, prompt: content }), // ✅ đổi "message" → "prompt"
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      setMessages((m) => [...m, { role: "ai", content: data.answer || "(Không có phản hồi từ Gemini)" }]);
+
+      // Nhận nhiều kiểu phản hồi
+      const reply =
+        data?.answer ||
+        data?.text ||
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "(Không có phản hồi từ Gemini)";
+
+      setMessages((m) => [...m, { role: "ai", content: reply }]);
     } catch (e: any) {
-      setMessages((m) => [...m, { role: "ai", content: `(Lỗi gọi API: ${e?.message ?? "không xác định"})` }]);
+      setMessages((m) => [
+        ...m,
+        { role: "ai", content: `(Lỗi gọi API: ${e?.message ?? "không xác định"})` },
+      ]);
     } finally {
       setBusy(false);
     }
@@ -199,7 +211,7 @@ export default function GeminiChat({
         <button
           onClick={() => send()}
           disabled={busy}
-          className="px-4 py-2 rounded bg-[navy] text-white hover:opacity-90 disabled:opacity-60"
+          className="px-4 py-2 rounded bg-[var(--navy)] text-white hover:opacity-90 disabled:opacity-60"
           type="button"
         >
           Gửi
