@@ -157,3 +157,40 @@ section {
   .intro { grid-template-columns: 1fr; }
   .card img { height: 180px; } /* ảnh sách rõ hơn trên mobile */
 }
+/* ====== Shared boxes (for lesson/chat panels) ====== */
+.box {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  box-shadow: 0 3px 10px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+
+.box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;              /* header thoáng hơn */
+  border-bottom: 1px solid #eaeaea;
+  background: #fff;
+}
+
+.box-actions > button { margin-left: 8px; }
+
+.box-body {
+  padding: 16px;                   /* 👈 thêm padding trong thân hộp */
+  background: #fff;
+}
+
+/* Văn bản sinh từ AI: khoảng cách và chữ dễ đọc hơn */
+.prose-lite {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-main);
+}
+.prose-lite p { margin: 0.4rem 0; }
+.prose-lite h3 { font-size: 1.05rem; margin: .6rem 0 .3rem; color: var(--navy); }
+.prose-lite ul, .prose-lite ol { margin: .4rem 0 .6rem 1.25rem; }
+.prose-lite li { margin: .15rem 0; }
+.prose-lite strong { font-weight: 600; }
+
