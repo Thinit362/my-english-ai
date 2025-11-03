@@ -1,10 +1,8 @@
 export const runtime = 'nodejs';
-
 type TtsBody = { text: string };
 
 export async function POST(req: Request) {
   const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
-
   const client = new TextToSpeechClient({
     credentials: {
       project_id: process.env.GCP_PROJECT_ID,
