@@ -3,15 +3,7 @@
 import FlashBox from './FlashBox'; // giữ nguyên
 
 // Padding 2px cho chữ trong hộp trò chuyện & phản hồi Gemini
-// \nLưu ý: Nếu FlashBox đã hỗ trợ prop chuyên biệt cho bubble/text, bạn có thể
-// map trực tiếp ở phía trong FlashBox. Ở đây mình truyền "uiHints" an toàn,
-// để không phá vỡ type của FlashBox (ép any) và vẫn cho phép tiêu thụ tuỳ chọn.
 const CHAT_TEXT_PADDING_PX = 2;
-const uiHints = {
-  textPaddingPx: CHAT_TEXT_PADDING_PX, // gợi ý chung cho padding chữ trong chat
-  bubblePaddingPx: CHAT_TEXT_PADDING_PX, // nếu FlashBox hỗ trợ bubble-level padding
-  aiResponsePaddingPx: CHAT_TEXT_PADDING_PX, // padding riêng cho phản hồi Gemini/AI
-} as any;
 
 // Thiết lập tối ưu cho Cloud TTS (GCP):
 // - dùng giọng Wavenet, sampleRate phù hợp, SSML bật sẵn
@@ -46,7 +38,7 @@ export default function DualLessonAssistant({
   endpoint = '/api/chat',
   model = 'gemini-2.5-flash',
   heading = 'Trợ lý học tập',
-  subnote = '* Nhập văn bản để nhận phản hồi bằng chữ. Nhấn để nói và trợ lý sẽ trả lời bằng giọng nói + hiển thị chữ.',
+  subnote = '* Nhập văn bản để nhận phản hồi bằng chữ. Nhấn 🎤 để nói và trợ lý sẽ trả lời bằng giọng nói + hiển thị chữ.',
 }: {
   grade: Grade;
   endpoint?: string;
@@ -60,7 +52,7 @@ export default function DualLessonAssistant({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Panel Tiếng Việt — ép giọng GCP vi-VN */}
-        <div className="rounded-xl border border-gray-200 p-2">
+        <div className="flashbox rounded-xl border border-gray-200 p-2">
           <FlashBox
             grade={grade}
             lang="vi"
@@ -68,9 +60,7 @@ export default function DualLessonAssistant({
             endpoint={endpoint}
             model={model}
             aiStyle={aiStyleTTS}
-            // Hints UI để FlashBox áp dụng padding 2px cho chữ trong chat & phản hồi Gemini
-            uiHints={uiHints as any}
-            tts={{
+            // Hints UI để FlashBox áp dụng padding 2px cho chữ trong chat & phản hồi Gemini            tts={{
               ...baseTtsCloud,
               // === GCP TTS options ===
               voice: 'vi-VN-Wavenet-D', // có thể đổi A/B/C/D
@@ -86,16 +76,14 @@ export default function DualLessonAssistant({
         </div>
 
         {/* Panel English — ép giọng GCP en-US */}
-        <div className="rounded-xl border border-gray-200 p-2">
+        <div className="flashbox rounded-xl border border-gray-200 p-2">
           <FlashBox
             grade={grade}
             lang="en"
             title="Assistant (English)"
             endpoint={endpoint}
             model={model}
-            aiStyle={aiStyleTTS}
-            uiHints={uiHints as any}
-            tts={{
+            aiStyle={aiStyleTTS}            tts={{
               ...baseTtsCloud,
               // === GCP TTS options ===
               voice: 'en-US-Wavenet-D', // hoặc 'en-US-Wavenet-F' (giọng nữ)
@@ -113,9 +101,8 @@ export default function DualLessonAssistant({
       <p className="text-xs text-gray-500 mt-3">{subnote}</p>
 
       {/*
-        Scoped style fallback: nếu FlashBox KHÔNG tiêu thụ uiHints,
-        các selector dưới sẽ thêm padding 2px cho text thường gặp trong chat UIs.
-        Bạn có thể xoá khối này khi FlashBox áp dụng uiHints nội bộ.
+        Scoped style: thêm padding 2px cho text trong chat UIs.
+        Bạn có thể xoá khối này khi FlashBox áp dụng padding nội bộ.
       */}
       <style jsx>{`
         :global(.flashbox) .message, /* generic */
