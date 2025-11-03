@@ -8,26 +8,22 @@ type FlashBoxProps = {
   grade: 10 | 11 | 12;
   lang: Lang;
   title: string;
-  endpoint?: string; // ví dụ: '/api/chat'
-  model?: string;    // ví dụ: 'gemini-2.5-flash'
+  endpoint?: string;
+  model?: string;
   aiStyle?: {
     concise?: boolean;           // ép ngắn gọn
     maxWords?: number;           // giới hạn số từ
-    pronunciationTips?: boolean; // thêm mẹo phát âm (IPA + trọng âm)
+    pronunciationTips?: boolean; // mẹo phát âm (cho panel VI)
   };
   tts?: {
-    enabled?: boolean;           // bật TTS (chỉ dùng cho EN)
-    allowStop?: boolean;         // hiển thị nút Dừng (chỉ dùng cho EN)
-
-    // Hints cũ (tương thích nếu bạn chưa đặt voice cụ thể)
+    enabled?: boolean;           // CHỈ dùng cho EN
+    allowStop?: boolean;
     forceVietnameseVoice?: boolean;
-    viVoiceHint?: string;        // 'vi-VN'
-    enVoiceHint?: string;        // 'en-US'
-
-    // --- Tham số điều khiển Google Cloud TTS ---
-    voice?: string;              // ví dụ 'en-US-Wavenet-D'
-    rate?: number;               // speakingRate (mặc định 1.0)
-    pitch?: number;              // pitch semitones (mặc định 0.0)
+    viVoiceHint?: string;
+    enVoiceHint?: string;
+    voice?: string;              // ví dụ 'en-US-Wavenet-F'
+    rate?: number;
+    pitch?: number;
   };
 };
 
@@ -45,7 +41,7 @@ export default function FlashBox({
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
 
-  // ====== STATE cho GCP TTS (hàng đợi phát – CHỈ dùng cho EN) ======
+  // ====== STATE cho GCP TTS (EN only) ======
   const queueRef = useRef<string[]>([]);
   const playingRef = useRef(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -53,18 +49,34 @@ export default function FlashBox({
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
 
-  // ------- Helpers: prompt ép ngắn gọn + mẹo phát âm (panel VI) -------
+  // ------- Guard-rail prompt cho VI & EN (ép ngắn gọn) -------
   function buildPrompt(userText: string) {
-    if (lang !== 'vi' || !aiStyle?.concise) return userText;
-    const max = aiStyle.maxWords ?? 80;
-    const wantPron = !!aiStyle.pronunciationTips;
-    const viGuardRail = [
-      `Hãy trả lời bằng TIẾNG VIỆT, rất ngắn gọn (<= ${max} từ), ưu tiên gạch đầu dòng.`,
-      `Tập trung vào học Tiếng Anh THPT hiệu quả (từ vựng/ngữ pháp/nghe-nói/đọc-viết).`,
-      wantPron ? `Thêm 1–2 mẹo phát âm: ghi IPA /.../ và đánh dấu trọng âm (ví dụ: pho'to /ˈfəʊ.təʊ/).` : ``,
-      `Không lan man.`,
-    ].filter(Boolean).join('\n');
-    return `${viGuardRail}\n\nCâu hỏi của người dùng: ${userText}`;
+    const concise = !!aiStyle?.concise;
+    const max = aiStyle?.maxWords ?? (lang === 'vi' ? 80 : 120); // EN cho phép dài hơn chút
+    const isEN = lang === 'en';
+
+    if (!concise) return userText;
+
+    if (lang === 'vi') {
+      const wantPron = !!aiStyle?.pronunciationTips;
+      const viGuard = [
+        `Hãy trả lời bằng TIẾNG VIỆT, RẤT NGẮN GỌN (<= ${max} từ), ưu tiên gạch đầu dòng.`,
+        `Tập trung vào học Tiếng Anh THPT hiệu quả (từ vựng/ngữ pháp/nghe-nói/đọc-viết).`,
+        wantPron ? `Thêm 1–2 mẹo phát âm: ghi IPA /.../ và đánh dấu trọng âm (ví dụ: pho'to /ˈfəʊ.təʊ/).` : ``,
+        `Không dùng tiêu đề lớn hay đoạn văn dài.`,
+      ].filter(Boolean).join('\n');
+      return `${viGuard}\n\nCâu hỏi của người dùng: ${userText}`;
+    }
+
+    // English: concise, bullets, anti-essay
+    const enGuard = [
+      `Reply in clear, concise ENGLISH (<= ${max} words).`,
+      `Prefer SHORT bullet points; avoid long paragraphs and headings.`,
+      `Focus on ACTIONABLE steps for a Vietnamese high-school learner.`,
+      `If the question is broad (e.g., "how to learn English"), return EXACTLY 5 bullets, one sentence each.`,
+      `No markdown headings like ###; simple bullets are fine.`,
+    ].join('\n');
+    return `${enGuard}\n\nUser question: ${userText}`;
   }
 
   async function callGemini(prompt: string) {
@@ -93,7 +105,6 @@ export default function FlashBox({
       const prompt = buildPrompt(`${sys}\n\n${q}`);
       const text = await callGemini(prompt);
       setResponse(text || (lang === 'vi' ? 'Chưa có phản hồi.' : 'No response.'));
-      // Không tự speak cho VI; EN có thể bấm Replay nếu muốn nghe
     } catch (err: any) {
       setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
     } finally {
@@ -102,7 +113,6 @@ export default function FlashBox({
   }
 
   // ------------------ Voice input (Web Speech for mic) ------------------
-  // YÊU CẦU: Không hiển thị nút nói cho VI ⇒ phần render bên dưới sẽ ẩn.
   async function handleVoice() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -127,9 +137,7 @@ export default function FlashBox({
         const built = buildPrompt(`${sys}\n\n${transcript}`);
         const text = await callGemini(built);
         setResponse(text);
-
-        // KHÔNG speak cho VI
-        if (lang === 'en') speak(text);
+        if (lang === 'en') speak(text); // KHÔNG speak cho VI
       } catch (err: any) {
         setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
       } finally {
@@ -163,10 +171,9 @@ export default function FlashBox({
     return text.split(/(?<=[\.\!\?\…])\s+/).map(t => t.trim()).filter(Boolean);
   }
 
-  // chỉ chọn voice cho EN
   function defaultVoice(): string {
     if (tts?.voice) return tts.voice;
-    return 'en-US-Wavenet-F'; // mặc định giọng EN (đổi thành D nếu muốn nam)
+    return 'en-US-Wavenet-F'; // mặc định EN (đổi D nếu muốn nam)
   }
 
   async function synthOnce(sentence: string) {
@@ -227,14 +234,14 @@ export default function FlashBox({
     if (lang === 'en' && response) speak(response);
   }
 
-  // ------------------ UI (áp dụng lớp từ globals.css) ------------------
+  // ------------------ UI (thêm padding + prose-lite) ------------------
   return (
     <div className="flex flex-col h-full box">
       {/* Header */}
       <div className="box-header">
         <h3 className="font-semibold">{title}</h3>
         <div className="box-actions flex gap-2">
-          {/* Chỉ hiện Replay/Stop ở EN và khi TTS bật */}
+          {/* Chỉ EN mới có Replay/Stop */}
           {lang === 'en' && response && tts?.enabled && (
             <>
               <button
@@ -265,8 +272,8 @@ export default function FlashBox({
             {lang === 'vi' ? 'Đang xử lý…' : 'Processing…'}
           </div>
         ) : response ? (
-          <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-            <p className="prose-lite whitespace-pre-wrap">{response}</p>
+          <div className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+            <div className="prose-lite whitespace-pre-wrap">{response}</div>
           </div>
         ) : (
           <p className="text-sm opacity-60">
@@ -286,7 +293,7 @@ export default function FlashBox({
             disabled={busy}
           />
 
-          {/* ẨN nút Nói cho VI */}
+          {/* Ẩn nút Nói cho VI */}
           {lang !== 'vi' && (
             <button
               type="button"
