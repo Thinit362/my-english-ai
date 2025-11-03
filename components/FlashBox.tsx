@@ -16,15 +16,16 @@ type FlashBoxProps = {
     pronunciationTips?: boolean; // thêm mẹo phát âm (IPA + trọng âm)
   };
   tts?: {
-    enabled?: boolean;           // bật TTS
-    allowStop?: boolean;         // hiển thị nút Dừng
-    // Hints cũ (để tương thích), vẫn dùng nếu bạn chưa đặt voice cụ thể
+    enabled?: boolean;           // bật TTS (chỉ dùng cho EN)
+    allowStop?: boolean;         // hiển thị nút Dừng (chỉ dùng cho EN)
+
+    // Hints cũ (tương thích nếu bạn chưa đặt voice cụ thể)
     forceVietnameseVoice?: boolean;
     viVoiceHint?: string;        // 'vi-VN'
     enVoiceHint?: string;        // 'en-US'
 
-    // --- MỚI: tham số điều khiển GCP TTS ---
-    voice?: string;              // ví dụ 'en-US-Wavenet-D' | 'vi-VN-Wavenet-D'
+    // --- Tham số điều khiển Google Cloud TTS ---
+    voice?: string;              // ví dụ 'en-US-Wavenet-D'
     rate?: number;               // speakingRate (mặc định 1.0)
     pitch?: number;              // pitch semitones (mặc định 0.0)
   };
@@ -44,7 +45,7 @@ export default function FlashBox({
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
 
-  // ====== STATE cho GCP TTS (hàng đợi phát) ======
+  // ====== STATE cho GCP TTS (hàng đợi phát – CHỈ dùng cho EN) ======
   const queueRef = useRef<string[]>([]);
   const playingRef = useRef(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -92,6 +93,7 @@ export default function FlashBox({
       const prompt = buildPrompt(`${sys}\n\n${q}`);
       const text = await callGemini(prompt);
       setResponse(text || (lang === 'vi' ? 'Chưa có phản hồi.' : 'No response.'));
+      // Không tự speak cho VI; EN có thể bấm Replay nếu muốn nghe
     } catch (err: any) {
       setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
     } finally {
@@ -100,6 +102,7 @@ export default function FlashBox({
   }
 
   // ------------------ Voice input (Web Speech for mic) ------------------
+  // YÊU CẦU: Không hiển thị nút nói cho VI ⇒ phần render bên dưới sẽ ẩn.
   async function handleVoice() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -124,7 +127,9 @@ export default function FlashBox({
         const built = buildPrompt(`${sys}\n\n${transcript}`);
         const text = await callGemini(built);
         setResponse(text);
-        speak(text); // phát bằng GCP TTS
+
+        // KHÔNG speak cho VI
+        if (lang === 'en') speak(text);
       } catch (err: any) {
         setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
       } finally {
@@ -144,7 +149,7 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ GCP TTS helpers ------------------
+  // ------------------ GCP TTS helpers (EN only) ------------------
   function sanitizeForSpeech(text: string) {
     let s = text;
     s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim(); // bỏ markdown
@@ -158,11 +163,10 @@ export default function FlashBox({
     return text.split(/(?<=[\.\!\?\…])\s+/).map(t => t.trim()).filter(Boolean);
   }
 
-  // chọn voice mặc định nếu bạn chưa truyền tts.voice
+  // chỉ chọn voice cho EN
   function defaultVoice(): string {
     if (tts?.voice) return tts.voice;
-    if (lang === 'vi') return 'vi-VN-Wavenet-D';  // có thể đổi A/B/C/D
-    return 'en-US-Wavenet-D';                     // đổi '...-F' nếu muốn nữ
+    return 'en-US-Wavenet-F'; // mặc định giọng EN (đổi thành D nếu muốn nam)
   }
 
   async function synthOnce(sentence: string) {
@@ -172,14 +176,13 @@ export default function FlashBox({
       body: JSON.stringify({
         text: sentence,
         voice: defaultVoice(),
-        rate: tts?.rate ?? (lang === 'vi' ? 0.92 : 1.0),
-        pitch: tts?.pitch ?? (lang === 'vi' ? 1.05 : 1.0),
+        rate: tts?.rate ?? 1.0,
+        pitch: tts?.pitch ?? 1.0,
       }),
     });
     if (!res.ok) throw new Error(`TTS ${res.status}`);
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    // phát
     await new Promise<void>((resolve, reject) => {
       const audio = new Audio(url);
       currentAudioRef.current = audio;
@@ -201,8 +204,8 @@ export default function FlashBox({
   }
 
   async function speak(text: string) {
-    if (!tts?.enabled || !text) return;
-    stopSpeak(); // clear cũ
+    if (lang !== 'en' || !tts?.enabled || !text) return; // KHÔNG speak cho VI
+    stopSpeak();
 
     const cleaned = sanitizeForSpeech(text);
     queueRef.current = splitSentences(cleaned);
@@ -212,47 +215,42 @@ export default function FlashBox({
     playingRef.current = true;
 
     while (playingRef.current && queueRef.current.length) {
-      // nếu đã bấm dừng giữa chừng
       if (token !== stopTokenRef.current) break;
-
       const sentence = queueRef.current.shift()!;
-      try {
-        await synthOnce(sentence);
-      } catch (e) {
-        console.error('TTS play error:', e);
-      }
+      try { await synthOnce(sentence); }
+      catch (e) { console.error('TTS play error:', e); }
     }
-
     playingRef.current = false;
   }
 
   function replay() {
-    if (response) speak(response);
+    if (lang === 'en' && response) speak(response);
   }
 
-  // ------------------ UI ------------------
+  // ------------------ UI (áp dụng lớp từ globals.css) ------------------
   return (
-    <div className="flex flex-col h-full rounded-2xl border border-gray-200 bg-white">
+    <div className="flex flex-col h-full box">
       {/* Header */}
-      <div className="px-5 py-3 border-b flex items-center justify-between">
+      <div className="box-header">
         <h3 className="font-semibold">{title}</h3>
-        <div className="flex gap-2">
-          {response && tts?.enabled && (
+        <div className="box-actions flex gap-2">
+          {/* Chỉ hiện Replay/Stop ở EN và khi TTS bật */}
+          {lang === 'en' && response && tts?.enabled && (
             <>
               <button
                 onClick={replay}
                 className="text-xs px-3 py-1.5 rounded-md border bg-white hover:bg-gray-50"
-                title={lang === 'vi' ? 'Nghe lại' : 'Replay'}
+                title="Replay"
               >
-                🔁 {lang === 'vi' ? 'Nghe lại' : 'Replay'}
+                🔁 Replay
               </button>
               {tts?.allowStop && (
                 <button
                   onClick={stopSpeak}
                   className="text-xs px-3 py-1.5 rounded-md border bg-white hover:bg-gray-50"
-                  title={lang === 'vi' ? 'Dừng nói' : 'Stop speaking'}
+                  title="Stop speaking"
                 >
-                ⏹️ {lang === 'vi' ? 'Dừng' : 'Stop'}
+                  ⏹️ Stop
                 </button>
               )}
             </>
@@ -261,14 +259,14 @@ export default function FlashBox({
       </div>
 
       {/* Nội dung phản hồi */}
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto box-body">
         {busy ? (
           <div className="text-sm opacity-70">
             {lang === 'vi' ? 'Đang xử lý…' : 'Processing…'}
           </div>
         ) : response ? (
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{response}</p>
+            <p className="prose-lite whitespace-pre-wrap">{response}</p>
           </div>
         ) : (
           <p className="text-sm opacity-60">
@@ -287,22 +285,27 @@ export default function FlashBox({
             className="flex-1 rounded-xl border px-4 py-3 text-sm"
             disabled={busy}
           />
-          <button
-            type="button"
-            onClick={handleVoice}
-            className={`rounded-xl px-3 py-3 border text-sm ${listening ? 'bg-red-50 border-red-200' : 'bg-gray-50 hover:bg-gray-100'}`}
-            title={lang === 'vi' ? 'Nhấn để nói' : 'Tap to speak'}
-            disabled={busy}
-          >
-            {listening ? '🎙️ Đang nghe' : '🎤 Nói'}
-          </button>
+
+          {/* ẨN nút Nói cho VI */}
+          {lang !== 'vi' && (
+            <button
+              type="button"
+              onClick={handleVoice}
+              className={`rounded-xl px-3 py-3 border text-sm ${listening ? 'bg-red-50 border-red-200' : 'bg-gray-50 hover:bg-gray-100'}`}
+              title="Tap to speak"
+              disabled={busy}
+            >
+              {listening ? '🎙️ Listening' : '🎤 Speak'}
+            </button>
+          )}
+
           <button
             type="submit"
             className="rounded-xl bg-[var(--navy)] hover:opacity-90 text-white px-4 py-3 text-sm disabled:opacity-60"
             disabled={busy}
             title={lang === 'vi' ? 'Gửi' : 'Send'}
           >
-            Gửi
+            {lang === 'vi' ? 'Gửi' : 'Send'}
           </button>
         </div>
       </form>
