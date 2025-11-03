@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 
 type Lang = 'vi' | 'en';
 
@@ -18,11 +18,15 @@ type FlashBoxProps = {
   tts?: {
     enabled?: boolean;           // bật TTS
     allowStop?: boolean;         // hiển thị nút Dừng
-    forceVietnameseVoice?: boolean; // ép giọng Việt cho panel VI
+    // Hints cũ (để tương thích), vẫn dùng nếu bạn chưa đặt voice cụ thể
+    forceVietnameseVoice?: boolean;
     viVoiceHint?: string;        // 'vi-VN'
     enVoiceHint?: string;        // 'en-US'
-    rate?: number;               // tốc độ đọc
-    pitch?: number;              // cao độ
+
+    // --- MỚI: tham số điều khiển GCP TTS ---
+    voice?: string;              // ví dụ 'en-US-Wavenet-D' | 'vi-VN-Wavenet-D'
+    rate?: number;               // speakingRate (mặc định 1.0)
+    pitch?: number;              // pitch semitones (mặc định 0.0)
   };
 };
 
@@ -40,10 +44,11 @@ export default function FlashBox({
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
 
-  const recognitionRef = useRef<any>(null);
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
-  const queueRef = useRef<SpeechSynthesisUtterance[]>([]);
-  const isSpeakingRef = useRef(false);
+  // ====== STATE cho GCP TTS (hàng đợi phát) ======
+  const queueRef = useRef<string[]>([]);
+  const playingRef = useRef(false);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const stopTokenRef = useRef(0);
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
 
@@ -94,70 +99,52 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ Voice input ------------------
+  // ------------------ Voice input (Web Speech for mic) ------------------
   async function handleVoice() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       alert(lang === 'vi' ? 'Trình duyệt không hỗ trợ micro.' : 'Micro is not supported.');
       return;
     }
-    if (!recognitionRef.current) {
-      const r = new SR();
-      r.lang = lang === 'vi' ? (tts?.viVoiceHint || 'vi-VN') : (tts?.enVoiceHint || 'en-US');
-      r.interimResults = false;
-      r.maxAlternatives = 1;
-      r.onresult = async (e: any) => {
-        const transcript = e.results[0][0].transcript || '';
-        setInput(transcript);
-        setListening(false);
-        try {
-          setBusy(true);
-          const sys =
-            lang === 'vi'
-              ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}.`
-              : `You are a helpful tutor for English Grade ${grade}.`;
-          const built = buildPrompt(`${sys}\n\n${transcript}`);
-          const text = await callGemini(built);
-          setResponse(text);
-          speak(text);
-        } catch (err: any) {
-          setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
-        } finally {
-          setBusy(false);
-        }
-      };
-      r.onerror = () => setListening(false);
-      r.onend = () => setListening(false);
-      recognitionRef.current = r;
-    }
+    const r = new SR();
+    r.lang = lang === 'vi' ? (tts?.viVoiceHint || 'vi-VN') : (tts?.enVoiceHint || 'en-US');
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+
+    r.onresult = async (e: any) => {
+      const transcript = e.results[0][0].transcript || '';
+      setInput(transcript);
+      setListening(false);
+      try {
+        setBusy(true);
+        const sys =
+          lang === 'vi'
+            ? `Bạn là trợ lý học tập cho chương trình Tiếng Anh lớp ${grade}.`
+            : `You are a helpful tutor for English Grade ${grade}.`;
+        const built = buildPrompt(`${sys}\n\n${transcript}`);
+        const text = await callGemini(built);
+        setResponse(text);
+        speak(text); // phát bằng GCP TTS
+      } catch (err: any) {
+        setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    r.onerror = () => setListening(false);
+    r.onend = () => setListening(false);
+
     if (listening) {
-      recognitionRef.current.stop();
+      r.stop();
       setListening(false);
     } else {
-      recognitionRef.current.start();
+      r.start();
       setListening(true);
     }
   }
 
-  // ------------------ TTS (ép giọng Việt cho panel VI) ------------------
-  useEffect(() => {
-    if (!tts?.enabled) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    function loadVoices() {
-      const v = synth.getVoices();
-      if (v && v.length) voicesRef.current = v;
-    }
-    loadVoices();
-    const handler = () => loadVoices();
-    synth.onvoiceschanged = handler;
-    const timer = setTimeout(() => synth.getVoices(), 200);
-    return () => {
-      clearTimeout(timer);
-      if (synth.onvoiceschanged === handler) synth.onvoiceschanged = null as any;
-    };
-  }, [tts?.enabled]);
-
+  // ------------------ GCP TTS helpers ------------------
   function sanitizeForSpeech(text: string) {
     let s = text;
     s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim(); // bỏ markdown
@@ -171,108 +158,79 @@ export default function FlashBox({
     return text.split(/(?<=[\.\!\?\…])\s+/).map(t => t.trim()).filter(Boolean);
   }
 
-  function pickVietnameseVoice(): SpeechSynthesisVoice | null {
-    const voices = voicesRef.current || [];
-    if (!voices.length) return null;
-    const preferredByName = [
-      'Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)',
-      'Microsoft An Online (Natural) - Vietnamese (Vietnam)',
-      'Microsoft Vi Online (Natural) - Vietnamese (Vietnam)',
-      'Google Vietnamese',
-    ];
-    const byName = voices.find(v => preferredByName.some(n => v.name?.toLowerCase() === n.toLowerCase()));
-    if (byName) return byName;
-    const hint = (tts?.viVoiceHint || 'vi-VN').toLowerCase();
-    const byHint = voices.find(v => v.lang?.toLowerCase().startsWith(hint));
-    if (byHint) return byHint;
-    const byPrefix = voices.find(v => v.lang?.toLowerCase().startsWith('vi'));
-    if (byPrefix) return byPrefix;
-    return voices[0] || null;
+  // chọn voice mặc định nếu bạn chưa truyền tts.voice
+  function defaultVoice(): string {
+    if (tts?.voice) return tts.voice;
+    if (lang === 'vi') return 'vi-VN-Wavenet-D';  // có thể đổi A/B/C/D
+    return 'en-US-Wavenet-D';                     // đổi '...-F' nếu muốn nữ
   }
 
-  function pickEnglishVoice(): SpeechSynthesisVoice | null {
-    const voices = voicesRef.current || [];
-    if (!voices.length) return null;
-    const hint = (tts?.enVoiceHint || 'en-US').toLowerCase();
-    const byHint = voices.find(v => v.lang?.toLowerCase().startsWith(hint));
-    if (byHint) return byHint;
-    const byPrefix = voices.find(v => v.lang?.toLowerCase().startsWith('en'));
-    if (byPrefix) return byPrefix;
-    return voices[0] || null;
-  }
-
-  function enqueueSpeak(u: SpeechSynthesisUtterance) {
-    queueRef.current.push(u);
-    if (!isSpeakingRef.current) playNext();
-  }
-
-  function playNext() {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    const next = queueRef.current.shift();
-    if (!next) { isSpeakingRef.current = false; return; }
-    isSpeakingRef.current = true;
-    next.onend = () => setTimeout(() => playNext(), 120);
-    next.onerror = () => setTimeout(() => playNext(), 120);
-    synth.speak(next);
-  }
-
-  function speak(text: string) {
-    if (!tts?.enabled || !text) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel(); // clear cũ
-    queueRef.current = [];
-    isSpeakingRef.current = false;
-
-    const cleaned = sanitizeForSpeech(text);
-    const parts = splitSentences(cleaned);
-
-    const forceVI = lang === 'vi' ? (tts?.forceVietnameseVoice ?? true) : false;
-    const viVoice = forceVI ? pickVietnameseVoice() : null;
-    const enVoice = pickEnglishVoice();
-
-    for (const sentence of parts) {
-      const u = new SpeechSynthesisUtterance(sentence);
-
-      if (lang === 'en') {
-        if (enVoice) u.voice = enVoice;
-        u.lang = u.voice?.lang || 'en-US';
-        u.rate = tts?.rate ?? 1.0;
-        u.pitch = tts?.pitch ?? 1.0;
-      } else {
-        // panel VI: luôn dùng VI nếu forceVI=true
-        if (forceVI && viVoice) {
-          u.voice = viVoice;
-          u.lang = viVoice.lang || 'vi-VN';
-          u.rate = tts?.rate ?? 0.92;
-          u.pitch = tts?.pitch ?? 1.05;
-        } else {
-          // fallback (ít dùng)
-          if (viVoice) u.voice = viVoice;
-          u.lang = u.voice?.lang || 'vi-VN';
-          u.rate = tts?.rate ?? 0.95;
-          u.pitch = tts?.pitch ?? 1.0;
-        }
-      }
-      enqueueSpeak(u);
-    }
+  async function synthOnce(sentence: string) {
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: sentence,
+        voice: defaultVoice(),
+        rate: tts?.rate ?? (lang === 'vi' ? 0.92 : 1.0),
+        pitch: tts?.pitch ?? (lang === 'vi' ? 1.05 : 1.0),
+      }),
+    });
+    if (!res.ok) throw new Error(`TTS ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    // phát
+    await new Promise<void>((resolve, reject) => {
+      const audio = new Audio(url);
+      currentAudioRef.current = audio;
+      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Audio error')); };
+      audio.play().catch(reject);
+    });
   }
 
   function stopSpeak() {
-    if (!tts?.enabled) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    synth.cancel();
+    stopTokenRef.current++;
     queueRef.current = [];
-    isSpeakingRef.current = false;
+    playingRef.current = false;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.src = '';
+      currentAudioRef.current = null;
+    }
+  }
+
+  async function speak(text: string) {
+    if (!tts?.enabled || !text) return;
+    stopSpeak(); // clear cũ
+
+    const cleaned = sanitizeForSpeech(text);
+    queueRef.current = splitSentences(cleaned);
+    if (queueRef.current.length === 0) queueRef.current = [cleaned];
+
+    const token = stopTokenRef.current;
+    playingRef.current = true;
+
+    while (playingRef.current && queueRef.current.length) {
+      // nếu đã bấm dừng giữa chừng
+      if (token !== stopTokenRef.current) break;
+
+      const sentence = queueRef.current.shift()!;
+      try {
+        await synthOnce(sentence);
+      } catch (e) {
+        console.error('TTS play error:', e);
+      }
+    }
+
+    playingRef.current = false;
   }
 
   function replay() {
     if (response) speak(response);
   }
 
-  // ------------------ UI (tăng padding hộp hỏi/đáp) ------------------
+  // ------------------ UI ------------------
   return (
     <div className="flex flex-col h-full rounded-2xl border border-gray-200 bg-white">
       {/* Header */}
@@ -294,7 +252,7 @@ export default function FlashBox({
                   className="text-xs px-3 py-1.5 rounded-md border bg-white hover:bg-gray-50"
                   title={lang === 'vi' ? 'Dừng nói' : 'Stop speaking'}
                 >
-                  ⏹️ {lang === 'vi' ? 'Dừng' : 'Stop'}
+                ⏹️ {lang === 'vi' ? 'Dừng' : 'Stop'}
                 </button>
               )}
             </>
@@ -302,7 +260,7 @@ export default function FlashBox({
         </div>
       </div>
 
-      {/* Nội dung phản hồi – bọc trong “bong bóng” có padding */}
+      {/* Nội dung phản hồi */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {busy ? (
           <div className="text-sm opacity-70">
@@ -319,14 +277,14 @@ export default function FlashBox({
         )}
       </div>
 
-      {/* Ô nhập – tăng padding bên trong input */}
+      {/* Ô nhập */}
       <form onSubmit={handleSubmit} className="p-4 border-t">
         <div className="flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={lang === 'vi' ? 'Nhập câu hỏi…' : 'Type your question…'}
-            className="flex-1 rounded-xl border px-4 py-3 text-sm" // ⬅️ py-3 để rộng thoáng
+            className="flex-1 rounded-xl border px-4 py-3 text-sm"
             disabled={busy}
           />
           <button
