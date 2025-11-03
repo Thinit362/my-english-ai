@@ -193,4 +193,16 @@ section {
 .prose-lite ul, .prose-lite ol { margin: .4rem 0 .6rem 1.25rem; }
 .prose-lite li { margin: .15rem 0; }
 .prose-lite strong { font-weight: 600; }
+/* ===== Buttons: toàn site ===== */
+:where(button, .btn, a.btn) {
+  padding: 0.5rem 0.875rem;   /* 8px x 14px */
+  border-radius: 0.625rem;    /* 10px bo góc */
+  line-height: 1.2;
+}
+
+:where(button, .btn, a.btn).btn-lg { padding: 0.75rem 1rem; }   /* 12 x 16 */
+:where(button, .btn, a.btn).btn-sm { padding: 0.375rem 0.75rem; }/* 6 x 12 */
+
+/* tăng vùng chạm tối thiểu cho mobile */
+.tap-44 { min-height: 44px; }
 
