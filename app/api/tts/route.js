@@ -1,39 +1,42 @@
-import { TextToSpeechClient } from "@google-cloud/text-to-speech";
+export const runtime = 'nodejs';
 
-const client = new TextToSpeechClient({
-  credentials: {
-    project_id: process.env.GCP_PROJECT_ID,
-    client_email: process.env.GCP_CLIENT_EMAIL,
-    private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  },
-});
+type TtsBody = { text: string };
 
-export async function POST(req) {
+export async function POST(req: Request) {
+  const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
+
+  // KHỞI TẠO CLIENT BẰNG ENV VERCEL
+  const client = new TextToSpeechClient({
+    credentials: {
+      project_id: process.env.GCP_PROJECT_ID,
+      client_email: process.env.GCP_CLIENT_EMAIL,
+      private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    },
+  });
+
   try {
-    const { text } = await req.json();
+    const { text } = (await req.json()) as TtsBody;
+    if (!text || !text.trim()) {
+      return new Response(JSON.stringify({ error: 'Missing text' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     const [response] = await client.synthesizeSpeech({
-      input: { text },
-      voice: {
-        languageCode: "en-US",
-        name: "en-US-Wavenet-D", // giọng nam tự nhiên (có thể đổi sang Wavenet-C/E/F)
-      },
-      audioConfig: {
-        audioEncoding: "MP3",
-        speakingRate: 1.0,
-      },
+      input: { text: text.trim() },
+      voice: { languageCode: 'en-US', name: 'en-US-Wavenet-D' }, // đổi giọng tùy ý
+      audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
     });
 
-    return new Response(response.audioContent, {
-      headers: {
-        "Content-Type": "audio/mpeg",
-      },
+    return new Response(response.audioContent as Buffer, {
+      headers: { 'Content-Type': 'audio/mpeg' },
     });
-  } catch (error) {
-    console.error("TTS Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (err: any) {
+    console.error('TTS Error:', err);
+    return new Response(JSON.stringify({ error: err?.message || 'TTS failed' }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
