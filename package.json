@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/speech": "^7.2.1",
     "@google-cloud/text-to-speech": "^5.8.1",
     "@google/generative-ai": "^0.24.0",
     "lucide-react": "^0.395.0",
