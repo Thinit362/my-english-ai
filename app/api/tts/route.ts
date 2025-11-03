@@ -28,17 +28,19 @@ export async function POST(req: Request) {
       audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
     });
 
-    // resp.audioContent có thể là Uint8Array hoặc string(base64) tùy môi trường
-    const bytes = resp.audioContent as Uint8Array | string;
-    const asUint8 =
-      typeof bytes === 'string'
-        ? Uint8Array.from(Buffer.from(bytes, 'base64'))
-        : bytes;
+    // 1) Chuẩn hoá dữ liệu âm thanh về Uint8Array
+    // resp.audioContent có thể là string base64 hoặc Uint8Array
+    const raw = resp.audioContent as Uint8Array | string;
+    const u8: Uint8Array =
+      typeof raw === 'string'
+        ? Uint8Array.from(Buffer.from(raw, 'base64')) // chỉ dùng Buffer để decode base64
+        : raw;
 
-    // Dùng Blob để hợp lệ với BodyInit của Response (tránh lỗi type TS)
-    const audio = new Blob([asUint8], { type: 'audio/mpeg' });
+    // 2) Tạo ArrayBuffer "thật" (tránh SharedArrayBuffer)
+    const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
 
-    return new Response(audio, {
+    // 3) Trả về body là ArrayBuffer (BodyInit hợp lệ, không còn lỗi type)
+    return new Response(ab, {
       headers: { 'Content-Type': 'audio/mpeg' },
     });
   } catch (err: any) {
