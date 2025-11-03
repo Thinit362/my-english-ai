@@ -113,3 +113,76 @@ function CardLecture({
             {data.title}
           </div>
           <div className="inline-block mt-1 text-xs bg-gray-100 border rounded px-2 py-0.5 text-gray-600">
+            {data.tag}
+          </div>
+
+          {/* Meta (placeholder) */}
+          <div className="mt-2 text-xs text-gray-500 flex gap-4">
+            <span className="inline-flex items-center gap-1">👁️ 0</span>
+            <span className="inline-flex items-center gap-1">💬 0</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function CardExercise({ data }: { data: LectureExercise["exercise"] }) {
+  return (
+    <Link
+      href={data.href}
+      className="relative block rounded-xl border border-gray-200 overflow-hidden bg-white hover:shadow-md transition"
+    >
+      <div className="absolute left-0 top-0 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-br-xl">
+        BÀI TẬP
+      </div>
+
+      <div className="p-4 h-full flex flex-col justify-center">
+        <div className="text-xl font-semibold text-orange-600">{data.title}</div>
+        <div className="mt-3 text-sm text-gray-500">Bạn chưa làm bài này</div>
+      </div>
+    </Link>
+  );
+}
+
+function SkillRow({ item }: { item: SkillItem }) {
+  const icon = {
+    read: "📖",
+    listen: "🎧",
+    speak: "🗣️",
+    write: "✍️",
+  }[item.icon ?? "read"];
+
+  return (
+    <Link
+      href={item.href}
+      className="flex items-center rounded-xl border border-gray-200 overflow-hidden bg-white hover:shadow-md transition"
+    >
+      <div className="bg-sky-100 px-3 py-2 text-xs font-semibold text-gray-700">
+        KĨ NĂNG
+      </div>
+
+      <div className="flex items-center gap-3 px-4 py-3 flex-1">
+        <div className="w-12 h-12 rounded-full bg-sky-200 flex items-center justify-center text-2xl">
+          <span>{icon}</span>
+        </div>
+        <div className="flex-1">
+          <div className="text-gray-900">{item.title}</div>
+          <div className="mt-1 inline-block text-xs bg-gray-100 border rounded px-2 py-0.5 text-gray-600">
+            {item.tag}
+          </div>
+          <div className="mt-1 text-xs text-gray-500 flex gap-4">
+            <span>👁️ 0</span>
+            <span>💬 0</span>
+          </div>
+        </div>
+        <span className="px-3 text-gray-400">›</span>
+      </div>
+
+      {/* Cột trạng thái bên phải (ẩn trên mobile) */}
+      <div className="hidden md:flex items-center px-4 text-sm text-gray-500">
+        Bạn chưa làm bài này
+      </div>
+    </Link>
+  );
+}
