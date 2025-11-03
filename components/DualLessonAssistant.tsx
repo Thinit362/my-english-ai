@@ -1,6 +1,6 @@
 'use client';
 
-import FlashBox from './FlashBox'; // ✅ đảm bảo file tên đúng y chang: FlashBox.tsx (chữ F & B viết hoa)
+import FlashBox from './FlashBox'; // giữ nguyên
 
 type Grade = 10 | 11 | 12;
 
@@ -22,7 +22,7 @@ export default function DualLessonAssistant({
       <h2 className="text-2xl md:text-3xl font-semibold mb-6">{heading}</h2>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Panel Tiếng Việt: ngắn gọn + mẹo phát âm + ÉP GIỌNG VIỆT */}
+        {/* Panel Tiếng Việt — ép giọng GCP vi-VN */}
         <FlashBox
           grade={grade}
           lang="vi"
@@ -33,14 +33,20 @@ export default function DualLessonAssistant({
           tts={{
             enabled: true,
             allowStop: true,
-            forceVietnameseVoice: true, // ✅ thay cho thuộc tính cũ
+
+            // === GCP TTS options ===
+            voice: 'vi-VN-Wavenet-D', // ← giọng Google Cloud (có thể đổi A/B/C/D)
+            rate: 0.92,               // speakingRate
+            pitch: 1.05,              // pitch (nếu bạn có dùng ở client)
+            // -----------------------
+
+            // Giữ key cũ làm HINT (nếu FlashBox chưa sửa kịp):
+            forceVietnameseVoice: true,
             viVoiceHint: 'vi-VN',
-            rate: 0.92,
-            pitch: 1.05,
           }}
         />
 
-        {/* Panel English */}
+        {/* Panel English — ép giọng GCP en-US */}
         <FlashBox
           grade={grade}
           lang="en"
@@ -50,9 +56,15 @@ export default function DualLessonAssistant({
           tts={{
             enabled: true,
             allowStop: true,
-            enVoiceHint: 'en-US',
+
+            // === GCP TTS options ===
+            voice: 'en-US-Wavenet-D', // đổi sang 'en-US-Wavenet-F' nếu bạn muốn giọng nữ
             rate: 1.0,
             pitch: 1.0,
+            // -----------------------
+
+            // Hint cũ (fallback nếu FlashBox đang check):
+            enVoiceHint: 'en-US',
           }}
         />
       </div>
