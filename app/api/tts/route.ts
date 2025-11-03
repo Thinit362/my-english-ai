@@ -1,8 +1,10 @@
 export const runtime = 'nodejs';
+
 type TtsBody = { text: string };
 
 export async function POST(req: Request) {
   const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
+
   const client = new TextToSpeechClient({
     credentials: {
       project_id: process.env.GCP_PROJECT_ID,
@@ -20,13 +22,23 @@ export async function POST(req: Request) {
       });
     }
 
-    const [response] = await client.synthesizeSpeech({
+    const [resp] = await client.synthesizeSpeech({
       input: { text: text.trim() },
       voice: { languageCode: 'en-US', name: 'en-US-Wavenet-D' },
       audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
     });
 
-    return new Response(response.audioContent as Buffer, {
+    // resp.audioContent có thể là Uint8Array hoặc string(base64) tùy môi trường
+    const bytes = resp.audioContent as Uint8Array | string;
+    const asUint8 =
+      typeof bytes === 'string'
+        ? Uint8Array.from(Buffer.from(bytes, 'base64'))
+        : bytes;
+
+    // Dùng Blob để hợp lệ với BodyInit của Response (tránh lỗi type TS)
+    const audio = new Blob([asUint8], { type: 'audio/mpeg' });
+
+    return new Response(audio, {
       headers: { 'Content-Type': 'audio/mpeg' },
     });
   } catch (err: any) {
