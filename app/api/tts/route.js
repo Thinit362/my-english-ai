@@ -3,7 +3,6 @@ export const runtime = 'nodejs';
 type TtsBody = { text: string };
 
 export async function POST(req: Request) {
-  // dynamic import để chỉ load ở server
   const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
 
   const client = new TextToSpeechClient({
@@ -25,7 +24,7 @@ export async function POST(req: Request) {
 
     const [response] = await client.synthesizeSpeech({
       input: { text: text.trim() },
-      voice: { languageCode: 'en-US', name: 'en-US-Wavenet-D' }, // đổi voice nếu muốn
+      voice: { languageCode: 'en-US', name: 'en-US-Wavenet-D' },
       audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
     });
 
