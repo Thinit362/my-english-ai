@@ -12,7 +12,7 @@ const rows: LectureExercise[] = [
     key: "warm-up",
     lecture: {
       title: "Nhật ký Đặng Thùy Trâm",
-      tag: "Khởi động",
+      tag: "khoi dong",
       href: "/english-12/unit/1/warm-up",
     },
     exercise: {
