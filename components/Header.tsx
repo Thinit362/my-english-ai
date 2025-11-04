@@ -57,8 +57,7 @@ export default function Header() {
           { href: "/english-10", label: "Tiếng Anh 10" },
           { href: "/english-11", label: "Tiếng Anh 11" },
           { href: "/english-12", label: "Tiếng Anh 12" },
-          { href: "/about", label: "Giới thiệu" },
-        ].map((l) => (
+         ].map((l) => (
           <a
             key={l.href}
             href={l.href}
