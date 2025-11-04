@@ -5,7 +5,6 @@ export const metadata = {
   title: "English 12 – Unit 1: Life stories we admire",
 };
 
-// 🔥 thêm thuộc tính status và progress để thể hiện thời gian thực
 const rows: LectureExercise[] = [
   {
     key: "warm-up",
@@ -13,7 +12,6 @@ const rows: LectureExercise[] = [
       title: "Nhật ký Đặng Thùy Trâm",
       tag: "Khởi động",
       href: "/english-12/unit/1/warm-up",
-      thumb: "/img/unit1/warmup.jpg",
       status: "done",
     },
     exercise: {
@@ -25,15 +23,14 @@ const rows: LectureExercise[] = [
   {
     key: "vocabulary-1",
     lecture: {
-      title: "Những câu chuyện cuộc đời đáng ngưỡng mộ",
+      title: "Từ vựng mô tả công việc nhà – Phần 1",
       tag: "Từ vựng",
       href: "/english-12/unit/1/vocabulary",
-      thumb: "/img/unit1/vocab1.jpg",
       status: "inprogress",
       progress: 40,
     },
     exercise: {
-      title: "Thực hành từ vựng",
+      title: "Thực hành từ vựng 1",
       href: "/english-12/unit/1/practice-vocabulary",
       status: "todo",
     },
@@ -41,12 +38,10 @@ const rows: LectureExercise[] = [
   {
     key: "grammar",
     lecture: {
-      title: "Thì quá khứ đơn và thì quá khứ tiếp diễn",
+      title: "Thì quá khứ đơn và quá khứ tiếp diễn",
       tag: "Ngữ pháp",
       href: "/english-12/unit/1/grammar",
-      thumb: "/img/unit1/grammar.jpg",
-      status: "inprogress",
-      progress: 70,
+      status: "todo",
     },
     exercise: {
       title: "Thực hành ngữ pháp",
@@ -60,7 +55,6 @@ const rows: LectureExercise[] = [
       title: "Nguyên âm đôi /eɪ/ và /əʊ/",
       tag: "Phát âm",
       href: "/english-12/unit/1/pronunciation",
-      thumb: "/img/unit1/pronunciation.jpg",
       status: "todo",
     },
     exercise: {
@@ -75,11 +69,10 @@ const rows: LectureExercise[] = [
       title: "Bài nghe 1: Walt Disney",
       tag: "Luyện nghe",
       href: "/english-12/unit/1/listening-1",
-      thumb: "/img/unit1/listen1.jpg",
       status: "done",
     },
     exercise: {
-      title: "Bài tập luyện nghe số 1",
+      title: "Bài tập luyện nghe 1",
       href: "/english-12/unit/1/practice-listening-1",
       status: "done",
     },
@@ -90,11 +83,10 @@ const rows: LectureExercise[] = [
       title: "Bài nghe 2: J.K. Rowling",
       tag: "Luyện nghe",
       href: "/english-12/unit/1/listening-2",
-      thumb: "/img/unit1/listen2.jpg",
       status: "todo",
     },
     exercise: {
-      title: "Bài tập luyện nghe số 2",
+      title: "Bài tập luyện nghe 2",
       href: "/english-12/unit/1/practice-listening-2",
       status: "todo",
     },
