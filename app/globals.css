@@ -1,95 +1,166 @@
 /* =========================
-   Tailwind (v4) baseline
+   Tailwind v4 base import
    ========================= */
 @import "tailwindcss";
 
 /* =========================
-   1) Base: font, màu nền
+   1) Base styles
    ========================= */
-:root{
+:root {
   --navy: #0b2a6f;
   --bg-page: #f9fbff;
   --radius: 12px;
 }
 
-html, body{
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+html, body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif;
   background: var(--bg-page);
   color: #222;
   scroll-behavior: smooth;
 }
 
-/* Không áp padding cho body toàn cục để tránh “dính lề” linh tinh */
-*{ box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* =========================
    2) Layout helpers
    ========================= */
-/* Bọc nội dung trang (đề nghị dùng trên <main>) */
-.container-page{ @apply container mx-auto max-w-6xl px-4 md:px-6; }
+.container-page {
+  @apply container mx-auto max-w-6xl px-4 md:px-6;
+}
 
-/* Section cách đều theo chiều dọc */
-.section{ @apply my-6 md:my-8; }
+.section {
+  @apply my-6 md:my-8;
+}
 
 /* =========================
-   3) UI primitives (tái sử dụng)
+   3) Cards & common boxes
    ========================= */
-.card{
+.card {
   border-radius: var(--radius);
   @apply bg-white border border-gray-200 shadow-sm p-4 md:p-6;
 }
 
-/* Buttons */
-.btn{ @apply inline-flex items-center justify-center font-medium rounded-full border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 active:scale-[0.99] transition; }
-.btn-primary{ @apply bg-[var(--navy)] text-white border-transparent hover:opacity-90; }
-.btn-outline{ @apply bg-white text-[var(--navy)] border-[var(--navy)] hover:bg-blue-50; }
-.btn-sm{ @apply px-3 py-1.5 text-xs; }
-.btn-lg{ @apply px-5 py-3 text-base; }
-
-/* Inputs */
-.input{ @apply w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-200; }
-.textarea{ @apply w-full rounded-lg border border-gray-300 px-4 py-3 min-h-[120px] outline-none focus:ring-2 focus:ring-blue-200; }
-
-/* Badges */
-.badge{ @apply inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100; }
+/* =========================
+   4) Buttons
+   ========================= */
+.btn {
+  @apply inline-flex items-center justify-center font-medium rounded-full border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 active:scale-[0.99] transition;
+}
+.btn-primary {
+  background: var(--navy);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-outline {
+  background: #fff;
+  color: var(--navy);
+  border-color: var(--navy);
+}
+.btn-outline:hover {
+  background: #eff6ff;
+}
+.btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+.btn-lg {
+  @apply px-5 py-3 text-base;
+}
 
 /* =========================
-   4) Lesson item (icon trái)
+   5) Inputs & Textareas
    ========================= */
-.lesson-item{ @apply flex items-start gap-4 p-4 rounded-lg border border-gray-200 bg-white; }
-.lesson-title{ @apply font-semibold mb-1; }
-.lesson-meta{ @apply flex flex-wrap gap-2; }
+.input,
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  @apply w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-200;
+}
 
-/* Khung icon (dùng <img> thường hoặc next/image fill) */
-.lesson-icon{
-  width: 44px; height: 44px; border-radius: 10px;
+/* =========================
+   6) Badges
+   ========================= */
+.badge {
+  @apply inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100;
+}
+
+/* =========================
+   7) Lesson items
+   ========================= */
+.lesson-item {
+  @apply flex items-start gap-4 p-4 rounded-lg border border-gray-200 bg-white;
+}
+.lesson-title {
+  @apply font-semibold mb-1;
+}
+.lesson-meta {
+  @apply flex flex-wrap gap-2;
+}
+.lesson-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   @apply shrink-0 overflow-hidden shadow-sm;
 }
 
 /* =========================
-   5) Chat box
+   8) Chatbox
    ========================= */
-.chatbox{ @apply bg-white border border-gray-200 rounded-[12px] p-4 md:p-5 shadow-sm flex flex-col gap-3; }
-.msg{ @apply rounded-[12px] px-3.5 py-2.5 leading-relaxed max-w-[80%]; }
-.msg-user{ @apply self-end bg-blue-50 border border-blue-200; }
-.msg-ai{ @apply bg-gray-50 border border-gray-200; }
-
-.chat-input{ @apply flex gap-2; }
-.chat-input > input{ @apply input; }
-.chat-input > button{ @apply btn btn-primary min-h-[44px]; }
+.chatbox {
+  @apply bg-white border border-gray-200 rounded-[12px] p-4 md:p-5 shadow-sm flex flex-col gap-3;
+}
+.msg {
+  @apply rounded-[12px] px-3.5 py-2.5 leading-relaxed max-w-[80%];
+}
+.msg-user {
+  @apply self-end bg-blue-50 border border-blue-200;
+}
+.msg-ai {
+  @apply bg-gray-50 border border-gray-200;
+}
+.chat-input {
+  @apply flex gap-2;
+}
+/* Không dùng @apply custom class */
+.chat-input > input {
+  @apply w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-200;
+}
+.chat-input > button {
+  @apply inline-flex items-center justify-center font-medium rounded-full border border-transparent px-4 py-2 text-sm transition active:scale-[0.99];
+  background: var(--navy);
+  color: #fff;
+  min-height: 44px;
+}
+.chat-input > button:hover {
+  opacity: 0.9;
+}
 
 /* =========================
-   6) Header/Nav (tối giản)
+   9) Header & Nav
    ========================= */
-.header{ @apply bg-white border-b border-blue-100 shadow-sm; }
-.header-inner{ @apply container-page flex items-center gap-3 py-2.5; }
-
-.nav-chip{ @apply rounded font-medium text-sm md:text-base px-3 md:px-4 py-2 bg-blue-100 text-[color:var(--navy)] hover:bg-blue-200 transition; }
+.header {
+  @apply bg-white border-b border-blue-100 shadow-sm;
+}
+.header-inner {
+  @apply container-page flex items-center gap-3 py-2.5;
+}
+.nav-chip {
+  @apply rounded font-medium text-sm md:text-base px-3 md:px-4 py-2 bg-blue-100 text-[color:var(--navy)] hover:bg-blue-200 transition;
+}
 
 /* =========================
-   7) Responsive tweaks
+   10) Responsive tweaks
    ========================= */
-@media (max-width: 768px){
-  .lesson-item{ @apply p-3; }
-  .card{ @apply p-4; }
+@media (max-width: 768px) {
+  .lesson-item {
+    @apply p-3;
+  }
+  .card {
+    @apply p-4;
+  }
 }
