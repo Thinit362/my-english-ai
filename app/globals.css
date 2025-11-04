@@ -1,208 +1,95 @@
+/* =========================
+   Tailwind (v4) baseline
+   ========================= */
 @import "tailwindcss";
 
-/* 🎨 Màu & biến dùng chung */
-:root {
+/* =========================
+   1) Base: font, màu nền
+   ========================= */
+:root{
   --navy: #0b2a6f;
-  --light-navy: #f2f6ff;
-  --accent: #ff9f00;
   --bg-page: #f9fbff;
-  --text-main: #222;
-  --text-muted: #666;
   --radius: 12px;
-
-  /* Đệm ngang mặc định cho layout */
-  --container-inline: clamp(16px, 4vw, 32px);
 }
 
-html, body {
-  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+html, body{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
   background: var(--bg-page);
-  color: var(--text-main);
+  color: #222;
   scroll-behavior: smooth;
 }
 
-body {
-  @apply bg-sky-50 text-gray-800;
-  font-family: "Inter", sans-serif;
-}
+/* Không áp padding cho body toàn cục để tránh “dính lề” linh tinh */
+*{ box-sizing: border-box; }
 
-/* ⚙️ Reset cơ bản (đã vá: bỏ padding:2 toàn cục) */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* =========================
+   2) Layout helpers
+   ========================= */
+/* Bọc nội dung trang (đề nghị dùng trên <main>) */
+.container-page{ @apply container mx-auto max-w-6xl px-4 md:px-6; }
 
-img { user-select: none; }
-a { transition: all 0.2s ease-in-out; }
+/* Section cách đều theo chiều dọc */
+.section{ @apply my-6 md:my-8; }
 
-/* Lớp bọc trang để tránh dính lề trên thiết bị có safe-area */
-.page-shell, body {
-  padding-inline: max(var(--container-inline), env(safe-area-inset-left));
-  padding-inline: max(var(--container-inline), env(safe-area-inset-right));
-}
-
-/* 🔝 Header */
-header {
-  background: #fff;
-  border-bottom: 2px solid var(--light-navy);
-  box-shadow: 0 2px 6px rgba(0,0,0,.05);
-}
-/* Nội dung bên trong header */
-header > .container-max {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-block: 10px;
-}
-
-/* 🌊 NAV: nền xanh đậm + nút xanh nhạt chữ navy */
-.nav-dark { background: var(--navy); }
-.nav-chip {
-  @apply rounded font-medium text-sm md:text-base px-3 md:px-4 py-2 transition;
-  background: #dbeafe;          /* blue-100 */
-  color: var(--navy);
-  margin: 0 2px;
-}
-.nav-chip:hover { background: #bfdbfe; transform: scale(1.05); } /* blue-200 */
-
-/* 🧭 Container tối đa (đã thêm padding-inline) */
-.container-max { 
-  @apply mx-auto w-full max-w-7xl; 
-  padding-inline: var(--container-inline);
-}
-
-/* 🪄 Nút dùng chung */
-.btn-navy { 
-  @apply bg-[var(--navy)] text-white rounded-lg font-semibold py-2 px-4 transition hover:opacity-90; 
-  min-height: 44px; min-width: 44px; line-height: 1.2;
-}
-.btn-outline {
-  border: 1px solid var(--navy);
-  color: var(--navy);
-  background: transparent;
+/* =========================
+   3) UI primitives (tái sử dụng)
+   ========================= */
+.card{
   border-radius: var(--radius);
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: .2s;
-  min-height: 44px; min-width: 44px; line-height: 1.2;
-}
-.btn-outline:hover { background: var(--light-navy); }
-/* Biến thể kích thước */
-.btn-sm { padding: 6px 12px; font-size: 0.9rem; }
-.btn-lg { padding: 12px 18px; font-size: 1.05rem; }
-
-/* 🧩 Card sách */
-.card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  overflow: hidden;
-  transition: all .3s ease;
-  box-shadow: 0 3px 10px rgba(0,0,0,.05);
-}
-.card:hover { transform: translateY(-4px); box-shadow: 0 5px 16px rgba(0,0,0,.1); }
-.card img { width: 100%; height: clamp(200px, 28vw, 240px); object-fit: cover; }
-.card-content { padding: 1rem 1.25rem; }
-.card-content h3 { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: .3rem; }
-.card-content p { font-size: .9rem; color: var(--text-muted); }
-
-/* 📘 Section padding (đã vá để không dính mép) */
-section { 
-  padding-block: clamp(24px, 5vw, 56px);
-  padding-inline: var(--container-inline);
+  @apply bg-white border border-gray-200 shadow-sm p-4 md:p-6;
 }
 
-/* 💬 Chatbox */
-.chatbox {
-  background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: var(--radius);
-  padding: 18px;
-  display: flex; flex-direction: column; gap: 10px;
-  box-shadow: 0 3px 12px rgba(0,0,0,.08);
-}
-.msg { 
-  padding: 10px 12px; 
-  border-radius: var(--radius); 
-  max-width: 80%; 
-  word-wrap: break-word; 
-  line-height: 1.4; 
-}
-.msg.user { background: #e8f0ff; align-self: flex-end; border: 1px solid #c7dcff; }
-.msg.ai { background: #f6f9ff; border: 1px solid #dde5ff; }
+/* Buttons */
+.btn{ @apply inline-flex items-center justify-center font-medium rounded-full border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 active:scale-[0.99] transition; }
+.btn-primary{ @apply bg-[var(--navy)] text-white border-transparent hover:opacity-90; }
+.btn-outline{ @apply bg-white text-[var(--navy)] border-[var(--navy)] hover:bg-blue-50; }
+.btn-sm{ @apply px-3 py-1.5 text-xs; }
+.btn-lg{ @apply px-5 py-3 text-base; }
 
-/* ✍️ Input chat */
-.chat-input { display: flex; gap: 10px; }
-.chat-input input {
-  flex: 1; border: 1px solid #ccc; border-radius: var(--radius);
-  padding: 10px 12px; font-size: .95rem;
-}
-.chat-input button {
-  background: var(--navy); color: #fff; border: none; border-radius: var(--radius);
-  padding: 10px 16px; cursor: pointer; transition: .2s; min-height: 44px;
-}
-.chat-input button:hover { opacity: .9; }
+/* Inputs */
+.input{ @apply w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-200; }
+.textarea{ @apply w-full rounded-lg border border-gray-300 px-4 py-3 min-h-[120px] outline-none focus:ring-2 focus:ring-blue-200; }
 
-/* 🌍 Giới thiệu song ngữ */
-.intro {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
-  background: #fff; border-radius: var(--radius);
-  padding: clamp(16px, 4vw, 24px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.06);
-}
-.intro h2 { color: var(--navy); margin-bottom: .5rem; }
-.intro p { font-size: .95rem; color: var(--text-muted); line-height: 1.6; }
-.intro ul { margin-top: .5rem; padding-left: 1rem; }
-.intro li { list-style-type: disc; font-size: .9rem; color: var(--text-main); }
+/* Badges */
+.badge{ @apply inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100; }
 
-/* 📱 Responsive */
-@media (max-width: 800px) {
-  .intro { grid-template-columns: 1fr; }
-  .card img { height: 180px; } /* ảnh sách rõ hơn trên mobile */
-}
-/* ====== Shared boxes (for lesson/chat panels) ====== */
-.box {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  box-shadow: 0 3px 10px rgba(0,0,0,.05);
-  overflow: hidden;
+/* =========================
+   4) Lesson item (icon trái)
+   ========================= */
+.lesson-item{ @apply flex items-start gap-4 p-4 rounded-lg border border-gray-200 bg-white; }
+.lesson-title{ @apply font-semibold mb-1; }
+.lesson-meta{ @apply flex flex-wrap gap-2; }
+
+/* Khung icon (dùng <img> thường hoặc next/image fill) */
+.lesson-icon{
+  width: 44px; height: 44px; border-radius: 10px;
+  @apply shrink-0 overflow-hidden shadow-sm;
 }
 
-.box-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;              /* header thoáng hơn */
-  border-bottom: 1px solid #eaeaea;
-  background: #fff;
+/* =========================
+   5) Chat box
+   ========================= */
+.chatbox{ @apply bg-white border border-gray-200 rounded-[12px] p-4 md:p-5 shadow-sm flex flex-col gap-3; }
+.msg{ @apply rounded-[12px] px-3.5 py-2.5 leading-relaxed max-w-[80%]; }
+.msg-user{ @apply self-end bg-blue-50 border border-blue-200; }
+.msg-ai{ @apply bg-gray-50 border border-gray-200; }
+
+.chat-input{ @apply flex gap-2; }
+.chat-input > input{ @apply input; }
+.chat-input > button{ @apply btn btn-primary min-h-[44px]; }
+
+/* =========================
+   6) Header/Nav (tối giản)
+   ========================= */
+.header{ @apply bg-white border-b border-blue-100 shadow-sm; }
+.header-inner{ @apply container-page flex items-center gap-3 py-2.5; }
+
+.nav-chip{ @apply rounded font-medium text-sm md:text-base px-3 md:px-4 py-2 bg-blue-100 text-[color:var(--navy)] hover:bg-blue-200 transition; }
+
+/* =========================
+   7) Responsive tweaks
+   ========================= */
+@media (max-width: 768px){
+  .lesson-item{ @apply p-3; }
+  .card{ @apply p-4; }
 }
-
-.box-actions > button { margin-left: 8px; }
-
-.box-body {
-  padding: 16px;                   /* 👈 thêm padding trong thân hộp */
-  background: #fff;
-}
-
-/* Văn bản sinh từ AI: khoảng cách và chữ dễ đọc hơn */
-.prose-lite {
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: var(--text-main);
-}
-.prose-lite p { margin: 0.4rem 0; }
-.prose-lite h3 { font-size: 1.05rem; margin: .6rem 0 .3rem; color: var(--navy); }
-.prose-lite ul, .prose-lite ol { margin: .4rem 0 .6rem 1.25rem; }
-.prose-lite li { margin: .15rem 0; }
-.prose-lite strong { font-weight: 600; }
-/* ===== Buttons: toàn site ===== */
-:where(button, .btn, a.btn) {
-  padding: 0.5rem 0.875rem;   /* 8px x 14px */
-  border-radius: 0.625rem;    /* 10px bo góc */
-  line-height: 1.2;
-}
-
-:where(button, .btn, a.btn).btn-lg { padding: 0.75rem 1rem; }   /* 12 x 16 */
-:where(button, .btn, a.btn).btn-sm { padding: 0.375rem 0.75rem; }/* 6 x 12 */
-
-/* tăng vùng chạm tối thiểu cho mobile */
-.tap-44 { min-height: 44px; }
-
