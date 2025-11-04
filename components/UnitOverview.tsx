@@ -1,4 +1,6 @@
 // components/UnitOverview.tsx
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 
@@ -6,7 +8,7 @@ export type LectureExercise = {
   key: string;
   lecture: {
     title: string;
-    tag: string;     // Khởi động | Từ vựng | Ngữ pháp | Phát âm | Luyện nghe ...
+    tag: string;     // Khởi động | Từ vựng | Ngữ pháp | Phát âm | ...
     href: string;
     thumb?: string;  // nếu không truyền -> dùng icon mặc định theo tag
   };
@@ -29,8 +31,15 @@ const ICON_MAP: Record<string, string> = {
   "tu vung": "/icons/vocabulary.png",
   "ngu phap": "/icons/grammar.png",
   "phat am": "/icons/pronunciation.png",
-  "luyen nghe": "/icons/pronunciation.png", // nếu cần icon riêng, thay đường dẫn
+
+  // phòng khi bạn dùng cụm kỹ năng làm tag
+  "luyen doc": "/icons/reading.png",
+  "luyen nghe": "/icons/listening.png",
+  "luyen noi": "/icons/speaking.png",
+  "luyen viet": "/icons/writing.png",
 };
+
+const DEFAULT_ICON = "/icons/lesson.png"; // fallback an toàn
 
 /** Chuẩn hoá tag: lowercase + bỏ dấu + gom khoảng trắng */
 function normalizeTag(input = "") {
@@ -86,7 +95,7 @@ export default function UnitOverview({
         ))}
       </div>
 
-      {/* Skills */}
+      {/* Skills (tuỳ chọn) */}
       {skills?.length ? (
         <div className="mt-8">
           <div className="font-semibold text-sm uppercase text-gray-600 mb-2">
@@ -110,41 +119,32 @@ function CardLecture({
   data: LectureExercise["lecture"];
   className?: string;
 }) {
-  // Ưu tiên thumb; nếu không có -> dùng icon theo tag (đã chuẩn hoá)
   const norm = normalizeTag(data.tag);
-  const iconSrc = data.thumb || ICON_MAP[norm];
+  const iconSrc = data.thumb || ICON_MAP[norm] || DEFAULT_ICON;
 
   return (
     <Link
       href={data.href}
-      className={`relative block rounded-xl border border-gray-200 overflow-hidden bg-white
-                  shadow-sm hover:shadow-lg transition ${className}`}
+      className={`relative block rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition ${className}`}
     >
       {/* Ribbon trái */}
-      <div className="absolute left-0 top-0 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-br-xl">
+      <div className="absolute left-0 top-0 bg-orange-500 text-white text-[11px] font-semibold px-3 py-1 rounded-br-xl select-none">
         BÀI GIẢNG
       </div>
 
-      {/* ĐÃ BỎ nhãn góc phải để không chồng lên khung ảnh */}
-
       <div className="flex gap-4 p-4">
-        {/* Ảnh / Icon mặc định */}
-        <div className="w-28 h-20 md:w-36 md:h-24 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
-          {iconSrc ? (
-            <Image
-              src={iconSrc}
-              alt={data.title}
-              width={144}  // ~ md:w-36
-              height={96}  // ~ md:h-24
-              className="w-full h-full object-cover"
-              priority
-            />
-          ) : (
-            <span className="text-3xl">📘</span>
-          )}
+        {/* Icon chỉ là hình, không chữ */}
+        <div className="relative w-28 h-20 md:w-36 md:h-24 rounded-md bg-gray-100 overflow-hidden">
+          <Image
+            src={iconSrc}
+            alt={data.title}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-lg font-semibold text-sky-800 hover:underline">
             {data.title}
           </div>
@@ -169,10 +169,9 @@ function CardExercise({ data }: { data: LectureExercise["exercise"] }) {
   return (
     <Link
       href={data.href}
-      className="relative block rounded-xl border border-gray-200 overflow-hidden bg-white
-                 shadow-sm hover:shadow-lg transition"
+      className="relative block rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition"
     >
-      <div className="absolute left-0 top-0 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-br-xl">
+      <div className="absolute left-0 top-0 bg-green-600 text-white text-[11px] font-semibold px-3 py-1 rounded-br-xl select-none">
         BÀI TẬP
       </div>
 
@@ -195,18 +194,17 @@ function SkillRow({ item }: { item: SkillItem }) {
   return (
     <Link
       href={item.href}
-      className="flex items-center rounded-xl border border-gray-200 overflow-hidden bg-white
-                 shadow-sm hover:shadow-lg transition"
+      className="flex items-center rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition"
     >
-      <div className="bg-sky-100 px-3 py-2 text-xs font-semibold text-gray-700">
+      <div className="bg-sky-100 px-3 py-2 text-[11px] font-semibold text-gray-700">
         KĨ NĂNG
       </div>
 
       <div className="flex items-center gap-3 px-4 py-3 flex-1">
         <div className="w-12 h-12 rounded-full bg-sky-200 flex items-center justify-center text-2xl">
-          <span>{icon}</span>
+          <span aria-hidden>{icon}</span>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-gray-900">{item.title}</div>
           <div className="mt-1 inline-block text-xs bg-gray-100 border rounded px-2.5 py-1 text-gray-600">
             {item.tag}
