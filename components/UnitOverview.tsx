@@ -4,17 +4,23 @@
 import Link from "next/link";
 import Image from "next/image";
 
+type Status = "todo" | "inprogress" | "done";
+
 export type LectureExercise = {
   key: string;
   lecture: {
     title: string;
-    tag: string;     // Khởi động | Từ vựng | Ngữ pháp | Phát âm | ...
+    tag: string;        // Khởi động | Từ vựng | Ngữ pháp | Phát âm | Luyện nghe | ...
     href: string;
-    thumb?: string;  // nếu không truyền -> dùng icon mặc định theo tag
+    // ❌ KHÔNG dùng thumb nữa cho giao diện chung icon theo tag
+    status?: Status;
+    progress?: number;  // 0..100 khi inprogress
   };
   exercise: {
-    title: string;   // Thực hành | Thực hành từ vựng ...
+    title: string;
     href: string;
+    status?: Status;
+    progress?: number;  // 0..100 khi inprogress
   };
 };
 
@@ -23,6 +29,8 @@ export type SkillItem = {
   tag: "Luyện đọc" | "Luyện nghe" | "Luyện nói" | "Luyện viết";
   href: string;
   icon?: "read" | "listen" | "speak" | "write";
+  status?: Status;
+  progress?: number;
 };
 
 /** Map icon mặc định theo tag (không phân biệt hoa/thường và có dấu/không dấu) */
@@ -31,27 +39,59 @@ const ICON_MAP: Record<string, string> = {
   "tu vung": "/icons/vocabulary.png",
   "ngu phap": "/icons/grammar.png",
   "phat am": "/icons/pronunciation.png",
-
-  // phòng khi bạn dùng cụm kỹ năng làm tag
-  "luyen doc": "/icons/reading.png",
   "luyen nghe": "/icons/listening.png",
+  "luyen doc": "/icons/reading.png",
   "luyen noi": "/icons/speaking.png",
   "luyen viet": "/icons/writing.png",
 };
+const DEFAULT_ICON = "/icons/lesson.png";
 
-const DEFAULT_ICON = "/icons/lesson.png"; // fallback an toàn
-
-/** Chuẩn hoá tag: lowercase + bỏ dấu + gom khoảng trắng */
-function normalizeTag(input = "") {
-  return input
-    .toLowerCase()
+const normalize = (s = "") =>
+  s.toLowerCase()
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "") // bỏ dấu tiếng Việt
+    .replace(/\p{Diacritic}/gu, "")
     .replace(/[^a-z0-9 ]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+/** ---- UI helpers ---- */
+function StatusBadge({
+  status = "todo",
+  progress,
+}: {
+  status?: Status;
+  progress?: number;
+}) {
+  if (status === "done")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5">
+        <span aria-hidden>✔</span> Đã hoàn thành
+      </span>
+    );
+  if (status === "inprogress")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5">
+        <span aria-hidden>⏳</span> Đang học
+        {typeof progress === "number" ? ` · ${Math.max(0, Math.min(100, Math.round(progress)))}%` : ""}
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-0.5">
+      <span aria-hidden>•</span> Chưa làm
+    </span>
+  );
 }
 
+function TinyProgress({ value = 0 }: { value?: number }) {
+  const v = Math.max(0, Math.min(100, Math.round(value)));
+  return (
+    <div className="mt-2 h-1.5 w-full rounded bg-gray-100">
+      <div className="h-1.5 rounded bg-amber-500 transition-[width]" style={{ width: `${v}%` }} />
+    </div>
+  );
+}
+
+/** ---- Main component ---- */
 export default function UnitOverview({
   unitTitle,
   breadcrumbs,
@@ -65,27 +105,19 @@ export default function UnitOverview({
 }) {
   return (
     <section className="mx-auto max-w-6xl px-3 md:px-4 py-6">
-      {/* Breadcrumbs */}
-      {breadcrumbs?.length ? (
+      {!!breadcrumbs?.length && (
         <nav className="mb-3 text-sm text-gray-500">
           {breadcrumbs.map((b, i) => (
             <span key={i}>
-              {b.href ? (
-                <Link href={b.href} className="hover:underline">
-                  {b.label}
-                </Link>
-              ) : (
-                <span>{b.label}</span>
-              )}
+              {b.href ? <Link href={b.href} className="hover:underline">{b.label}</Link> : <span>{b.label}</span>}
               {i < breadcrumbs.length - 1 && <span className="mx-2">›</span>}
             </span>
           ))}
         </nav>
-      ) : null}
+      )}
 
       <h1 className="text-2xl md:text-3xl font-bold mb-5">{unitTitle}</h1>
 
-      {/* Lecture + Exercise rows */}
       <div className="space-y-4">
         {rows.map((r) => (
           <div key={r.key} className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -95,19 +127,14 @@ export default function UnitOverview({
         ))}
       </div>
 
-      {/* Skills (tuỳ chọn) */}
-      {skills?.length ? (
+      {!!skills?.length && (
         <div className="mt-8">
-          <div className="font-semibold text-sm uppercase text-gray-600 mb-2">
-            Kỹ năng
-          </div>
+          <div className="font-semibold text-sm uppercase text-gray-600 mb-2">Kỹ năng</div>
           <div className="space-y-3">
-            {skills.map((s, i) => (
-              <SkillRow key={i} item={s} />
-            ))}
+            {skills.map((s, i) => <SkillRow key={i} item={s} />)}
           </div>
         </div>
-      ) : null}
+      )}
     </section>
   );
 }
@@ -119,42 +146,35 @@ function CardLecture({
   data: LectureExercise["lecture"];
   className?: string;
 }) {
-  const norm = normalizeTag(data.tag);
-  const iconSrc = data.thumb || ICON_MAP[norm] || DEFAULT_ICON;
+  // Icon vuông mặc định theo tag (không lấy ảnh riêng từng bài)
+  const iconSrc = ICON_MAP[normalize(data.tag)] || DEFAULT_ICON;
+  const borderColor =
+    data.status === "done" ? "border-green-300"
+    : data.status === "inprogress" ? "border-amber-300"
+    : "border-gray-200";
 
   return (
-    <Link
-      href={data.href}
-      className={`relative block rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition ${className}`}
-    >
-      {/* Ribbon trái */}
+    <Link href={data.href} className={`relative block rounded-xl border ${borderColor} overflow-hidden bg-white shadow-sm hover:shadow-md transition ${className}`}>
       <div className="absolute left-0 top-0 bg-orange-500 text-white text-[11px] font-semibold px-3 py-1 rounded-br-xl select-none">
         BÀI GIẢNG
       </div>
 
       <div className="flex gap-4 p-4">
-        {/* Icon chỉ là hình, không chữ */}
-        <div className="relative w-28 h-20 md:w-36 md:h-24 rounded-md bg-gray-100 overflow-hidden">
-          <Image
-            src={iconSrc}
-            alt={data.title}
-            fill
-            className="object-cover"
-            priority
-          />
+        {/* Icon vuông 72x72 – chỉ hình, không chữ */}
+        <div className="relative w-[72px] h-[72px] rounded-md bg-gray-100 overflow-hidden shrink-0">
+          <Image src={iconSrc} alt={data.tag} fill className="object-cover" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="text-lg font-semibold text-sky-800 hover:underline">
-            {data.title}
+          <div className="text-lg font-semibold text-sky-800 hover:underline">{data.title}</div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="inline-block text-xs bg-gray-100 border rounded px-2.5 py-1 text-gray-600">{data.tag}</span>
+            <StatusBadge status={data.status} progress={data.progress} />
           </div>
 
-          {/* Tag chip */}
-          <div className="inline-block mt-2 text-xs bg-gray-100 border rounded px-2.5 py-1 text-gray-600">
-            {data.tag}
-          </div>
+          {data.status === "inprogress" && typeof data.progress === "number" && <TinyProgress value={data.progress} />}
 
-          {/* Meta (placeholder) */}
           <div className="mt-2 text-xs text-gray-500 flex gap-4">
             <span className="inline-flex items-center gap-1">👁️ 0</span>
             <span className="inline-flex items-center gap-1">💬 0</span>
@@ -166,60 +186,56 @@ function CardLecture({
 }
 
 function CardExercise({ data }: { data: LectureExercise["exercise"] }) {
+  const borderColor =
+    data.status === "done" ? "border-green-300"
+    : data.status === "inprogress" ? "border-amber-300"
+    : "border-gray-200";
+
   return (
-    <Link
-      href={data.href}
-      className="relative block rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition"
-    >
+    <Link href={data.href} className={`relative block rounded-xl border ${borderColor} overflow-hidden bg-white shadow-sm hover:shadow-md transition`}>
       <div className="absolute left-0 top-0 bg-green-600 text-white text-[11px] font-semibold px-3 py-1 rounded-br-xl select-none">
         BÀI TẬP
       </div>
 
       <div className="p-5 h-full flex flex-col justify-center">
         <div className="text-xl font-semibold text-orange-600">{data.title}</div>
-        <div className="mt-3 text-sm text-gray-500">Bạn chưa làm bài này</div>
+
+        <div className="mt-3 flex items-center gap-2">
+          <StatusBadge status={data.status} progress={data.progress} />
+        </div>
+
+        {data.status === "inprogress" && typeof data.progress === "number" && <TinyProgress value={data.progress} />}
       </div>
     </Link>
   );
 }
 
 function SkillRow({ item }: { item: SkillItem }) {
-  const icon = {
-    read: "📖",
-    listen: "🎧",
-    speak: "🗣️",
-    write: "✍️",
-  }[item.icon ?? "read"];
+  const icon = { read: "📖", listen: "🎧", speak: "🗣️", write: "✍️" }[item.icon ?? "read"];
+  const rightText =
+    item.status === "done" ? "Đã hoàn thành"
+    : item.status === "inprogress" ? `Đang học${typeof item.progress === "number" ? ` · ${Math.round(item.progress)}%` : ""}`
+    : "Bạn chưa làm bài này";
 
   return (
-    <Link
-      href={item.href}
-      className="flex items-center rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition"
-    >
-      <div className="bg-sky-100 px-3 py-2 text-[11px] font-semibold text-gray-700">
-        KĨ NĂNG
-      </div>
+    <Link href={item.href} className="flex items-center rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition">
+      <div className="bg-sky-100 px-3 py-2 text-[11px] font-semibold text-gray-700">KĨ NĂNG</div>
 
       <div className="flex items-center gap-3 px-4 py-3 flex-1">
         <div className="w-12 h-12 rounded-full bg-sky-200 flex items-center justify-center text-2xl">
           <span aria-hidden>{icon}</span>
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="text-gray-900">{item.title}</div>
-          <div className="mt-1 inline-block text-xs bg-gray-100 border rounded px-2.5 py-1 text-gray-600">
-            {item.tag}
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="inline-block text-xs bg-gray-100 border rounded px-2.5 py-1 text-gray-600">{item.tag}</span>
+            <StatusBadge status={item.status} progress={item.progress} />
           </div>
-          <div className="mt-1 text-xs text-gray-500 flex gap-4">
-            <span>👁️ 0</span>
-            <span>💬 0</span>
-          </div>
+          {item.status === "inprogress" && typeof item.progress === "number" && <TinyProgress value={item.progress} />}
         </div>
-        <span className="px-3 text-gray-400">›</span>
-      </div>
 
-      {/* Cột trạng thái bên phải (ẩn trên mobile) */}
-      <div className="hidden md:flex items-center px-4 text-sm text-gray-500">
-        Bạn chưa làm bài này
+        <span className="hidden md:block px-3 text-sm text-gray-500">{rightText}</span>
       </div>
     </Link>
   );
