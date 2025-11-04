@@ -36,7 +36,7 @@ export type SkillItem = {
 
 /** ===== Map icon mặc định theo TAG (không phân biệt dấu/hoa-thường) ===== */
 const ICON_MAP: Record<string, string> = {
-  "khoi dong": "/icons/warmup.png",
+  "khoi dong": "/icons/warmup1.png",
   "tu vung": "/icons/vocabulary.png",
   "ngu phap": "/icons/grammar.png",
   "phat am": "/icons/pronunciation.png",
