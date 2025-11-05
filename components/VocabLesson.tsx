@@ -1,145 +1,152 @@
-// components/VocabLesson.tsx
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-/* ========= TYPES ========= */
+/** ======= Types ======= */
 export type VocabItem = {
   id: string;
-  word: string;             // be admired for
-  ipa?: string;             // /ədˈmaɪəd/
-  pos?: string;             // v., n., adj...
-  vi: string;               // nghĩa tiếng Việt
-  exampleEn?: string;       // câu ví dụ EN
-  exampleVi?: string;       // câu ví dụ VI
-  imageUrl?: string;        // ảnh minh hoạ (tuỳ chọn)
+  word: string;            // be admired for
+  ipa?: string;            // /bi ədˈmaɪəd fɔːr/
+  pos?: string;            // v., n., adj...
+  vi: string;              // nghĩa tiếng Việt
+  exampleEn?: string;      // câu ví dụ tiếng Anh
+  exampleVi?: string;      // nghĩa câu ví dụ (tuỳ chọn)
+  /** ảnh minh hoạ: chỉ cần phần tên file, nó sẽ ghép với baseImagePath */
+  imageFile?: string;      // "be-admired-for.jpg"
 };
 
 type Props = {
   title?: string;
   items: VocabItem[];
-  ttsVoiceWord?: string;      // giọng đọc cho từ (mặc định en-US-Wavenet-D)
-  ttsVoiceExample?: string;   // giọng đọc cho câu ví dụ
+  /** ví dụ: "/english-12/unit/1/voca/"  -> ảnh là base + imageFile */
+  baseImagePath?: string;
 };
 
-/* ========= IndexedDB (cache offline) ========= */
+/** ======= IndexedDB cache (TTS) ======= */
 const DB_NAME = "vocab-tts-db";
 const DB_STORE = "audios";
-const DB_VERSION = 1;
+const DB_VER = 1;
 
-function openIDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open(DB_NAME, DB_VER);
+    rq.onupgradeneeded = () => {
+      const db = rq.result;
       if (!db.objectStoreNames.contains(DB_STORE)) {
         db.createObjectStore(DB_STORE, { keyPath: "id" }); // {id, blob}
       }
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
   });
 }
 async function idbGet(id: string): Promise<Blob | undefined> {
-  const db = await openIDB();
-  return new Promise((resolve, reject) => {
+  const db = await openDB();
+  return new Promise((res, rej) => {
     const tx = db.transaction(DB_STORE, "readonly");
     const st = tx.objectStore(DB_STORE);
     const rq = st.get(id);
-    rq.onsuccess = () => resolve((rq.result as {id:string;blob:Blob}|undefined)?.blob);
-    rq.onerror = () => reject(rq.error);
+    rq.onsuccess = () =>
+      res((rq.result as { id: string; blob: Blob } | undefined)?.blob);
+    rq.onerror = () => rej(rq.error);
   });
 }
-async function idbPut(id: string, blob: Blob): Promise<void> {
-  const db = await openIDB();
-  return new Promise((resolve, reject) => {
+async function idbPut(id: string, blob: Blob) {
+  const db = await openDB();
+  return new Promise<void>((res, rej) => {
     const tx = db.transaction(DB_STORE, "readwrite");
     const st = tx.objectStore(DB_STORE);
     const rq = st.put({ id, blob });
-    rq.onsuccess = () => resolve();
-    rq.onerror = () => reject(rq.error);
+    rq.onsuccess = () => res();
+    rq.onerror = () => rej(rq.error);
   });
 }
-async function sha256(text: string): Promise<string> {
+async function sha(text: string) {
   try {
-    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    const buf = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(text)
+    );
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   } catch {
-    // fallback djb2
+    // fallback
     let h = 5381;
-    for (let i=0;i<text.length;i++) h = (h*33) ^ text.charCodeAt(i);
-    return (h>>>0).toString(16);
+    for (let i = 0; i < text.length; i++) h = (h * 33) ^ text.charCodeAt(i);
+    return (h >>> 0).toString(16);
   }
 }
 
-/* ========= Helpers ========= */
-async function fetchTtsBlob(text: string): Promise<Blob> {
-  const res = await fetch("/api/tts", {
+/** ======= helpers ======= */
+async function fetchTTS(text: string): Promise<Blob> {
+  const r = await fetch("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, languageCode: "en-US" }),
   });
-  if (!res.ok) {
-    const msg = await res.text().catch(()=> "");
-    throw new Error(`TTS ${res.status}: ${msg}`);
-  }
-  const buf = await res.arrayBuffer();
+  if (!r.ok) throw new Error(await r.text());
+  const buf = await r.arrayBuffer();
   return new Blob([buf], { type: "audio/mpeg" });
 }
-
-function normalizeForCompare(s: string) {
+function normalize(s: string) {
   return s
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s']/gu, " ") // bỏ ký tự đặc biệt
+    .replace(/[^\p{L}\p{N}\s']/gu, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
-
 function levenshtein(a: string, b: string) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({length: m+1}, (_,i)=> Array(n+1).fill(0));
-  for (let i=0;i<=m;i++) dp[i][0] = i;
-  for (let j=0;j<=n;j++) dp[0][j] = j;
-  for (let i=1;i<=m;i++){
-    for (let j=1;j<=n;j++){
-      const cost = a[i-1] === b[j-1] ? 0 : 1;
+  const m = a.length,
+    n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       dp[i][j] = Math.min(
-        dp[i-1][j] + 1,
-        dp[i][j-1] + 1,
-        dp[i-1][j-1] + cost
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
       );
     }
   }
   return dp[m][n];
 }
-
-function scoreSimilarity(target: string, said: string) {
-  const A = normalizeForCompare(target);
-  const B = normalizeForCompare(said);
+function score(target: string, said: string) {
+  const A = normalize(target);
+  const B = normalize(said);
   if (!A || !B) return 0;
   const dist = levenshtein(A, B);
-  const maxLen = Math.max(A.length, B.length);
-  const sim = 1 - dist / maxLen;
+  const sim = 1 - dist / Math.max(A.length, B.length);
   return Math.max(0, Math.min(1, sim));
 }
 
-/* ========= Component ========= */
+/** ======= UI ======= */
 export default function VocabLesson({
   title = "Vocabulary",
   items,
+  baseImagePath = "",
 }: Props) {
-  /* audio / playback */
+  /* audio state */
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlMem = useRef<Map<string, string>>(new Map());
   const [isClient, setIsClient] = useState(false);
-  const urlCache = useRef<Map<string, string>>(new Map());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [playAll, setPlayAll] = useState(false);
 
-  /* mic / scoring */
-  const [practiceFor, setPracticeFor] = useState<string | null>(null);
-  const [lastSaid, setLastSaid] = useState<string>("");
-  const [lastScore, setLastScore] = useState<number | null>(null);
+  /* modal state (practice) */
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalFor, setModalFor] = useState<{ id: string; text: string; label: string } | null>(null);
+  const [recBlob, setRecBlob] = useState<Blob | null>(null);
+  const [recUrl, setRecUrl] = useState<string | null>(null);
+  const [recoding, setRecoding] = useState(false);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [said, setSaid] = useState<string>("");
+  const [percent, setPercent] = useState<number | null>(null);
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -147,222 +154,364 @@ export default function VocabLesson({
       setIsClient(true);
     }
     return () => {
-      urlCache.current.forEach(u => URL.revokeObjectURL(u));
-      urlCache.current.clear();
-      try { audioRef.current?.pause(); } catch {}
+      urlMem.current.forEach((u) => URL.revokeObjectURL(u));
+      urlMem.current.clear();
+      try {
+        audioRef.current?.pause();
+      } catch {}
     };
   }, []);
 
-  async function getAudioUrl(text: string): Promise<string> {
-    const id = await sha256(text);
-    const mem = urlCache.current.get(id);
+  async function getAudioUrl(text: string) {
+    const key = await sha(text);
+    const mem = urlMem.current.get(key);
     if (mem) return mem;
-    const fromIDB = await idbGet(id);
-    if (fromIDB) {
-      const url = URL.createObjectURL(fromIDB);
-      urlCache.current.set(id, url);
+    const cached = await idbGet(key);
+    if (cached) {
+      const url = URL.createObjectURL(cached);
+      urlMem.current.set(key, url);
       return url;
     }
-    const blob = await fetchTtsBlob(text);
-    await idbPut(id, blob);
+    const blob = await fetchTTS(text);
+    await idbPut(key, blob);
     const url = URL.createObjectURL(blob);
-    urlCache.current.set(id, url);
+    urlMem.current.set(key, url);
     return url;
   }
 
-  async function playText(text: string, id: string) {
+  async function play(text: string, id: string) {
     if (!isClient || !text) return;
     const a = audioRef.current ?? new Audio();
 
-    // nếu nhấn lại mục đang phát -> dừng
+    // toggle stop
     if (playingId === id && !a.paused) {
-      a.pause(); a.currentTime = 0; setPlayingId(null); setPlayAll(false); return;
+      a.pause();
+      a.currentTime = 0;
+      setPlayingId(null);
+      return;
     }
 
     try {
       setBusyId(id);
-      if (!a.paused) { a.pause(); a.currentTime = 0; }
+      if (!a.paused) {
+        a.pause();
+        a.currentTime = 0;
+      }
       const url = await getAudioUrl(text);
       a.src = url;
       audioRef.current = a;
       setPlayingId(id);
-      // autoplay policy workaround
+
+      // autoplay-safe resume
       try {
-        const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+        const AC: any =
+          (window as any).AudioContext || (window as any).webkitAudioContext;
         if (AC) {
           const ctx = ((window as any).__vocabCtx ||= new AC());
           if (ctx.state === "suspended") await ctx.resume();
         }
       } catch {}
+
       await a.play();
-      a.onended = () => {
-        setPlayingId(null);
-        if (playAll) playNext(id);
-      };
+      a.onended = () => setPlayingId(null);
     } catch (e) {
-      console.error("[VocabLesson] play error", e);
+      console.error("[vocab] play error", e);
       setPlayingId(null);
-      setPlayAll(false);
     } finally {
       setBusyId(null);
     }
   }
 
-  function playNext(currentId: string) {
-    const idx = items.findIndex(i => i.id === currentId);
-    const next = items[idx + 1];
-    if (!next) { setPlayAll(false); return; }
-    playText(next.word, next.id); // mặc định phát "từ" khi Play All
+  /** mở modal luyện nói cho "từ" hoặc "câu ví dụ" */
+  async function openPractice(id: string, text: string, label: string) {
+    setModalFor({ id, text, label });
+    setRecBlob(null);
+    setRecUrl(null);
+    setSaid("");
+    setPercent(null);
+    setModalOpen(true);
+    // chuẩn bị url âm mẫu (model)
+    try {
+      const url = await getAudioUrl(text);
+      setModelUrl(url);
+    } catch {
+      setModelUrl(null);
+    }
   }
 
-  function onPlayAll() {
-    if (!items.length) return;
-    setPlayAll(true);
-    playText(items[0].word, items[0].id);
+  async function startRecord() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const m = new MediaRecorder(stream);
+    mediaRef.current = m;
+    chunksRef.current = [];
+    m.ondataavailable = (e) => e.data && chunksRef.current.push(e.data);
+    m.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      setRecBlob(blob);
+      const url = URL.createObjectURL(blob);
+      setRecUrl(url);
+      // tắt mic
+      stream.getTracks().forEach((t) => t.stop());
+    };
+    m.start();
+    setRecoding(true);
   }
-  function onStopAll() {
-    const a = audioRef.current;
-    if (a && !a.paused) { a.pause(); a.currentTime = 0; }
-    setPlayingId(null); setPlayAll(false);
+  function stopRecord() {
+    mediaRef.current?.stop();
+    setRecoding(false);
   }
 
-  async function practiceSpeak(target: string, id: string) {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  /** chấm điểm bằng Web Speech → transcript rồi so với target */
+  async function scoreMyPronunciation() {
+    const target = modalFor?.text || "";
+    const SR: any =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      alert("Trình duyệt không hỗ trợ microphone.");
+      alert("Trình duyệt không hỗ trợ Speech Recognition để chấm điểm.");
       return;
     }
     const r = new SR();
     r.lang = "en-US";
     r.interimResults = false;
     r.maxAlternatives = 1;
-
-    setPracticeFor(id);
-    setLastSaid("");
-    setLastScore(null);
-
     r.onresult = (e: any) => {
-      const said = e.results[0][0].transcript || "";
-      setLastSaid(said);
-      const score = Math.round(scoreSimilarity(target, said) * 100);
-      setLastScore(score);
+      const saidText = e.results[0][0].transcript || "";
+      setSaid(saidText);
+      const pct = Math.round(score(target, saidText) * 100);
+      setPercent(pct);
     };
-    r.onerror = () => setPracticeFor(null);
-    r.onend = () => {}; // giữ kết quả hiển thị
-
+    r.onerror = () => {};
+    r.onend = () => {};
     r.start();
   }
 
-  const youWillHear = useMemo(() => new Set(items.map(i => i.id)), [items]);
+  function downloadBlob(blob: Blob | null, filename: string) {
+    if (!blob) return;
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(u);
+  }
 
+  /* ===== render ===== */
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <h1 className="text-xl font-semibold text-center">{title}</h1>
+      <h1 className="text-xl font-semibold">{title}</h1>
 
-      <div className="flex justify-end gap-2">
-        {!playAll ? (
-          <button
-            onClick={onPlayAll}
-            className="rounded-lg border px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200"
-          >▶ Play All</button>
-        ) : (
-          <button
-            onClick={onStopAll}
-            className="rounded-lg border px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200"
-          >⏹ Stop All</button>
-        )}
-      </div>
+      {items.map((it) => {
+        const imgSrc =
+          it.imageFile && baseImagePath
+            ? `${baseImagePath}${it.imageFile}`
+            : it.imageFile || "";
 
-      <div className="space-y-4">
-        {items.map((it) => {
-          const isPlaying = playingId === it.id;
-          const isBusy = busyId === it.id;
-          const practicing = practiceFor === it.id;
+        const isBusy = busyId === it.id;
+        const isPlaying = playingId === it.id;
 
-          return (
-            <div
-              key={it.id}
-              className={`p-4 border rounded-xl bg-white flex flex-col gap-3 transition ${
-                isPlaying ? "ring-2 ring-blue-500 bg-blue-50" : ""
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                {it.imageUrl && (
+        return (
+          <div
+            key={it.id}
+            className={`p-4 border rounded-xl bg-white transition ${isPlaying ? "ring-2 ring-blue-500 bg-blue-50" : ""}`}
+          >
+            <div className="grid grid-cols-12 gap-4">
+              {/* Ảnh minh hoạ (theo yêu cầu: góc phải) */}
+              <div className="order-2 col-span-12 md:col-span-3 md:order-2 flex justify-end">
+                {imgSrc ? (
                   <img
-                    src={it.imageUrl}
+                    src={imgSrc}
                     alt={it.word}
-                    className="w-20 h-20 object-cover rounded-md border"
+                    className="w-28 h-28 object-cover rounded-md border"
                     loading="lazy"
                   />
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-lg font-semibold">{it.word}</span>
-                    {it.pos && <span className="px-2 py-0.5 text-xs rounded bg-gray-100 border">{it.pos}</span>}
-                    {it.ipa && <span className="text-sm text-gray-600">{it.ipa}</span>}
-                    <button
-                      onClick={() => playText(it.word, it.id)}
-                      disabled={!isClient || isBusy}
-                      className="ml-auto rounded-full border px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-60"
-                      title={isPlaying ? "Stop" : "Play"}
-                    >
-                      {isBusy ? "…" : isPlaying ? "⏸ Stop" : "🔊 Play"}
-                    </button>
+                ) : (
+                  <div className="w-28 h-28 rounded-md border grid place-items-center text-xs text-gray-400">
+                    No image
                   </div>
-                  <div className="text-gray-700 mt-1">{it.vi}</div>
-                </div>
+                )}
               </div>
 
-              {(it.exampleEn || it.exampleVi) && (
-                <div className="rounded-md bg-gray-50 border p-3">
-                  {it.exampleEn && (
-                    <div className="flex items-center gap-2">
-                      <span className="flex-1">{it.exampleEn}</span>
-                      <button
-                        onClick={() => playText(it.exampleEn!, it.id + ":ex")}
-                        disabled={!isClient}
-                        className="rounded-full border px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200"
-                        title="Play example"
-                      >
-                        🔊
-                      </button>
-                    </div>
-                  )}
-                  {it.exampleVi && (
-                    <div className="text-gray-600 mt-1">{it.exampleVi}</div>
+              {/* Nội dung từ vựng */}
+              <div className="order-1 col-span-12 md:col-span-9 md:order-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-semibold text-[var(--navy,#0f172a)]">
+                    {it.word}
+                  </span>
+
+                  {/* nút loa / mic cho TỪ */}
+                  <button
+                    onClick={() => play(it.word, it.id)}
+                    disabled={!isClient || isBusy}
+                    className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-60"
+                    title="Nghe phát âm mẫu"
+                  >
+                    🔊
+                  </button>
+                  <button
+                    onClick={() => openPractice(it.id, it.word, "Từ vựng")}
+                    className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                    title="Luyện nói"
+                  >
+                    🎤
+                  </button>
+                </div>
+
+                <div className="mt-1 text-sm text-gray-700">
+                  {it.ipa && <span className="mr-3">{it.ipa}</span>}
+                  {it.pos && (
+                    <span className="px-2 py-0.5 text-xs rounded bg-gray-100 border">
+                      {it.pos}
+                    </span>
                   )}
                 </div>
-              )}
 
-              {/* Practice (mic) */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => practiceSpeak(it.word, it.id)}
-                  className={`rounded-full px-3 py-1 text-sm border ${practicing ? "bg-red-50 border-red-300" : "bg-gray-100 hover:bg-gray-200"}`}
-                  title="Nhấn để luyện nói"
-                >
-                  {practicing ? "🎙️ Đang ghi..." : "🎤 Ghi âm lại"}
-                </button>
+                <div className="mt-1">{it.vi}</div>
 
-                {lastScore !== null && practiceFor === it.id && (
-                  <div className="ml-2 text-sm">
-                    <span className="font-semibold">{lastScore}%</span>{" "}
-                    {lastScore >= 80 ? "Tốt lắm!" : "Bạn hãy làm lại để đạt điểm cao hơn nhé!"}
-                    {lastSaid && (
-                      <span className="ml-2 text-gray-500">({lastSaid})</span>
-                    )}
+                {(it.exampleEn || it.exampleVi) && (
+                  <div className="mt-3 rounded-md bg-gray-50 border p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        {it.exampleEn && <div className="font-medium">{it.exampleEn}</div>}
+                        {it.exampleVi && (
+                          <div className="text-gray-600 mt-1">{it.exampleVi}</div>
+                        )}
+                      </div>
+                      {/* nút loa / mic cho CÂU VÍ DỤ */}
+                      {it.exampleEn && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => play(it.exampleEn!, it.id + ":ex")}
+                            className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                            title="Nghe câu ví dụ"
+                          >
+                            🔊
+                          </button>
+                          <button
+                            onClick={() =>
+                              openPractice(it.id + ":ex", it.exampleEn!, "Câu ví dụ")
+                            }
+                            className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                            title="Luyện nói câu ví dụ"
+                          >
+                            🎤
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
 
-      {/* chú thích nhỏ */}
-      <p className="text-xs text-gray-500">
-        * TTS dùng Google Cloud (cache offline). Luyện nói dùng Web Speech API (độ chính xác phụ thuộc trình duyệt).
-      </p>
+      {/* ===== Modal luyện nói ===== */}
+      {modalOpen && modalFor && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div className="font-semibold">
+                Luyện nói – {modalFor.label}: <span className="text-[var(--navy,#0f172a)]">{modalFor.text}</span>
+              </div>
+              <button
+                className="rounded-md border px-3 py-1 text-sm bg-gray-50 hover:bg-gray-100"
+                onClick={() => setModalOpen(false)}
+              >
+                ✖
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Hướng dẫn */}
+              <div className="text-sm text-gray-600">
+                Hãy nhấn <b>Ghi âm</b> để đọc theo. Bạn có thể <b>Nghe mẫu</b>, <b>Nghe lại ghi âm</b>,
+                <b> Tải ghi âm</b>, và <b>Chấm điểm</b> (so khớp với văn bản mục tiêu).
+              </div>
+
+              {/* Nút âm mẫu (model) */}
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const a = new Audio(modelUrl || (await getAudioUrl(modalFor.text)));
+                    try {
+                      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+                      if (AC) {
+                        const ctx = ((window as any).__vocabCtx2 ||= new AC());
+                        if (ctx.state === "suspended") await ctx.resume();
+                      }
+                    } catch {}
+                    a.play();
+                  }}
+                  className="rounded-md border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
+                >
+                  🔊 Nghe mẫu
+                </button>
+
+                {!recoding ? (
+                  <button
+                    onClick={startRecord}
+                    className="rounded-md border px-3 py-2 text-sm bg-red-50 hover:bg-red-100 border-red-200"
+                  >
+                    🎤 Ghi âm
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopRecord}
+                    className="rounded-md border px-3 py-2 text-sm bg-gray-800 text-white"
+                  >
+                    ⏹ Dừng ghi
+                  </button>
+                )}
+
+                <button
+                  disabled={!recUrl}
+                  onClick={() => {
+                    if (recUrl) new Audio(recUrl).play();
+                  }}
+                  className="rounded-md border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                >
+                  ▶ Nghe lại ghi âm
+                </button>
+
+                <button
+                  disabled={!recBlob}
+                  onClick={() =>
+                    downloadBlob(recBlob, `practice-${modalFor.id.replace(/[:]/g,"-")}.webm`)
+                  }
+                  className="rounded-md border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                >
+                  ⬇ Tải ghi âm
+                </button>
+
+                <button
+                  onClick={scoreMyPronunciation}
+                  className="rounded-md border px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border-blue-200"
+                >
+                  ✅ Chấm điểm
+                </button>
+              </div>
+
+              {/* Kết quả chấm điểm */}
+              {percent !== null && (
+                <div className="rounded-lg border bg-blue-50 px-4 py-3">
+                  <div className="text-sm">
+                    <span className="font-semibold">Bạn đạt: {percent}%</span>{" "}
+                    {percent >= 80 ? "Tuyệt vời! Tiếp tục phát huy!" : "Bạn làm khá tốt. Cố gắng hơn nữa nhé!"}
+                  </div>
+                  {said && (
+                    <div className="mt-1 text-xs text-gray-600">
+                      Bạn nói: <i>"{said}"</i>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
