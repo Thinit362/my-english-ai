@@ -6,7 +6,7 @@ export const metadata = {
 
 const items: VocabItem[] = [
   {
-    id: "admired-for",
+    id: "be-admired-for",
     word: "be admired for",
     ipa: "/bi ədˈmaɪəd fɔːr/",
     pos: "v. phrase",
@@ -18,7 +18,7 @@ const items: VocabItem[] = [
     imageFile: "be-admired-for.jpg",
   },
   {
-    id: "adopted-by",
+    id: "be-adopted-by",
     word: "be adopted by",
     ipa: "/bi əˈdɒptɪd baɪ/",
     pos: "v. phrase",
@@ -30,7 +30,7 @@ const items: VocabItem[] = [
     imageFile: "be-adopted-by.jpg",
   },
   {
-    id: "accessible-to",
+    id: "be-accessible-to",
     word: "be accessible to",
     ipa: "/bi əkˈsesəbl tuː/",
     pos: "adj. phrase",
