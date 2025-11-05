@@ -299,18 +299,19 @@ export default function VocabLesson({
   }
 
   /** style helpers for % block */
-  function pctColor(p?: number | null) {
-    if (p === null) return "text-gray-500";
-    if (p >= 90) return "text-green-600";
-    if (p >= 70) return "text-amber-500";
-    return "text-red-600";
-  }
-  function messageFor(p?: number | null) {
-    if (p === null) return "Nhấn Chấm điểm rồi đọc lại câu ở trên để hệ thống đánh giá.";
-    if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
-    if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
-    return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
-  }
+  function pctColor(p: number | null | undefined) {
+  if (p == null) return "text-gray-500";      // bao phủ cả null và undefined
+  const v = Number(p);                         // narrow thành number
+  if (v >= 90) return "text-green-600";
+  if (v >= 70) return "text-amber-500";
+  return "text-red-600";
+}
+  function messageFor(p: number | null | undefined) {
+  if (p == null) return "Nhấn Chấm điểm rồi đọc lại câu ở trên để hệ thống đánh giá.";
+  if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
+  if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
+  return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
+}
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
