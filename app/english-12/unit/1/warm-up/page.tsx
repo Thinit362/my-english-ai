@@ -207,7 +207,7 @@ export default function WarmupLesson({ title = "Warm‑up", videoId, lines }: Wa
   );
 }
 
-// ============ Integration for Next.js (Gemini 2.5‑Flash) ============
+// ========= Integration for Next.js (Gemini 2.5‑Flash) =========
 export async function geminiGenerate({ prompt, system, history }: { prompt: string; system?: string; history?: Array<{role: 'user'|'model'; parts: string}> }) {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
