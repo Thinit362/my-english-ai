@@ -1,5 +1,5 @@
 // app/english-12/unit/1/warm-up/page.tsx
-import WarmupDialogue, { type Line } from "@/app/components/WarmupLesson";
+import WarmupDialogue, { type Line } from "@/components/WarmupLesson";
 
 export const metadata = {
   title: "English 12 – Unit 1 – Warm-up: The diary of Dang Thuy Tram",
