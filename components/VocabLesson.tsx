@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-/** ======= Types ======= */
+/** ===== Types ===== */
 export type VocabItem = {
   id: string;
   word: string;
@@ -17,10 +17,10 @@ export type VocabItem = {
 type Props = {
   title?: string;
   items: VocabItem[];
-  baseImagePath?: string; // ví dụ "/english-12/unit/1/voca/"
+  baseImagePath?: string;
 };
 
-/** ======= IndexedDB cache (TTS) ======= */
+/** ===== IndexedDB cache (TTS) ===== */
 const DB_NAME = "vocab-tts-db";
 const DB_STORE = "audios";
 const DB_VER = 1;
@@ -31,7 +31,7 @@ function openDB(): Promise<IDBDatabase> {
     rq.onupgradeneeded = () => {
       const db = rq.result;
       if (!db.objectStoreNames.contains(DB_STORE)) {
-        db.createObjectStore(DB_STORE, { keyPath: "id" }); // {id, blob}
+        db.createObjectStore(DB_STORE, { keyPath: "id" });
       }
     };
     rq.onsuccess = () => res(rq.result);
@@ -69,13 +69,14 @@ async function sha(text: string) {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
   } catch {
+    // fallback
     let h = 5381;
     for (let i = 0; i < text.length; i++) h = (h * 33) ^ text.charCodeAt(i);
     return (h >>> 0).toString(16);
   }
 }
 
-/** ======= helpers ======= */
+/** ===== helpers ===== */
 async function fetchTTS(text: string, voice: string): Promise<Blob> {
   const r = await fetch("/api/tts", {
     method: "POST",
@@ -83,7 +84,7 @@ async function fetchTTS(text: string, voice: string): Promise<Blob> {
     body: JSON.stringify({
       text,
       languageCode: "en-US",
-      voice, // ví dụ: "en-US-Neural2-D"
+      voice, // Neural2-D/F mặc định
       rate: 1.0,
       pitch: 0,
     }),
@@ -92,6 +93,7 @@ async function fetchTTS(text: string, voice: string): Promise<Blob> {
   const buf = await r.arrayBuffer();
   return new Blob([buf], { type: "audio/mpeg" });
 }
+
 function normalize(s: string) {
   return s
     .toLowerCase()
@@ -126,34 +128,36 @@ function score(target: string, said: string) {
   return Math.max(0, Math.min(1, sim));
 }
 
-/** ======= Component ======= */
+/** ===== Component ===== */
 export default function VocabLesson({
   title = "Vocabulary",
   items,
   baseImagePath = "",
 }: Props) {
-  /** audio state */
+  // Audio
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlMem = useRef<Map<string, string>>(new Map());
   const [isClient, setIsClient] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  /** modal state (practice) */
+  // Practice popup state
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalFor, setModalFor] = useState<{ id: string; text: string; label: string } | null>(null);
+  const [modalFor, setModalFor] = useState<{ id: string; text: string; label: string; voice: string } | null>(null);
+
   const [recUrl, setRecUrl] = useState<string | null>(null);
   const [recoding, setRecoding] = useState(false);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
   const [said, setSaid] = useState<string>("");
   const [percent, setPercent] = useState<number | null>(null);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
-  const [listening, setListening] = useState(false); // trạng thái chấm điểm (SR)
+  const [listening, setListening] = useState(false);
 
-  // giọng chuẩn: Neural2 (rõ, tự nhiên)
-  const VOICE_WORD = "en-US-Neural2-D";
-  const VOICE_EXAMPLE = "en-US-Neural2-F";
+  // voices
+  const VOICE_WORD = "en-US-Neural2-D";     // nam, rõ, chuẩn
+  const VOICE_EXAMPLE = "en-US-Neural2-F";  // nữ, tự nhiên
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -163,9 +167,7 @@ export default function VocabLesson({
     return () => {
       urlMem.current.forEach((u) => URL.revokeObjectURL(u));
       urlMem.current.clear();
-      try {
-        audioRef.current?.pause();
-      } catch {}
+      try { audioRef.current?.pause(); } catch {}
     };
   }, []);
 
@@ -228,15 +230,13 @@ export default function VocabLesson({
     }
   }
 
-  /** mở modal luyện nói cho "từ" hoặc "câu ví dụ" */
   async function openPractice(id: string, text: string, label: string, voice: string) {
-    setModalFor({ id, text, label });
+    setModalFor({ id, text, label, voice });
     setRecUrl(null);
     setSaid("");
     setPercent(null);
-    setModalOpen(true);
     setListening(false);
-    // âm mẫu
+    setModalOpen(true);
     try {
       const url = await getAudioUrl(text, voice);
       setModelUrl(url);
@@ -245,7 +245,6 @@ export default function VocabLesson({
     }
   }
 
-  /** Record local để nghe lại (không dùng để chấm điểm) */
   async function startRecord() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const m = new MediaRecorder(stream);
@@ -254,9 +253,7 @@ export default function VocabLesson({
     m.ondataavailable = (e) => e.data && chunksRef.current.push(e.data);
     m.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      const url = URL.createObjectURL(blob);
-      setRecUrl(url);
-      // tắt mic
+      setRecUrl(URL.createObjectURL(blob));
       stream.getTracks().forEach((t) => t.stop());
     };
     m.start();
@@ -267,13 +264,13 @@ export default function VocabLesson({
     setRecoding(false);
   }
 
-  /** Chấm điểm (SR) – nghe trực tiếp người học đọc câu mục tiêu */
   async function scoreMyPronunciation() {
-    const target = modalFor?.text || "";
+    if (!modalFor) return;
+    const target = modalFor.text;
     const SR: any =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      alert("Trình duyệt không hỗ trợ Speech Recognition để chấm điểm.");
+      alert("Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói.");
       return;
     }
     const r = new SR();
@@ -293,9 +290,26 @@ export default function VocabLesson({
       setListening(false);
     };
     r.onerror = () => setListening(false);
-    r.onend = () => setListening(false);
+    r.onend = () => {
+      // nếu end mà chưa có result (người học chưa nói) -> giữ trạng thái neutral
+      if (percent === null) setListening(false);
+    };
 
     r.start();
+  }
+
+  /** style helpers for % block */
+  function pctColor(p?: number | null) {
+    if (p === null) return "text-gray-500";
+    if (p >= 90) return "text-green-600";
+    if (p >= 70) return "text-amber-500";
+    return "text-red-600";
+  }
+  function messageFor(p?: number | null) {
+    if (p === null) return "Nhấn Chấm điểm rồi đọc lại câu ở trên để hệ thống đánh giá.";
+    if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
+    if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
+    return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
   }
 
   return (
@@ -407,62 +421,56 @@ export default function VocabLesson({
         );
       })}
 
-      {/* ===== Modal luyện nói ===== */}
+      {/* ===== Popup luyện nói (styling như mẫu) ===== */}
       {modalOpen && modalFor && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border">
+          <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border overflow-hidden">
+            {/* Header + Close */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
                 Luyện nói – {modalFor.label}:{" "}
                 <span className="text-[var(--navy,#0f172a)]">{modalFor.text}</span>
               </div>
               <button
-                className="rounded-md border px-3 py-1 text-sm bg-gray-50 hover:bg-gray-100"
+                className="rounded-full border w-8 h-8 grid place-items-center bg-gray-50 hover:bg-gray-100"
                 onClick={() => setModalOpen(false)}
+                aria-label="Close"
               >
                 ✖
               </button>
             </div>
 
-            <div className="p-4 space-y-3">
-              {/* điểm / trạng thái */}
-              {percent !== null ? (
-                <div className="rounded-lg border bg-blue-50 px-4 py-3">
-                  <div className="text-lg font-semibold">
-                    Bạn đạt{" "}
-                    <span className="text-green-600">
-                      {percent}%
-                    </span>
-                  </div>
-                  <div className="text-sm mt-1">
-                    {percent >= 90
-                      ? "Bạn rất xuất sắc. Cố gắng phát huy nhé!"
-                      : percent >= 70
-                      ? "Bạn làm khá tốt. Cố gắng hơn nữa nhé!"
-                      : "Bạn hãy luyện lại để đạt điểm cao hơn nhé!"}
-                  </div>
-                  {said && (
-                    <div className="mt-1 text-xs text-gray-600">
-                      Bạn nói: <i>"{said}"</i>
+            {/* Khối trên (trắng): % + câu mục tiêu */}
+            <div className="px-4 pt-4">
+              <div className="rounded-lg border bg-white overflow-hidden">
+                <div className="flex">
+                  <div className="w-32 min-w-[8rem] bg-gray-50 border-r p-3">
+                    <div className="text-xs text-gray-500">Bạn đạt</div>
+                    <div className={`mt-1 text-3xl font-extrabold leading-none ${pctColor(percent)}`}>
+                      {percent === null ? "—" : `${percent}%`}
                     </div>
-                  )}
+                  </div>
+                  <div className="flex-1 p-3 text-sm">
+                    {modalFor.text}
+                  </div>
                 </div>
-              ) : listening ? (
-                <div className="rounded-lg border bg-yellow-50 px-4 py-3 text-sm">
-                  🎙️ <b>Đang lắng nghe…</b> Hãy đọc lại chính xác câu ở trên để chấm điểm.
-                </div>
-              ) : (
-                <div className="rounded-lg border bg-gray-50 px-4 py-3 text-sm">
-                  Nhấn <b>Ghi âm</b> để luyện nói và <b>Chấm điểm</b> để hệ thống đánh giá mức độ chính xác.
-                </div>
-              )}
+              </div>
+            </div>
 
-              {/* điều khiển */}
-              <div className="flex flex-wrap gap-2">
+            {/* Khối dưới (xanh) + nút */}
+            <div className="mt-3 bg-[#0B5ED7] text-white px-4 py-4">
+              <div className="text-sm font-semibold text-center">
+                {listening ? "🎙️ Đang lắng nghe… Hãy đọc lại chính xác câu ở trên." : messageFor(percent)}
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2 justify-center">
                 <button
                   onClick={async () => {
+                    if (!modelUrl) {
+                      const u = await getAudioUrl(modalFor.text, modalFor.voice);
+                      setModelUrl(u);
+                    }
                     const a = new Audio(modelUrl || "");
-                    if (!modelUrl) return;
                     try {
                       const AC: any =
                         (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -473,7 +481,7 @@ export default function VocabLesson({
                     } catch {}
                     a.play();
                   }}
-                  className="rounded-md border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
+                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   🔊 Nghe mẫu
                 </button>
@@ -481,14 +489,14 @@ export default function VocabLesson({
                 {!recoding ? (
                   <button
                     onClick={startRecord}
-                    className="rounded-md border px-3 py-2 text-sm bg-red-50 hover:bg-red-100 border-red-200"
+                    className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
                   >
-                    🎤 Ghi âm
+                    🎤 Ghi âm lại
                   </button>
                 ) : (
                   <button
                     onClick={stopRecord}
-                    className="rounded-md border px-3 py-2 text-sm bg-gray-800 text-white"
+                    className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
                   >
                     ⏹ Dừng ghi
                   </button>
@@ -496,17 +504,15 @@ export default function VocabLesson({
 
                 <button
                   disabled={!recUrl}
-                  onClick={() => {
-                    if (recUrl) new Audio(recUrl).play();
-                  }}
-                  className="rounded-md border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                  onClick={() => recUrl && new Audio(recUrl).play()}
+                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
                 >
                   ▶ Nghe lại bài ghi âm
                 </button>
 
                 <button
                   onClick={scoreMyPronunciation}
-                  className="rounded-md border px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border-blue-200"
+                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   ✅ Chấm điểm
                 </button>
