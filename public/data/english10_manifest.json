@@ -746,7 +746,8 @@
     {
       "id": "eng10_u8",
       "index": 8,
-      "page_range": "NEW WAYS TO LEARN",
+       "title": "NEW WAYS TO LEARN",
+      "page_range": "",
       "summary": "",
       "lessons": [
         {
