@@ -48,7 +48,7 @@ export default function Page() {
       <VocabLesson
         title="Unit 1 – Từ vựng"
         items={items}
-        baseImagePath="/english-12/unit/1/voca/"
+        baseImagePath="/images/vocab/unit1/"
       />
     </div>
   );
