@@ -69,7 +69,6 @@ async function sha(text: string) {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
   } catch {
-    // fallback
     let h = 5381;
     for (let i = 0; i < text.length; i++) h = (h * 33) ^ text.charCodeAt(i);
     return (h >>> 0).toString(16);
@@ -84,7 +83,7 @@ async function fetchTTS(text: string, voice: string): Promise<Blob> {
     body: JSON.stringify({
       text,
       languageCode: "en-US",
-      voice, // Neural2-D/F mặc định
+      voice, // Neural2-D/F
       rate: 1.0,
       pitch: 0,
     }),
@@ -93,7 +92,6 @@ async function fetchTTS(text: string, voice: string): Promise<Blob> {
   const buf = await r.arrayBuffer();
   return new Blob([buf], { type: "audio/mpeg" });
 }
-
 function normalize(s: string) {
   return s
     .toLowerCase()
@@ -151,12 +149,14 @@ export default function VocabLesson({
   const chunksRef = useRef<Blob[]>([]);
 
   const [said, setSaid] = useState<string>("");
-  const [percent, setPercent] = useState<number | null>(null);
+  const [percent, setPercent] = useState<number | null>(0);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
-  const [listening, setListening] = useState(false);
+
+  // SpeechRecognition instance (giữ lại để stop được)
+  const srRef = useRef<any>(null);
 
   // voices
-  const VOICE_WORD = "en-US-Neural2-D";     // nam, rõ, chuẩn
+  const VOICE_WORD = "en-US-Neural2-D";     // nam, rõ
   const VOICE_EXAMPLE = "en-US-Neural2-F";  // nữ, tự nhiên
 
   useEffect(() => {
@@ -165,9 +165,11 @@ export default function VocabLesson({
       setIsClient(true);
     }
     return () => {
+      try { audioRef.current?.pause(); } catch {}
       urlMem.current.forEach((u) => URL.revokeObjectURL(u));
       urlMem.current.clear();
-      try { audioRef.current?.pause(); } catch {}
+      // stop SR nếu còn
+      try { srRef.current?.stop?.(); } catch {}
     };
   }, []);
 
@@ -234,9 +236,9 @@ export default function VocabLesson({
     setModalFor({ id, text, label, voice });
     setRecUrl(null);
     setSaid("");
-    setPercent(null);
-    setListening(false);
+    setPercent(0);      // luôn hiển thị 0% khi mở
     setModalOpen(true);
+    // âm mẫu
     try {
       const url = await getAudioUrl(text, voice);
       setModelUrl(url);
@@ -245,7 +247,47 @@ export default function VocabLesson({
     }
   }
 
+  /** ===== Recording + Auto scoring ===== */
+  function setupSR(lang = "en-US") {
+    const SR: any =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = lang;
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    return r;
+  }
+
   async function startRecord() {
+    if (!modalFor) return;
+    // reset kết quả
+    setSaid("");
+    setPercent(0);
+
+    // SR
+    const r = setupSR("en-US");
+    if (!r) {
+      alert("Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói (SpeechRecognition). Vui lòng dùng Chrome/Edge.");
+    } else {
+      srRef.current = r;
+      r.onresult = (e: any) => {
+        const saidText = e.results[0][0].transcript || "";
+        setSaid(saidText);
+      };
+      r.onerror = () => {/* im lặng */};
+      r.onend = () => {
+        // khi SR tự end, nếu đã có bản ghi audio, chấm điểm ngay
+        if (modalFor && said !== undefined) {
+          const raw = Math.round(score(modalFor.text, said) * 100);
+          const pct = Math.max(0, Math.min(100, raw));
+          setPercent(pct);
+        }
+      };
+      try { r.start(); } catch {}
+    }
+
+    // ghi âm local để nghe lại
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const m = new MediaRecorder(stream);
     mediaRef.current = m;
@@ -255,63 +297,38 @@ export default function VocabLesson({
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       setRecUrl(URL.createObjectURL(blob));
       stream.getTracks().forEach((t) => t.stop());
+
+      // Auto score tại thời điểm dừng (nếu SR có kết quả -> said đã được set)
+      if (modalFor) {
+        const raw = Math.round(score(modalFor.text, said) * 100);
+        const pct = Math.max(0, Math.min(100, raw));
+        setPercent(pct);
+      }
+      try { srRef.current?.stop?.(); } catch {}
     };
     m.start();
     setRecoding(true);
   }
+
   function stopRecord() {
     mediaRef.current?.stop();
     setRecoding(false);
   }
 
-  async function scoreMyPronunciation() {
-    if (!modalFor) return;
-    const target = modalFor.text;
-    const SR: any =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      alert("Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói.");
-      return;
-    }
-    const r = new SR();
-    r.lang = "en-US";
-    r.interimResults = false;
-    r.maxAlternatives = 1;
-
-    setListening(true);
-    setSaid("");
-    setPercent(null);
-
-    r.onresult = (e: any) => {
-      const saidText = e.results[0][0].transcript || "";
-      setSaid(saidText);
-      const pct = Math.round(score(target, saidText) * 100);
-      setPercent(pct);
-      setListening(false);
-    };
-    r.onerror = () => setListening(false);
-    r.onend = () => {
-      // nếu end mà chưa có result (người học chưa nói) -> giữ trạng thái neutral
-      if (percent === null) setListening(false);
-    };
-
-    r.start();
-  }
-
   /** style helpers for % block */
   function pctColor(p: number | null | undefined) {
-  if (p == null) return "text-gray-500";      // bao phủ cả null và undefined
-  const v = Number(p);                         // narrow thành number
-  if (v >= 90) return "text-green-600";
-  if (v >= 70) return "text-amber-500";
-  return "text-red-600";
-}
+    if (p == null) return "text-gray-500";
+    const v = Number(p);
+    if (v >= 90) return "text-green-600";
+    if (v >= 70) return "text-amber-500";
+    return "text-red-600";
+  }
   function messageFor(p: number | null | undefined) {
-  if (p == null) return "Nhấn Chấm điểm rồi đọc lại câu ở trên để hệ thống đánh giá.";
-  if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
-  if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
-  return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
-}
+    if (p == null) return "Nhấn Ghi âm rồi đọc lại câu ở trên để luyện và được hệ thống chấm điểm.";
+    if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
+    if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
+    return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
@@ -422,7 +439,7 @@ export default function VocabLesson({
         );
       })}
 
-      {/* ===== Popup luyện nói (styling như mẫu) ===== */}
+      {/* ===== Popup luyện nói (auto chấm điểm) ===== */}
       {modalOpen && modalFor && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
           <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border overflow-hidden">
@@ -434,7 +451,11 @@ export default function VocabLesson({
               </div>
               <button
                 className="rounded-full border w-8 h-8 grid place-items-center bg-gray-50 hover:bg-gray-100"
-                onClick={() => setModalOpen(false)}
+                onClick={() => {
+                  setModalOpen(false);
+                  try { srRef.current?.stop?.(); } catch {}
+                  if (recoding) stopRecord();
+                }}
                 aria-label="Close"
               >
                 ✖
@@ -447,8 +468,8 @@ export default function VocabLesson({
                 <div className="flex">
                   <div className="w-32 min-w-[8rem] bg-gray-50 border-r p-3">
                     <div className="text-xs text-gray-500">Bạn đạt</div>
-                    <div className={`mt-1 text-3xl font-extrabold leading-none ${pctColor(percent)}`}>
-                      {percent === null ? "—" : `${percent}%`}
+                    <div className={`mt-1 text-4xl font-extrabold leading-none ${pctColor(percent)}`}>
+                      {(percent ?? 0).toFixed(0)}%
                     </div>
                   </div>
                   <div className="flex-1 p-3 text-sm">
@@ -461,7 +482,7 @@ export default function VocabLesson({
             {/* Khối dưới (xanh) + nút */}
             <div className="mt-3 bg-[#0B5ED7] text-white px-4 py-4">
               <div className="text-sm font-semibold text-center">
-                {listening ? "🎙️ Đang lắng nghe… Hãy đọc lại chính xác câu ở trên." : messageFor(percent)}
+                {messageFor(percent)}
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2 justify-center">
@@ -491,8 +512,9 @@ export default function VocabLesson({
                   <button
                     onClick={startRecord}
                     className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
+                    title="Bắt đầu ghi âm và tự động chấm điểm"
                   >
-                    🎤 Ghi âm lại
+                    🎤 Ghi âm
                   </button>
                 ) : (
                   <button
@@ -509,13 +531,6 @@ export default function VocabLesson({
                   className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
                 >
                   ▶ Nghe lại bài ghi âm
-                </button>
-
-                <button
-                  onClick={scoreMyPronunciation}
-                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  ✅ Chấm điểm
                 </button>
               </div>
             </div>
