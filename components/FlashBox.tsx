@@ -11,17 +11,17 @@ type FlashBoxProps = {
   endpoint?: string;
   model?: string;
   aiStyle?: {
-    concise?: boolean;           // ép ngắn gọn
-    maxWords?: number;           // giới hạn số từ
-    pronunciationTips?: boolean; // mẹo phát âm (cho panel VI)
+    concise?: boolean;
+    maxWords?: number;
+    pronunciationTips?: boolean;
   };
   tts?: {
-    enabled?: boolean;           // CHỈ dùng cho EN
+    enabled?: boolean;
     allowStop?: boolean;
     forceVietnameseVoice?: boolean;
     viVoiceHint?: string;
     enVoiceHint?: string;
-    voice?: string;              // ví dụ 'en-US-Wavenet-F'
+    voice?: string;
     rate?: number;
     pitch?: number;
   };
@@ -49,12 +49,10 @@ export default function FlashBox({
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
 
-  // ------- Guard-rail prompt cho VI & EN (ép ngắn gọn) -------
+  /* ---------------- Guard-rail prompt ---------------- */
   function buildPrompt(userText: string) {
     const concise = !!aiStyle?.concise;
-    const max = aiStyle?.maxWords ?? (lang === 'vi' ? 80 : 120); // EN cho phép dài hơn chút
-    const isEN = lang === 'en';
-
+    const max = aiStyle?.maxWords ?? (lang === 'vi' ? 80 : 120);
     if (!concise) return userText;
 
     if (lang === 'vi') {
@@ -62,19 +60,18 @@ export default function FlashBox({
       const viGuard = [
         `Hãy trả lời bằng TIẾNG VIỆT, RẤT NGẮN GỌN (<= ${max} từ), ưu tiên gạch đầu dòng.`,
         `Tập trung vào học Tiếng Anh THPT hiệu quả (từ vựng/ngữ pháp/nghe-nói/đọc-viết).`,
-        wantPron ? `Thêm 1–2 mẹo phát âm: ghi IPA /.../ và đánh dấu trọng âm (ví dụ: pho'to /ˈfəʊ.təʊ/).` : ``,
+        wantPron ? `Thêm 1–2 mẹo phát âm: ghi IPA /.../ và đánh dấu trọng âm.` : ``,
         `Không dùng tiêu đề lớn hay đoạn văn dài.`,
       ].filter(Boolean).join('\n');
       return `${viGuard}\n\nCâu hỏi của người dùng: ${userText}`;
     }
 
-    // English: concise, bullets, anti-essay
     const enGuard = [
       `Reply in clear, concise ENGLISH (<= ${max} words).`,
       `Prefer SHORT bullet points; avoid long paragraphs and headings.`,
       `Focus on ACTIONABLE steps for a Vietnamese high-school learner.`,
-      `If the question is broad (e.g., "how to learn English"), return EXACTLY 5 bullets, one sentence each.`,
-      `No markdown headings like ###; simple bullets are fine.`,
+      `If the question is broad, return EXACTLY 5 bullets, one sentence each.`,
+      `No markdown headings.`,
     ].join('\n');
     return `${enGuard}\n\nUser question: ${userText}`;
   }
@@ -90,7 +87,7 @@ export default function FlashBox({
     return data.output || data.answer || data.text || data.result || '';
   }
 
-  // ------------------ Submit text ------------------
+  /* ---------------- Submit text ---------------- */
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     const q = input.trim();
@@ -105,6 +102,11 @@ export default function FlashBox({
       const prompt = buildPrompt(`${sys}\n\n${q}`);
       const text = await callGemini(prompt);
       setResponse(text || (lang === 'vi' ? 'Chưa có phản hồi.' : 'No response.'));
+
+      // ✅ Quan trọng: với English panel, tự đọc to bằng Cloud TTS
+      if (lang === 'en' && tts?.enabled && text) {
+        speak(text);
+      }
     } catch (err: any) {
       setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
     } finally {
@@ -112,7 +114,7 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ Voice input (Web Speech for mic) ------------------
+  /* ---------------- Voice input (Web Speech) ---------------- */
   async function handleVoice() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -137,7 +139,7 @@ export default function FlashBox({
         const built = buildPrompt(`${sys}\n\n${transcript}`);
         const text = await callGemini(built);
         setResponse(text);
-        if (lang === 'en') speak(text); // KHÔNG speak cho VI
+        if (lang === 'en' && tts?.enabled) speak(text); // vẫn đọc như trước
       } catch (err: any) {
         setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
       } finally {
@@ -157,12 +159,12 @@ export default function FlashBox({
     }
   }
 
-  // ------------------ GCP TTS helpers (EN only) ------------------
+  /* ---------------- GCP TTS helpers (EN only) ---------------- */
   function sanitizeForSpeech(text: string) {
     let s = text;
-    s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim(); // bỏ markdown
-    s = s.replace(/\/[^\/]{1,40}\//g, ''); // bỏ IPA /.../
-    s = s.replace(/\[[^\]]{1,40}\]/g, ''); // bỏ IPA [...]
+    s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    s = s.replace(/\/[^\/]{1,40}\//g, ''); // remove IPA /.../
+    s = s.replace(/\[[^\]]{1,40}\]/g, ''); // remove [ ... ]
     s = s.replace(/•/g, '• ').replace(/\s{2,}/g, ' ').trim();
     return s;
   }
@@ -173,24 +175,31 @@ export default function FlashBox({
 
   function defaultVoice(): string {
     if (tts?.voice) return tts.voice;
-    return 'en-US-Wavenet-F'; // mặc định EN (đổi D nếu muốn nam)
+    return 'en-US-Wavenet-F';
   }
 
   async function synthOnce(sentence: string) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: sentence,
-        voice: defaultVoice(),
-        rate: tts?.rate ?? 1.0,
-        pitch: tts?.pitch ?? 1.0,
-      }),
+      body: JSON.stringify({ text: sentence }), // ✅ route của bạn chỉ cần "text"
     });
     if (!res.ok) throw new Error(`TTS ${res.status}`);
-    const blob = await res.blob();
+
+    const buf = await res.arrayBuffer();
+    const blob = new Blob([buf], { type: 'audio/mpeg' });
     const url = URL.createObjectURL(blob);
-    await new Promise<void>((resolve, reject) => {
+
+    await new Promise<void>(async (resolve, reject) => {
+      try {
+        // cố gắng resume AudioContext để tránh autoplay policy
+        const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (AC) {
+          const ctx = ((window as any).__ttsCtx ||= new AC());
+          if (ctx.state === 'suspended') await ctx.resume();
+        }
+      } catch {}
+
       const audio = new Audio(url);
       currentAudioRef.current = audio;
       audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
@@ -211,7 +220,7 @@ export default function FlashBox({
   }
 
   async function speak(text: string) {
-    if (lang !== 'en' || !tts?.enabled || !text) return; // KHÔNG speak cho VI
+    if (lang !== 'en' || !tts?.enabled || !text) return;
     stopSpeak();
 
     const cleaned = sanitizeForSpeech(text);
@@ -231,17 +240,15 @@ export default function FlashBox({
   }
 
   function replay() {
-    if (lang === 'en' && response) speak(response);
+    if (lang === 'en' && response && tts?.enabled) speak(response);
   }
 
-  // ------------------ UI (thêm padding + prose-lite) ------------------
+  /* ---------------- UI ---------------- */
   return (
     <div className="flex flex-col h-full box">
-      {/* Header */}
       <div className="box-header">
         <h3 className="font-semibold">{title}</h3>
         <div className="box-actions flex gap-2">
-          {/* Chỉ EN mới có Replay/Stop */}
           {lang === 'en' && response && tts?.enabled && (
             <>
               <button
@@ -265,7 +272,6 @@ export default function FlashBox({
         </div>
       </div>
 
-      {/* Nội dung phản hồi */}
       <div className="flex-1 overflow-y-auto box-body">
         {busy ? (
           <div className="text-sm opacity-70">
@@ -282,7 +288,6 @@ export default function FlashBox({
         )}
       </div>
 
-      {/* Ô nhập */}
       <form onSubmit={handleSubmit} className="p-4 border-t">
         <div className="flex gap-2">
           <input
@@ -293,7 +298,6 @@ export default function FlashBox({
             disabled={busy}
           />
 
-          {/* Ẩn nút Nói cho VI */}
           {lang !== 'vi' && (
             <button
               type="button"
