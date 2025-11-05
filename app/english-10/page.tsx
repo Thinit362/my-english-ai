@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import DualLessonAssistant from '@/components/DualLessonAssistant';
 
-//type Item = { title: string; slug: string; imageUrl?: string; type?: 'unit' | 'review' };
+type Item = { title: string; slug: string; imageUrl?: string; type?: 'unit' | 'review' };
 
 export const metadata = { title: 'Tiếng Anh 10 – Global Success' };
 
@@ -16,7 +16,7 @@ export default async function Page() {
     title: u.title ? `Unit ${u.index}: ${u.title}` : `Unit ${u.index}`,
     slug: `unit/${u.index}`,
     imageUrl: `/data/images/unit-10-${u.index}.jpg`, // ảnh local trong public/images
-    //type: 'unit',
+    type: 'unit',
   }));
 
   // Danh sách Review (nếu có)
@@ -55,7 +55,7 @@ export default async function Page() {
               </div>
 
               <div className="p-4">
-               // <p className="text-xs text-gray-500 tracking-wide">{(it.type ?? '').toUpperCase()}</p>
+                <p className="text-xs text-gray-500 tracking-wide">{(it.type ?? '').toUpperCase()}</p>
                 <h3 className="mt-1 font-medium group-hover:text-blue-600">{it.title}</h3>
               </div>
             </Link>
