@@ -1,53 +1,84 @@
+// app/api/tts/route.ts
 export const runtime = 'nodejs';
 
-type TtsBody = { text: string };
+type TtsBody = {
+  text?: string;
+  voice?: string;          // ví dụ: 'en-US-Wavenet-D'
+  languageCode?: string;   // ví dụ: 'en-US'
+  rate?: number;           // speakingRate 0.25..4.0
+  pitch?: number;          // -20..20
+};
+
+function jsonError(status: number, message: string, extra?: any) {
+  return new Response(JSON.stringify({ error: message, ...extra }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 export async function POST(req: Request) {
-  const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
+  // 1) Kiểm tra ENV trước khi khởi tạo client (tránh 500 mù)
+  const project_id = process.env.GCP_PROJECT_ID;
+  const client_email = process.env.GCP_CLIENT_EMAIL;
+  const raw_key = process.env.GCP_PRIVATE_KEY;
 
+  if (!project_id || !client_email || !raw_key) {
+    return jsonError(500, 'Missing GCP credentials', {
+      GCP_PROJECT_ID: !!project_id,
+      GCP_CLIENT_EMAIL: !!client_email,
+      GCP_PRIVATE_KEY: !!raw_key,
+    });
+  }
+
+  // 2) Parse body
+  let body: TtsBody;
+  try {
+    body = (await req.json()) as TtsBody;
+  } catch {
+    return jsonError(400, 'Invalid JSON body');
+  }
+  const text = (body.text || '').trim();
+  if (!text) return jsonError(400, 'Missing "text"');
+
+  // 3) Import và tạo client (Node runtime)
+  const { TextToSpeechClient } = await import('@google-cloud/text-to-speech');
   const client = new TextToSpeechClient({
     credentials: {
-      project_id: process.env.GCP_PROJECT_ID,
-      client_email: process.env.GCP_CLIENT_EMAIL,
-      private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      project_id,
+      client_email,
+      private_key: raw_key.replace(/\\n/g, '\n'),
     },
   });
 
-  try {
-    const { text } = (await req.json()) as TtsBody;
-    if (!text?.trim()) {
-      return new Response(JSON.stringify({ error: 'Missing text' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  // 4) Tham số TTS
+  const languageCode = body.languageCode || 'en-US';
+  const voiceName = body.voice || 'en-US-Wavenet-D';
+  const speakingRate = typeof body.rate === 'number' ? body.rate : 1.0;
+  const pitch = typeof body.pitch === 'number' ? body.pitch : 0;
 
+  try {
     const [resp] = await client.synthesizeSpeech({
-      input: { text: text.trim() },
-      voice: { languageCode: 'en-US', name: 'en-US-Wavenet-D' },
-      audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
+      input: { text },
+      voice: { languageCode, name: voiceName },
+      audioConfig: { audioEncoding: 'MP3', speakingRate, pitch },
     });
 
-    // 1) Chuẩn hoá dữ liệu âm thanh về Uint8Array
-    // resp.audioContent có thể là string base64 hoặc Uint8Array
+    // Chuẩn hoá về ArrayBuffer
     const raw = resp.audioContent as Uint8Array | string;
-    const u8: Uint8Array =
+    const u8 =
       typeof raw === 'string'
-        ? Uint8Array.from(Buffer.from(raw, 'base64')) // chỉ dùng Buffer để decode base64
+        ? Uint8Array.from(Buffer.from(raw, 'base64'))
         : raw;
-
-    // 2) Tạo ArrayBuffer "thật" (tránh SharedArrayBuffer)
     const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
 
-    // 3) Trả về body là ArrayBuffer (BodyInit hợp lệ, không còn lỗi type)
-    return new Response(ab, {
-      headers: { 'Content-Type': 'audio/mpeg' },
-    });
+    return new Response(ab, { headers: { 'Content-Type': 'audio/mpeg' } });
   } catch (err: any) {
+    // Trả lỗi chi tiết để bạn nhìn thấy ngay trong Network → Response
     console.error('TTS Error:', err);
-    return new Response(JSON.stringify({ error: err?.message || 'TTS failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    return jsonError(500, err?.message || 'TTS failed', {
+      code: err?.code,
+      statusDetails: err?.statusDetails,
+      details: err?.details,
     });
   }
 }
