@@ -1,21 +1,21 @@
 "use client";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export type Line = { id: string; speaker: string; text: string };
 
 type Props = {
   title?: string;
-  videoId?: string;            // nếu có video YouTube thì truyền ID
+  videoId?: string;   // truyền ID YouTube nếu muốn hiện video
   lines: Line[];
 };
 
-// gọi Cloud TTS trên server (route /api/tts đã có sẵn)
+// gọi Cloud TTS trên server (route /api/tts của bạn)
 async function synthToDataUrl(text: string) {
   const res = await fetch("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text,                       // chỉ nội dung câu, không kèm speaker
+      text,
       languageCode: "en-US",
       voiceName: "en-US-Neural2-A",
       speakingRate: 1,
@@ -31,14 +31,22 @@ async function synthToDataUrl(text: string) {
 export default function WarmupDialogue({ title = "Warm-up", videoId, lines }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  // cache đơn giản để không gọi TTS lại cho câu đã phát
-  const cacheRef = useRef<Map<string, string>>(new Map());
+  const [isClient, setIsClient] = useState(false);
+  const cacheRef = useRef<Map<string, string>>(new Map()); // cache trong RAM
 
-  if (!audioRef.current) audioRef.current = new Audio();
+  // ✅ Chỉ tạo Audio ở client, sau khi hydrate
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio();
+      setIsClient(true);
+    }
+  }, []);
 
   async function toggle(line: Line) {
-    const a = audioRef.current!;
-    // đang phát đúng câu => dừng
+    if (!isClient) return;                 // SSR an toàn
+    const a = audioRef.current ?? new Audio();
+
+    // Đang phát đúng câu → dừng
     if (playingId === line.id && !a.paused) {
       a.pause();
       a.currentTime = 0;
@@ -47,19 +55,16 @@ export default function WarmupDialogue({ title = "Warm-up", videoId, lines }: Pr
     }
 
     try {
-      // nếu đang phát câu khác -> dừng trước
-      if (!a.paused) {
-        a.pause();
-        a.currentTime = 0;
-      }
+      if (!a.paused) { a.pause(); a.currentTime = 0; }
 
-      // lấy source từ cache hoặc gọi TTS
       let src = cacheRef.current.get(line.id);
       if (!src) {
-        src = await synthToDataUrl(line.text); // chỉ đọc text
+        src = await synthToDataUrl(line.text); // chỉ đọc câu, không đọc tên
         cacheRef.current.set(line.id, src);
       }
+
       a.src = src;
+      audioRef.current = a;
       setPlayingId(line.id);
       await a.play();
       a.onended = () => setPlayingId(null);
@@ -92,13 +97,8 @@ export default function WarmupDialogue({ title = "Warm-up", videoId, lines }: Pr
 
       <div className="space-y-3">
         {lines.map((l) => (
-          <div
-            key={l.id}
-            className="flex items-start gap-3 p-3 border rounded-xl bg-white"
-          >
-            <span className="font-semibold w-16 shrink-0 text-gray-600">
-              {l.speaker}
-            </span>
+          <div key={l.id} className="flex items-start gap-3 p-3 border rounded-xl bg-white">
+            <span className="font-semibold w-16 shrink-0 text-gray-600">{l.speaker}</span>
 
             <div className="flex-1 leading-relaxed">{l.text}</div>
 
@@ -107,6 +107,7 @@ export default function WarmupDialogue({ title = "Warm-up", videoId, lines }: Pr
               aria-label={playingId === l.id ? "Stop" : "Play"}
               title={playingId === l.id ? "Stop" : "Play"}
               className="shrink-0 rounded-full border px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+              disabled={!isClient}                          // tránh click khi SSR
             >
               {playingId === l.id ? "⏸ Stop" : "▶ Play"}
             </button>
