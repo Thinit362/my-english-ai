@@ -1,7 +1,7 @@
 {
   "book": {
     "id": "eng11",
-    "title": "Tiếng Anh 11 – Global Success",
+    "title": "A LONG AND HEALTHY LIFE",
     "grade": 11,
     "slug": "english-11",
     "source_pdf": "Sách Tiếng anh 11 Global success - Sách học sinh.pdf",
@@ -11,7 +11,7 @@
     {
       "id": "eng11_u1",
       "index": 1,
-      "title": "",
+      "title": "A long and healthy life",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -116,7 +116,7 @@
     {
       "id": "eng11_u2",
       "index": 2,
-      "title": "",
+      "title": "THE GENERATION GAP",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -221,7 +221,7 @@
     {
       "id": "eng11_u3",
       "index": 3,
-      "title": "",
+      "title": "CITIES OF THE FUTURE",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -326,7 +326,7 @@
     {
       "id": "eng11_u4",
       "index": 4,
-      "title": "",
+      "title": "ASEAN AND VIET NAM",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -431,7 +431,7 @@
     {
       "id": "eng11_u5",
       "index": 5,
-      "title": "",
+      "title": "GLOBAL WARMING",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -536,7 +536,7 @@
     {
       "id": "eng11_u6",
       "index": 6,
-      "title": "",
+      "title": "PRESERVING OUR HERITAGE",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -641,7 +641,7 @@
     {
       "id": "eng11_u7",
       "index": 7,
-      "title": "",
+      "title": "EDUCATION OPTIONS FOR SCHOOL-LEAVERS",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -746,7 +746,7 @@
     {
       "id": "eng11_u8",
       "index": 8,
-      "title": "",
+      "title": "BECOMING INDEPENDENT",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -851,7 +851,7 @@
     {
       "id": "eng11_u9",
       "index": 9,
-      "title": "",
+      "title": "SOCIAL ISSUES",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -956,7 +956,7 @@
     {
       "id": "eng11_u10",
       "index": 10,
-      "title": "",
+      "title": "THE ECOSYSTEM",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -1061,7 +1061,7 @@
     {
       "id": "eng11_u11",
       "index": 11,
-      "title": "",
+      "title": "REVIEW 1-2-3",
       "page_range": "",
       "summary": "",
       "lessons": [
@@ -1166,7 +1166,7 @@
     {
       "id": "eng11_u12",
       "index": 12,
-      "title": "",
+      "title": "REVIEW 4-5-6",
       "page_range": "",
       "summary": "",
       "lessons": [
