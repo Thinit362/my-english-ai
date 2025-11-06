@@ -305,3 +305,64 @@ input[type="password"]:focus {
     padding: 1rem;
   }
 }
+/* ===== Popover với mũi tên (dùng chung) ===== */
+@layer components {
+  /* Khung popover */
+  .ta-popover {
+    /* style cơ bản có thể vẫn kết hợp utility Tailwind trong JSX */
+    border: 1px solid theme(colors.gray.200);
+    background-color: theme(colors.white);
+    border-radius: theme(borderRadius.lg);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+                0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* Mũi tên (mặc định nhô lên ở cạnh trên) */
+  .ta-popover::before {
+    content: "";
+    position: absolute;
+    /* vị trí ngang của mũi tên — có thể override bằng CSS var */
+    left: var(--ta-arrow-left, 1rem);
+    /* nằm ngay trên viền trên của popover */
+    top: -6px;
+    width: 12px;
+    height: 12px;
+    background: theme(colors.white);
+    transform: rotate(45deg);
+    /* viền trùng màu viền popover */
+    border-left: 1px solid theme(colors.gray.200);
+    border-top: 1px solid theme(colors.gray.200);
+    /* đổ bóng nhẹ cho mũi tên */
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  /* Biến thể: mũi tên ở cạnh dưới (nếu cần) */
+  .ta-popover[data-side="bottom"]::before {
+    top: auto;
+    bottom: -6px;
+    border-left: none;
+    border-top: none;
+    border-right: 1px solid theme(colors.gray.200);
+    border-bottom: 1px solid theme(colors.gray.200);
+  }
+
+  /* Biến thể: mũi tên ở cạnh trái/phải (nếu cần) */
+  .ta-popover[data-side="left"]::before {
+    top: var(--ta-arrow-top, 0.75rem);
+    left: -6px;
+    width: 12px; height: 12px;
+    border-left: none; border-top: none;
+    border-right: 1px solid theme(colors.gray.200);
+    border-top: 1px solid theme(colors.gray.200);
+    transform: rotate(45deg);
+  }
+  .ta-popover[data-side="right"]::before {
+    top: var(--ta-arrow-top, 0.75rem);
+    left: auto; right: -6px;
+    width: 12px; height: 12px;
+    border-right: none; border-bottom: none;
+    border-left: 1px solid theme(colors.gray.200);
+    border-top: 1px solid theme(colors.gray.200);
+    transform: rotate(45deg);
+  }
+}
