@@ -11,7 +11,7 @@ export type VocabItem = {
   vi: string;
   exampleEn?: string;
   exampleVi?: string;
-  imageFile?: string; // "be-admired-for.jpg" hoặc URL đầy đủ
+  imageFile?: string; // "be-admired-for.jpg" hoặc URL
 };
 
 type Props = {
@@ -19,6 +19,52 @@ type Props = {
   items: VocabItem[];
   baseImagePath?: string;
 };
+
+/** ====== Ghi chú loại từ (tóm lược theo Unit 1 – TA10) ======
+ * Bạn có thể điều chỉnh nội dung cho khớp chính xác nguồn bạn dùng.
+ */
+const POS_NOTES: Record<string, string> = {
+  verb:
+    "Động từ (v.): Miêu tả hành động hoặc trạng thái (do, walk, be...). Trong câu luôn có ít nhất một động từ.",
+  "verb phrase":
+    "Cụm động từ (v. phr.): Động từ + thành phần đi kèm (do the washing-up, take out...). Hoạt động như một động từ.",
+  "phrasal verb":
+    "Cụm động từ hai/tři thành phần (phr. v.): động từ + giới/tiểu từ (take out, look after...).",
+  noun:
+    "Danh từ (n.): Chỉ người, vật, sự việc, ý niệm (family, chores...). Có thể đứng làm chủ ngữ/tân ngữ.",
+  adjective:
+    "Tính từ (adj.): Bổ nghĩa cho danh từ hoặc đứng sau các liên động từ (be, seem...).",
+  adverb:
+    "Trạng từ (adv.): Bổ nghĩa cho động từ/tính từ/toàn câu (always, usually...).",
+  preposition:
+    "Giới từ (prep.): Nối các thành phần, chỉ quan hệ (in, on, after...).",
+  pronoun:
+    "Đại từ (pron.): Thay thế cho danh từ (I, you, they, mine...).",
+  conjunction:
+    "Liên từ (conj.): Nối từ/cụm từ/mệnh đề (and, but, because...).",
+  determiner:
+    "Hạn định từ (det.): Xác định danh từ (a, an, the, this, my...).",
+  interjection:
+    "Thán từ: Từ cảm thán (oh!, wow!, hey!).",
+};
+
+// Chuẩn hoá chuỗi pos về key trong POS_NOTES
+function normalizePOS(pos?: string) {
+  if (!pos) return "";
+  const p = pos.toLowerCase().replace(/\s+/g, " ").trim();
+  if (/(^|\W)(v\.?\s*phr|v\.?\s*phrase)/.test(p)) return "verb phrase";
+  if (/(^|\W)(phr\.?\s*v|phrasal verb)/.test(p)) return "phrasal verb";
+  if (/^v/.test(p)) return "verb";
+  if (/^n/.test(p)) return "noun";
+  if (/^adj/.test(p)) return "adjective";
+  if (/^adv/.test(p)) return "adverb";
+  if (/^prep/.test(p)) return "preposition";
+  if (/^pron/.test(p)) return "pronoun";
+  if (/^conj/.test(p)) return "conjunction";
+  if (/^det/.test(p)) return "determiner";
+  if (/^interj/.test(p)) return "interjection";
+  return "";
+}
 
 /** ===== IndexedDB cache (TTS) ===== */
 const DB_NAME = "vocab-tts-db";
@@ -83,7 +129,7 @@ async function fetchTTS(text: string, voice: string): Promise<Blob> {
     body: JSON.stringify({
       text,
       languageCode: "en-US",
-      voice, // Neural2-D/F
+      voice,
       rate: 1.0,
       pitch: 0,
     }),
@@ -139,9 +185,17 @@ export default function VocabLesson({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
+  // POS popover
+  const [posOpenFor, setPosOpenFor] = useState<string | null>(null);
+
   // Practice popup state
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalFor, setModalFor] = useState<{ id: string; text: string; label: string; voice: string } | null>(null);
+  const [modalFor, setModalFor] = useState<{
+    id: string;
+    text: string;
+    label: string;
+    voice: string;
+  } | null>(null);
 
   const [recUrl, setRecUrl] = useState<string | null>(null);
   const [recoding, setRecoding] = useState(false);
@@ -152,25 +206,26 @@ export default function VocabLesson({
   const [percent, setPercent] = useState<number | null>(0);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
 
-  // SpeechRecognition instance (giữ lại để stop được)
+  // SpeechRecognition instance
   const srRef = useRef<any>(null);
 
   // voices
-  const VOICE_WORD = "en-US-Neural2-D";     // nam, rõ
-  const VOICE_EXAMPLE = "en-US-Neural2-F";  // nữ, tự nhiên
+  const VOICE_WORD = "en-US-Neural2-D";
+  const VOICE_EXAMPLE = "en-US-Neural2-F";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       audioRef.current = new Audio();
       setIsClient(true);
+      // đóng popover khi click ra ngoài
+      const handler = (e: MouseEvent) => {
+        const el = e.target as HTMLElement;
+        if (!el.closest?.("[data-pos-pop]")) setPosOpenFor(null);
+      };
+      window.addEventListener("click", handler);
+      return () => window.removeEventListener("click", handler);
     }
-    return () => {
-      try { audioRef.current?.pause(); } catch {}
-      urlMem.current.forEach((u) => URL.revokeObjectURL(u));
-      urlMem.current.clear();
-      // stop SR nếu còn
-      try { srRef.current?.stop?.(); } catch {}
-    };
+    return () => {};
   }, []);
 
   async function getAudioUrl(text: string, voice: string) {
@@ -194,7 +249,6 @@ export default function VocabLesson({
     if (!isClient || !text) return;
     const a = audioRef.current ?? new Audio();
 
-    // toggle stop
     if (playingId === id && !a.paused) {
       a.pause();
       a.currentTime = 0;
@@ -232,13 +286,17 @@ export default function VocabLesson({
     }
   }
 
-  async function openPractice(id: string, text: string, label: string, voice: string) {
+  async function openPractice(
+    id: string,
+    text: string,
+    label: string,
+    voice: string
+  ) {
     setModalFor({ id, text, label, voice });
     setRecUrl(null);
     setSaid("");
-    setPercent(0);      // luôn hiển thị 0% khi mở
+    setPercent(0);
     setModalOpen(true);
-    // âm mẫu
     try {
       const url = await getAudioUrl(text, voice);
       setModelUrl(url);
@@ -250,7 +308,8 @@ export default function VocabLesson({
   /** ===== Recording + Auto scoring ===== */
   function setupSR(lang = "en-US") {
     const SR: any =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
     if (!SR) return null;
     const r = new SR();
     r.lang = lang;
@@ -261,33 +320,32 @@ export default function VocabLesson({
 
   async function startRecord() {
     if (!modalFor) return;
-    // reset kết quả
     setSaid("");
     setPercent(0);
 
-    // SR
     const r = setupSR("en-US");
     if (!r) {
-      alert("Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói (SpeechRecognition). Vui lòng dùng Chrome/Edge.");
+      alert(
+        "Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói. Vui lòng dùng Chrome/Edge."
+      );
     } else {
       srRef.current = r;
       r.onresult = (e: any) => {
         const saidText = e.results[0][0].transcript || "";
         setSaid(saidText);
       };
-      r.onerror = () => {/* im lặng */};
+      r.onerror = () => {};
       r.onend = () => {
-        // khi SR tự end, nếu đã có bản ghi audio, chấm điểm ngay
         if (modalFor && said !== undefined) {
           const raw = Math.round(score(modalFor.text, said) * 100);
-          const pct = Math.max(0, Math.min(100, raw));
-          setPercent(pct);
+          setPercent(Math.max(0, Math.min(100, raw)));
         }
       };
-      try { r.start(); } catch {}
+      try {
+        r.start();
+      } catch {}
     }
 
-    // ghi âm local để nghe lại
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const m = new MediaRecorder(stream);
     mediaRef.current = m;
@@ -297,14 +355,13 @@ export default function VocabLesson({
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       setRecUrl(URL.createObjectURL(blob));
       stream.getTracks().forEach((t) => t.stop());
-
-      // Auto score tại thời điểm dừng (nếu SR có kết quả -> said đã được set)
       if (modalFor) {
         const raw = Math.round(score(modalFor.text, said) * 100);
-        const pct = Math.max(0, Math.min(100, raw));
-        setPercent(pct);
+        setPercent(Math.max(0, Math.min(100, raw)));
       }
-      try { srRef.current?.stop?.(); } catch {}
+      try {
+        srRef.current?.stop?.();
+      } catch {}
     };
     m.start();
     setRecoding(true);
@@ -315,7 +372,6 @@ export default function VocabLesson({
     setRecoding(false);
   }
 
-  /** style helpers for % block */
   function pctColor(p: number | null | undefined) {
     if (p == null) return "text-gray-500";
     const v = Number(p);
@@ -324,7 +380,8 @@ export default function VocabLesson({
     return "text-red-600";
   }
   function messageFor(p: number | null | undefined) {
-    if (p == null) return "Nhấn Ghi âm rồi đọc lại câu ở trên để luyện và được hệ thống chấm điểm.";
+    if (p == null)
+      return "Nhấn Ghi âm rồi đọc lại câu ở trên để luyện và được hệ thống chấm điểm.";
     if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
     if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
     return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
@@ -343,23 +400,28 @@ export default function VocabLesson({
         const isBusy = busyId === it.id;
         const isPlaying = playingId === it.id;
 
+        const posKey = normalizePOS(it.pos);
+        const posNote = posKey ? POS_NOTES[posKey] : "";
+
         return (
           <div
             key={it.id}
-            className={`p-4 border rounded-xl bg-white transition ${isPlaying ? "ring-2 ring-blue-500 bg-blue-50" : ""}`}
+            className={`relative p-4 border rounded-2xl bg-white transition ${
+              isPlaying ? "ring-2 ring-blue-500 bg-blue-50" : ""
+            }`}
           >
             <div className="grid grid-cols-12 gap-4">
-              {/* Ảnh minh hoạ (góc phải) */}
+              {/* Ảnh minh hoạ (góc phải – nổi) */}
               <div className="order-2 col-span-12 md:col-span-3 md:order-2 flex justify-end">
                 {imgSrc ? (
                   <img
                     src={imgSrc}
                     alt={it.word}
-                    className="w-28 h-28 object-cover rounded-md border"
+                    className="w-full md:w-36 h-40 md:h-36 object-cover rounded-xl border shadow-lg ring-1 ring-black/5"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-28 h-28 rounded-md border grid place-items-center text-xs text-gray-400">
+                  <div className="w-full md:w-36 h-36 rounded-xl border grid place-items-center text-xs text-gray-400">
                     No image
                   </div>
                 )}
@@ -382,7 +444,9 @@ export default function VocabLesson({
                     🔊
                   </button>
                   <button
-                    onClick={() => openPractice(it.id, it.word, "Từ vựng", VOICE_WORD)}
+                    onClick={() =>
+                      openPractice(it.id, it.word, "Từ vựng", VOICE_WORD)
+                    }
                     className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
                     title="Luyện nói"
                   >
@@ -390,30 +454,56 @@ export default function VocabLesson({
                   </button>
                 </div>
 
-                <div className="mt-1 text-sm text-gray-700">
-                  {it.ipa && <span className="mr-3">{it.ipa}</span>}
+                {/* IPA + POS (tăng cỡ chữ + popover) */}
+                <div className="mt-1 text-gray-700 flex items-center gap-2 flex-wrap">
+                  {it.ipa && <span className="mr-2 text-base">{it.ipa}</span>}
                   {it.pos && (
-                    <span className="px-2 py-0.5 text-xs rounded bg-gray-100 border">
+                    <span
+                      data-pos-pop
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPosOpenFor((v) => (v === it.id ? null : it.id));
+                      }}
+                      className="relative cursor-pointer select-none px-2 py-0.5 text-xs rounded bg-amber-50 border border-amber-200 hover:bg-amber-100"
+                      title="Nhấp để xem ghi chú loại từ"
+                    >
                       {it.pos}
+                      {posNote && posOpenFor === it.id && (
+                      <div
+                      className="ta-popover absolute z-20 mt-2 left-0 w-72 md:w-80 p-3 text-sm leading-relaxed"
+                      style={{ ['--ta-arrow-left' as any]: '1.25rem' }}  // tuỳ chỉnh vị trí mũi tên
+                      role="tooltip"
+                  >
+                      <div className="font-semibold mb-1">Ghi chú loại từ</div>
+                      <div className="text-gray-700">{posNote}</div>
+                      </div>
+                    )}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-1">{it.vi}</div>
+                {/* Nghĩa tiếng Việt — tăng cỡ chữ */}
+                <div className="mt-1 text-lg">{it.vi}</div>
 
                 {(it.exampleEn || it.exampleVi) && (
                   <div className="mt-3 rounded-md bg-gray-50 border p-3">
                     <div className="flex items-start gap-2">
                       <div className="flex-1">
-                        {it.exampleEn && <div className="font-medium">{it.exampleEn}</div>}
+                        {it.exampleEn && (
+                          <div className="font-medium">{it.exampleEn}</div>
+                        )}
                         {it.exampleVi && (
-                          <div className="text-gray-600 mt-1">{it.exampleVi}</div>
+                          <div className="text-gray-600 mt-1">
+                            {it.exampleVi}
+                          </div>
                         )}
                       </div>
                       {it.exampleEn && (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => play(it.exampleEn!, it.id + ":ex", VOICE_EXAMPLE)}
+                            onClick={() =>
+                              play(it.exampleEn!, it.id + ":ex", VOICE_EXAMPLE)
+                            }
                             className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
                             title="Nghe câu ví dụ"
                           >
@@ -421,7 +511,12 @@ export default function VocabLesson({
                           </button>
                           <button
                             onClick={() =>
-                              openPractice(it.id + ":ex", it.exampleEn!, "Câu ví dụ", VOICE_EXAMPLE)
+                              openPractice(
+                                it.id + ":ex",
+                                it.exampleEn!,
+                                "Câu ví dụ",
+                                VOICE_EXAMPLE
+                              )
                             }
                             className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
                             title="Luyện nói câu ví dụ"
@@ -447,13 +542,17 @@ export default function VocabLesson({
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
                 Luyện nói – {modalFor.label}:{" "}
-                <span className="text-[var(--navy,#0f172a)]">{modalFor.text}</span>
+                <span className="text-[var(--navy,#0f172a)]">
+                  {modalFor.text}
+                </span>
               </div>
               <button
                 className="rounded-full border w-8 h-8 grid place-items-center bg-gray-50 hover:bg-gray-100"
                 onClick={() => {
                   setModalOpen(false);
-                  try { srRef.current?.stop?.(); } catch {}
+                  try {
+                    srRef.current?.stop?.();
+                  } catch {}
                   if (recoding) stopRecord();
                 }}
                 aria-label="Close"
@@ -468,13 +567,15 @@ export default function VocabLesson({
                 <div className="flex">
                   <div className="w-32 min-w-[8rem] bg-gray-50 border-r p-3">
                     <div className="text-xs text-gray-500">Bạn đạt</div>
-                    <div className={`mt-1 text-4xl font-extrabold leading-none ${pctColor(percent)}`}>
+                    <div
+                      className={`mt-1 text-4xl font-extrabold leading-none ${pctColor(
+                        percent
+                      )}`}
+                    >
                       {(percent ?? 0).toFixed(0)}%
                     </div>
                   </div>
-                  <div className="flex-1 p-3 text-sm">
-                    {modalFor.text}
-                  </div>
+                  <div className="flex-1 p-3 text-sm">{modalFor.text}</div>
                 </div>
               </div>
             </div>
@@ -489,15 +590,20 @@ export default function VocabLesson({
                 <button
                   onClick={async () => {
                     if (!modelUrl) {
-                      const u = await getAudioUrl(modalFor.text, modalFor.voice);
+                      const u = await getAudioUrl(
+                        modalFor.text,
+                        modalFor.voice
+                      );
                       setModelUrl(u);
                     }
                     const a = new Audio(modelUrl || "");
                     try {
                       const AC: any =
-                        (window as any).AudioContext || (window as any).webkitAudioContext;
+                        (window as any).AudioContext ||
+                        (window as any).webkitAudioContext;
                       if (AC) {
-                        const ctx = ((window as any).__vocabCtx2 ||= new AC());
+                        const ctx =
+                          ((window as any).__vocabCtx2 ||= new AC());
                         if (ctx.state === "suspended") await ctx.resume();
                       }
                     } catch {}
