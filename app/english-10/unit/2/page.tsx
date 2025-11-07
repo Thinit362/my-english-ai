@@ -2,8 +2,8 @@
 import UnitOverview, { LectureExercise, SkillItem } from "@/components/UnitOverview";
 
 export const metadata = {
-  title: "English 10 – Unit : Family life",
-};2
+  title: "English 10 – Unit 2 : HUMANS AND THE ENVIRONMENT",
+};
 
 // Không set status/progress -> mặc định "Chưa làm".
 // Khi học sinh bấm vào bài, trang danh sách sẽ ghi dấu "Đang học" (localStorage).
