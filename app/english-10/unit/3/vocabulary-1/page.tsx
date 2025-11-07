@@ -1,15 +1,11 @@
-// app/english-10/unit/1/vocabulary-1/page.tsx
+// app/english-10/unit/3/vocabulary-1/page.tsx
 import VocabLesson, { type VocabItem } from "@/components/VocabLesson";
 
 export const metadata = {
-  title: "English 10 – Unit 1 – Vocabulary 1",
+  title: "English 10 – Unit 3 – Vocabulary 1",
 };
 
-/**
- * Danh sách từ/cụm từ chủ đề "Household chores" (Phần 1).
- * Nguồn tham khảo bố cục & nội dung: TiengAnh123 - Unit 1: Family life – Vocabulary 1.
- * (Bạn có thể điều chỉnh/ bổ sung thêm mục tuỳ theo nội dung chi tiết bạn triển khai.)
- */
+
 const items: VocabItem[] = [
   {
     id: "audience",
@@ -132,15 +128,14 @@ const items: VocabItem[] = [
     imageFile: "feed-the-pets.jpg",
   },
 ];
-
 export default function Page() {
   return (
     <div className="py-6">
       <VocabLesson
-        title="Unit 1 – Từ vựng (Phần 1)"
+        title="Unit 3 – Từ vựng (Phần 1)"
         items={items}
         // Đổi path ảnh theo nơi bạn lưu hình minh hoạ
-        baseImagePath="/images/vocab/english-10/unit1/"
+        baseImagePath="/images/vocab/english-10/unit3/"
       />
     </div>
   );
