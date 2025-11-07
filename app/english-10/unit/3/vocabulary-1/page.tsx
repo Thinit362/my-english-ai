@@ -4,8 +4,6 @@ import VocabLesson, { type VocabItem } from "@/components/VocabLesson";
 export const metadata = {
   title: "English 10 – Unit 3 – Vocabulary 1",
 };
-
-
 const items: VocabItem[] = [
   {
     id: "audience",
