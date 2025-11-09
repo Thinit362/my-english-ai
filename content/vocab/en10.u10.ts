@@ -1,4 +1,4 @@
-/ content/vocab/en10.u10.ts
+// content/vocab/en10.u10.ts
 import type { UnitVocab } from "../english10.vocab";
 
 const data: UnitVocab = {
