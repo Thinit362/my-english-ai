@@ -1,20 +1,32 @@
+// app/english-10/unit/[unit]/page.tsx
 import { notFound } from "next/navigation";
-import { getManifest } from "@/lib/manifests";
+import UnitOverview from "@/components/UnitOverview";
+import { english10Units } from "@/content/english10.units";
 
-type PageProps = { params: { unit: string } };
+export function generateStaticParams() {
+  // Giúp Next build sẵn /english-10/unit/1..10
+  return english10Units.map((u) => ({ unit: String(u.id) }));
+}
 
-export default async function Unit10Page({ params }: PageProps) {
-  const unitNum = Number(params.unit);          // lấy giá trị từ URL
-  if (!Number.isFinite(unitNum)) notFound();    // nếu không phải số thì 404
+export async function generateMetadata({ params }: { params: { unit: string } }) {
+  const id = Number(params.unit);
+  const meta = english10Units.find((u) => u.id === id);
+  return {
+    title: meta ? `English 10 – ${meta.title}` : "English 10 – Unit",
+  };
+}
 
-  const manifest = await getManifest(10);
-  const unit = manifest.units?.find((u: any) => u.index === unitNum);
-  if (!unit) notFound();
+export default function Page({ params }: { params: { unit: string } }) {
+  const id = Number(params.unit);
+  const meta = english10Units.find((u) => u.id === id);
+  if (!meta) notFound();
 
+  // KHÔNG truyền breadcrumbs nữa (đã có ở layout)
   return (
-    <div>
-      <h1>Tiếng Anh 10 – Unit {unit.index}{unit.title ? `: ${unit.title}` : ""}</h1>
-      {/* nội dung Unit ở đây */}
-    </div>
+    <UnitOverview
+      unitTitle={meta.title}
+      rows={meta.rows}
+      skills={meta.skills}
+    />
   );
 }
