@@ -1,3 +1,13 @@
+// content/vocab/en10.u3.ts
 import type { UnitVocab } from "../english10.vocab";
-const data: UnitVocab = { unitId: 3, title: "Unit 3 – (updating)", items: [] };
+
+const data: UnitVocab = {
+  unitId: 3,
+  unitTitle: "Unit 10: Ecotourism",
+  lessons: [
+    // Khi chưa có dữ liệu, để mảng rỗng cũng được:
+    // { key: "vocabulary-1", title: "Từ vựng: Du lịch sinh thái – Phần 1", items: [] },
+  ],
+};
+
 export default data;
