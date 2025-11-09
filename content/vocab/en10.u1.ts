@@ -458,7 +458,7 @@ const data: UnitVocab = {
   ],
 };
 
-export default data;
+export default u1;
 
 // Optional: Export a strict type of all image filenames used in this unit for asset validation/type-safety.
 export type U1VocabImageFile =
