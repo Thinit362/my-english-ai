@@ -1,19 +1,45 @@
+// app/english-10/unit/[unit]/vocabulary-1/page.tsx
 import { notFound } from "next/navigation";
 import LessonShell from "@/components/LessonShell";
-import VocabLesson from "@/components/VocabLesson";
-import { loadUnitVocab } from "@/content/english10.vocab";
+import VocabLesson from "@/components/VocabLesson"; // <- component của bạn
+import { english10VocabManifest, loadUnitVocab } from "@/content/english10.vocab";
 
-export default async function Page({ params }: { params: { unit: string } }) {
+type Params = { unit: string };
+
+export function generateStaticParams() {
+  // Chỉ build những unit có lesson "vocabulary-1"
+  const units = english10VocabManifest
+    .filter(u => u.lessons.some(l => l.key === "vocabulary-1"))
+    .map(u => ({ unit: String(u.unitId) }));
+  return units;
+}
+
+export async function generateMetadata({ params }: { params: Params }) {
   const unitId = Number(params.unit);
-  const unit = await loadUnitVocab(unitId).catch(() => null);
-  if (!unit) notFound();
+  const meta = english10VocabManifest.find(u => u.unitId === unitId);
+  const lesson = meta?.lessons.find(l => l.key === "vocabulary-1");
+  return { title: meta && lesson ? `${meta.unitTitle} – ${lesson.title}` : "Vocabulary" };
+}
 
+export default async function Page({ params }: { params: Params }) {
+  const unitId = Number(params.unit);
+  if (!Number.isFinite(unitId)) notFound();
+
+  // 1) Tải toàn bộ vocab của Unit (đã tách bundle)
+  const unit = await loadUnitVocab(unitId);
+
+  // 2) Tìm đúng lesson "vocabulary-1"
   const lesson = unit.lessons.find(l => l.key === "vocabulary-1");
   if (!lesson) notFound();
 
+  // 3) Truyền props ĐÚNG kiểu cho VocabLesson (title, items, baseImagePath)
   return (
     <LessonShell title={`${unit.unitTitle} – ${lesson.title}`}>
-      <VocabLesson unitId={unit.unitId} unitTitle={unit.unitTitle} lesson={lesson} />
+      <VocabLesson
+        title={lesson.title}
+        items={lesson.items}
+        baseImagePath={lesson.baseImagePath}
+      />
     </LessonShell>
   );
 }
