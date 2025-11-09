@@ -55,7 +55,7 @@ export default async function Page() {
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-gray-500 tracking-wide">{(it.type ?? '').toUpperCase()}</p>
+               {/* <p className="text-xs text-gray-500 tracking-wide">{(it.type ?? '').toUpperCase()}</p>*/}
                 <h3 className="mt-1 font-medium group-hover:text-blue-600">{it.title}</h3>
               </div>
             </Link>
