@@ -1,8 +1,6 @@
 // content/english10.units.ts
-//
 // Nguồn dữ liệu điều khiển danh mục cho từng Unit của Tiếng Anh 10 (Global Success).
 // Dùng cho các trang động: /english-10/unit/[id]/...
-//
 // GỢI Ý SỬ DỤNG:
 // - Trang Unit page.tsx chỉ cần import { english10Units } và chọn theo unitId.
 // - Các href bên dưới đã theo quy ước định tuyến của bạn.
