@@ -98,10 +98,18 @@ const loaders: Record<number, () => Promise<UnitVocab>> = {
   9: () => import("./vocab/en10.u9").then(m => m.default),
   10: () => import("./vocab/en10.u10").then(m => m.default),
 };
-
-/** Hàm public: lấy dữ liệu vocab của một Unit (tách bundle). */
 export async function loadUnitVocab(unitId: number): Promise<UnitVocab> {
+  switch (unitId) {
+    case 1: return (await import("./vocab/en10.u1")).default;
+    case 2: return (await import("./vocab/en10.u2")).default;
+    // case 3: return (await import("./vocab/en10.u3")).default;
+    // ...
+    default: throw new Error(`Unknown unitId: ${unitId}`);
+  }
+}
+/** Hàm public: lấy dữ liệu vocab của một Unit (tách bundle). */
+/** export async function loadUnitVocab(unitId: number): Promise<UnitVocab> {
   const fn = loaders[unitId];
   if (!fn) throw new Error(`No vocab for unit ${unitId}`);
   return fn();
-}
+}*/
