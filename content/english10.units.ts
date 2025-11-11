@@ -140,15 +140,15 @@ export const english10Units: UnitMeta[] = [
     cover: "/covers/english10/u2.jpg",
     rows: [
       {
-        key: "vocabulary",
+        key: "vocabulary-1",
         lecture: {
           title: "Từ & cụm từ về con người và môi trường",
           tag: "Từ vựng",
-          href: u(2, "vocabulary"),
+          href: u(2, "vocabulary-1"),
         },
         exercise: {
           title: "Thực hành từ vựng",
-          href: u(2, "practice-vocabulary"),
+          href: u(2, "practice-vocabulary-1"),
         },
       },
       {
