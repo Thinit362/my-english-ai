@@ -41,7 +41,7 @@ export const english10VocabManifest: { unitId: number; unitTitle: string; lesson
   {
     unitId: 2,
     unitTitle: "Unit 2: Humans and the environment",
-    lessons: [{ key: "vocabulary", title: "Từ & cụm từ về con người và môi trường" }],
+    lessons: [{ key: "vocabulary-1", title: "Từ & cụm từ về con người và môi trường" }],
   },
   {
     unitId: 3,
@@ -98,15 +98,10 @@ const loaders: Record<number, () => Promise<UnitVocab>> = {
   9: () => import("./vocab/en10.u9").then(m => m.default),
   10: () => import("./vocab/en10.u10").then(m => m.default),
 };
-export async function loadUnitVocab(unitId: number): Promise<UnitVocab> {
-  const loader = loaders[unitId];
-  if (!loader) throw new Error(`Unknown unitId: ${unitId}`);
-  const mod = await loader();
-  return mod.default; // ★ quan trọng: dùng .default để trả về đúng UnitVocab
-}
+
 /** Hàm public: lấy dữ liệu vocab của một Unit (tách bundle). */
- /** export async function loadUnitVocab(unitId: number): Promise<UnitVocab> {
+  export async function loadUnitVocab(unitId: number): Promise<UnitVocab> {
   const fn = loaders[unitId];
   if (!fn) throw new Error(`No vocab for unit ${unitId}`);
   return fn();
-}*/
+}
