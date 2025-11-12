@@ -421,7 +421,7 @@ export default function VocabLesson({
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full md:w-36 h-36 rounded-xl border grid place-items-center text-xs text-gray-400">
+                  <div className="w-full md:w-56 h-56 rounded-xl border grid place-items-center text-xs text-gray-400">
                     No image
                   </div>
                 )}
