@@ -417,11 +417,11 @@ export default function VocabLesson({
                   <img
                     src={imgSrc}
                     alt={it.word}
-                    className="w-full md:w-56 h-56 md:h-56 object-cover rounded-xl border shadow-lg ring-1 ring-black/5"
+                    className="w-full md:w-50 h-50 md:h-50 object-cover rounded-xl border shadow-lg ring-1 ring-black/5"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full md:w-50 h-48 rounded-xl border grid place-items-center text-xs text-gray-400">
+                  <div className="w-full md:w-50 h-46 rounded-xl border grid place-items-center text-xs text-gray-400">
                     No image
                   </div>
                 )}
