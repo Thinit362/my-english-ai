@@ -64,10 +64,10 @@ export const english10VocabManifest: { unitId: number; unitTitle: string; lesson
       { key: "vocabulary-2", title: "Từ & cụm từ về bình đẳng giới – Phần 2" },
   ]},
   { unitId: 7, unitTitle: "Unit 7: Viet Nam and international organisations", lessons: [
-      { key: "vocabulary", title: "Từ vựng: Việt Nam & tổ chức quốc tế" },
+      { key: "vocabulary-1", title: "Từ vựng: Việt Nam & tổ chức quốc tế" },
   ]},
   { unitId: 8, unitTitle: "Unit 8: New ways to learn", lessons: [
-      { key: "vocabulary", title: "Từ vựng: Phương thức học mới" },
+      { key: "vocabulary-1", title: "Từ vựng: Phương thức học mới" },
   ]},
   { unitId: 9, unitTitle: "Unit 9: Protecting the environment", lessons: [
       { key: "vocabulary-1", title: "Từ vựng: Bảo vệ môi trường – Phần 1" },
