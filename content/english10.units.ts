@@ -557,15 +557,15 @@ export const english10Units: UnitMeta[] = [
     cover: "/covers/english10/u7.jpg",
     rows: [
       {
-        key: "vocabulary",
+        key: "vocabulary-1",
         lecture: {
           title: "Từ vựng: Việt Nam & tổ chức quốc tế",
           tag: "Từ vựng",
-          href: u(7, "vocabulary"),
+          href: u(7, "vocabulary-1"),
         },
         exercise: {
           title: "Thực hành từ vựng",
-          href: u(7, "practice-vocabulary"),
+          href: u(7, "practice-vocabulary-1"),
         },
       },
       {
@@ -628,15 +628,15 @@ export const english10Units: UnitMeta[] = [
     cover: "/covers/english10/u8.jpg",
     rows: [
       {
-        key: "vocabulary",
+        key: "vocabulary-1",
         lecture: {
           title: "Từ vựng: Phương thức học mới",
           tag: "Từ vựng",
-          href: u(8, "vocabulary"),
+          href: u(8, "vocabulary-1"),
         },
         exercise: {
           title: "Thực hành từ vựng",
-          href: u(8, "practice-vocabulary"),
+          href: u(8, "practice-vocabulary-1"),
         },
       },
       {
