@@ -3,220 +3,181 @@ import type { UnitGrammar } from "../english10.grammar";
 const u1: UnitGrammar = {
   unit: 1,
   grammar1: {
-    title: "So sánh thì Hiện tại đơn và Hiện tại tiếp diễn",
+    title: "Phân biệt Hiện tại đơn và Hiện tại tiếp diễn",
     viExplain: `
-**1. Ôn lại: Khác biệt về dạng thức của động từ**
+Trong bài học này, các em sẽ được ôn lại hai thì **Hiện tại đơn (Present Simple)** 
+và **Hiện tại tiếp diễn (Present Continuous)** dựa trên sự so sánh các điểm khác biệt.
 
-**Hiện tại đơn (Present Simple)**  
-- Động từ thường: dùng V nguyên mẫu, thêm **-s / -es** với chủ ngữ ngôi thứ ba số ít (he, she, it...).  
-- Động từ *to be*: chia thành **am / is / are** tùy theo chủ ngữ.
+I. Khác biệt trong dạng thức của động từ
+---------------------------------------
 
-**Hiện tại tiếp diễn (Present Continuous)**  
-- Cấu trúc: **S + am/is/are + V-ing**.  
-- Động từ chính luôn ở dạng **V-ing**.
+**1. Hiện tại đơn (Present Simple)**
 
-**Ví dụ so sánh dạng thức**  
-- *She often feeds her baby five times per day.*  
-  → Hiện tại đơn: diễn tả thói quen.  
-- *She is feeding her baby at the moment.*  
-  → Hiện tại tiếp diễn: diễn tả hành động đang xảy ra ngay bây giờ.
+- Động từ thường (V) giữ nguyên hoặc thêm **s/es** tuỳ theo chủ ngữ.
+- Động từ *to be* chia thành **am / is / are** tuỳ theo chủ ngữ.
 
----
+**2. Hiện tại tiếp diễn (Present Continuous)**
 
-**2. Khác biệt về cách dùng**
+- Cấu trúc: \`S + am/is/are + V-ing\`.
+
+Ví dụ:
+- She often feeds her baby five times per day.  
+  (Cô ấy thường cho con ăn 5 lần một ngày.)
+- She is feeding her baby at the moment.  
+  (Cô ấy đang cho con ăn.)
+
+II. Khác biệt trong cách dùng
+-----------------------------
 
 **Hiện tại đơn**  
-- Diễn tả **thói quen**, **hành động lặp đi lặp lại** hoặc **sự thật hiển nhiên**.  
-- Thường đi với các trạng từ tần suất:  
-  *never, sometimes, often, usually, always, rarely,...*  
-  và các cụm chỉ tần suất:  
-  *once a week, twice a month, every day,...*
+- Diễn tả những hành động **thường xuyên xảy ra**, có tính **lặp đi lặp lại**, hoặc sự thật.  
+- Dấu hiệu nhận biết:  
+  \`never, sometimes, often, usually, always, once a week, every day, ...\`
 
 **Hiện tại tiếp diễn**  
-- Diễn tả hành động **đang xảy ra tại thời điểm nói** hoặc **xung quanh thời điểm nói**.  
-- Thường đi với các trạng từ chỉ thời gian hiện tại:  
-  *now, right now, at the moment, at present,...*  
-- Thường dùng sau các câu mệnh lệnh như:  
-  *Be quiet!*, *Listen!*, *Look!*,...
+- Diễn tả hành động xảy ra **ngay tại thời điểm nói** hoặc **xung quanh thời điểm nói**.  
+- Dấu hiệu nhận biết:  
+  \`now, at the moment, at present, ...\`  
+  và các câu mệnh lệnh:  
+  \`Be quiet!\`, \`Listen!\`, ...
 
-**Ví dụ so sánh cách dùng**  
-- *My younger sister always does the washing-up after meals.*  
-  → Hiện tại đơn: thói quen lặp lại.  
-- *My younger sister is doing the washing-up now.*  
-  → Hiện tại tiếp diễn: hành động đang diễn ra bây giờ.
+Ví dụ:
+- My younger sister always does the washing-up after meals.  
+  (Em gái tôi luôn rửa bát sau mỗi bữa ăn.)
+- My younger sister is doing the washing-up now.  
+  (Em gái tôi đang rửa bát.)
+
+III. Các động từ đặc trưng trong từng thì
+-----------------------------------------
+
+1. **Động từ thường dùng ở Hiện tại đơn – stative verbs**
+
+“Stative verbs” (động từ chỉ trạng thái) thường được chia ở thì hiện tại đơn, không dùng ở dạng tiếp diễn.
+
+- Nhóm tri giác: *feel, hear, see, smell, taste, ...*  
+- Nhóm nhận thức: *agree, believe, disagree, know, think (nghĩ rằng), ...*  
+- Nhóm yêu/ghét: *dislike, enjoy, hate, like, love, ...*  
+- Nhóm sở hữu: *belong, have, include, own, possess, ...*  
+- Khác: *appear, need, seem, want, wish, ...*
+
+Ví dụ:
+- Mary owns an expensive car. ✔  
+- Mary is owning an expensive car. ✖
+
+2. **Động từ thường dùng ở Hiện tại tiếp diễn**
+
+Dùng cho những sự **thay đổi, xu hướng đang diễn ra**:
+
+*get, fall, grow, begin, change, become, improve, increase, ...*
+
+Ví dụ:
+- Bill is getting taller this year.  
+  (Năm nay Bill đang dần cao hơn.)
+- Demands for Christmas gifts are growing.  
+  (Nhu cầu mua quà Giáng Sinh đang tăng.)
+
+3. **Động từ dùng được ở cả 2 thì nhưng mang nghĩa khác nhau**
+
+- **taste**  
+  - The soup tastes good. → món canh có vị ngon (trạng thái).  
+  - I am tasting the soup. → tôi đang nếm món canh (hành động).
+
+- **look**  
+  - They look happy together. → họ trông hạnh phúc (trạng thái).  
+  - Why are you looking at me? → tại sao cậu đang nhìn tớ? (hành động).
+
+- **weigh**  
+  - The oranges weigh a kilo. → những quả cam nặng 1 kg (trạng thái).  
+  - She is weighing these oranges. → cô ấy đang cân cam (hành động).
+
+- **enjoy**  
+  - Kate enjoys parties. → Kate thích tiệc tùng (sở thích chung).  
+  - Kate is enjoying the party. → Kate đang tận hưởng bữa tiệc.
+
+- **see**  
+  - I see your point. → tớ hiểu ý cậu.  
+  - I am seeing an old friend. → tớ sắp/đang đi gặp một người bạn cũ.
+
+- **have**  
+  - Laura has a big house. → Laura có một ngôi nhà lớn.  
+  - Laura is having dinner. → Laura đang ăn tối.
+
+- **think**  
+  - I think you're right. → tớ nghĩ cậu đúng.  
+  - What are you thinking about? → bạn đang suy nghĩ về điều gì?
+
+- **consider**  
+  - I consider you my friend. → tớ xem cậu là bạn.  
+  - I am considering your advice. → tớ đang cân nhắc lời khuyên của cậu.
 `,
     examples: [
       {
         en: "She often feeds her baby five times per day.",
-        vi: "Cô ấy thường cho con ăn 5 lần một ngày."
+        vi: "Cô ấy thường cho con ăn 5 lần một ngày.",
       },
       {
         en: "She is feeding her baby at the moment.",
-        vi: "Cô ấy đang cho con ăn lúc này."
+        vi: "Cô ấy đang cho con ăn lúc này.",
       },
       {
         en: "My younger sister always does the washing-up after meals.",
-        vi: "Em gái tôi luôn rửa bát sau mỗi bữa ăn."
+        vi: "Em gái tôi luôn rửa bát sau mỗi bữa ăn.",
       },
       {
         en: "My younger sister is doing the washing-up now.",
-        vi: "Em gái tôi đang rửa bát bây giờ."
-      }
-    ]
-  },
-
-  grammar2: {
-    title: "Động từ đặc trưng trong Hiện tại đơn và Hiện tại tiếp diễn",
-    viExplain: `
-**I. Các động từ thường dùng ở Hiện tại đơn – Stative verbs**
-
-*Stative verbs* là các động từ **miêu tả trạng thái** (không phải hành động cụ thể), thường **không dùng ở thì hiện tại tiếp diễn**.
-
-1. Nhóm động từ chỉ **tri giác**:  
-*feel, hear, see, smell, taste,...*
-
-2. Nhóm động từ chỉ **quan điểm, nhận thức**:  
-*agree, believe, disagree, know, understand, think (nghĩ rằng)...*
-
-3. Nhóm động từ chỉ **yêu/ghét**:  
-*like, love, hate, enjoy, dislike,...*
-
-4. Nhóm động từ chỉ **sở hữu**:  
-*have, own, possess, belong, include,...*
-
-5. Một số động từ trạng thái khác:  
-*appear, seem, need, want, wish,...*
-
-Ví dụ đúng/sai điển hình:  
-- ✔️ *Mary owns an expensive car.*  
-- ❌ *Mary is owning an expensive car.*
-
----
-
-**II. Các động từ thường dùng ở Hiện tại tiếp diễn**
-
-Các động từ thể hiện **sự thay đổi, xu hướng, quá trình đang diễn ra** thường dùng với thì hiện tại tiếp diễn, ví dụ:  
-*get, grow, fall, increase, change, become, improve, begin,...*
-
-Ví dụ:  
-- *Bill is getting taller this year.*  
-- *Demands for Christmas gifts are growing.*
-
----
-
-**III. Động từ dùng được ở cả hai thì nhưng mang nghĩa khác nhau**
-
-1. **taste**  
-- *The soup tastes good.* → “có vị” (trạng thái, hiện tại đơn).  
-- *I am tasting the soup.* → “đang nếm” (hành động, hiện tại tiếp diễn).
-
-2. **look**  
-- *They look happy together.* → “trông có vẻ” (trạng thái).  
-- *Why are you looking at me?* → “đang nhìn” (hành động).
-
-3. **weigh**  
-- *The oranges weigh a kilo.* → “cân nặng là” (trạng thái).  
-- *She is weighing these oranges.* → “đang cân” (hành động).
-
-4. **enjoy**  
-- *Kate enjoys parties.* → sở thích chung.  
-- *Kate is enjoying the party.* → tận hưởng bữa tiệc ngay lúc này.
-
-5. **see**  
-- *I see your point.* → “hiểu, nhận ra” (trạng thái).  
-- *I am seeing an old friend.* → “đang đi gặp” hoặc “sắp gặp”.
-
-6. **have**  
-- *Laura has a big house.* → “sở hữu” (trạng thái).  
-- *Laura is having dinner.* → “đang ăn tối” (hành động).
-
-7. **think**  
-- *I think you're right.* → “nghĩ rằng, cho rằng” (ý kiến cá nhân).  
-- *What are you thinking about?* → “đang suy nghĩ về điều gì”.
-
-8. **consider**  
-- *I consider you my friend.* → “xem là, coi là”.  
-- *I am considering your advice.* → “đang cân nhắc” lời khuyên.
-`,
-    examples: [
+        vi: "Em gái tôi đang rửa bát bây giờ.",
+      },
       {
         en: "Mary owns an expensive car.",
-        vi: "Mary sở hữu một chiếc xe hơi đắt tiền."
+        vi: "Mary sở hữu một chiếc xe hơi đắt tiền.",
       },
       {
         en: "Bill is getting taller this year.",
-        vi: "Năm nay Bill đang dần cao hơn."
-      },
-      {
-        en: "Demands for Christmas gifts are growing.",
-        vi: "Nhu cầu mua quà Giáng Sinh đang tăng lên."
+        vi: "Năm nay Bill đang dần cao hơn.",
       },
       {
         en: "The soup tastes good.",
-        vi: "Món canh này có vị ngon."
+        vi: "Món canh này có vị ngon.",
       },
       {
         en: "I am tasting the soup.",
-        vi: "Tớ đang nếm món canh này."
+        vi: "Tớ đang nếm món canh này.",
       },
       {
         en: "They look happy together.",
-        vi: "Họ trông thật hạnh phúc bên nhau."
+        vi: "Họ trông thật hạnh phúc bên nhau.",
       },
       {
         en: "Why are you looking at me?",
-        vi: "Tại sao cậu lại nhìn tớ thế?"
-      },
-      {
-        en: "The oranges weigh a kilo.",
-        vi: "Những quả cam này nặng một cân."
-      },
-      {
-        en: "She is weighing these oranges.",
-        vi: "Cô ấy đang cân những quả cam này."
-      },
-      {
-        en: "Kate enjoys parties.",
-        vi: "Kate thích tiệc tùng."
-      },
-      {
-        en: "Kate is enjoying the party.",
-        vi: "Kate đang tận hưởng bữa tiệc."
-      },
-      {
-        en: "I see your point.",
-        vi: "Tớ hiểu quan điểm của cậu."
-      },
-      {
-        en: "I am seeing an old friend.",
-        vi: "Tớ sắp đi gặp một người bạn cũ."
+        vi: "Tại sao cậu lại nhìn tớ thế?",
       },
       {
         en: "Laura has a big house.",
-        vi: "Laura có một ngôi nhà lớn."
+        vi: "Laura có một ngôi nhà lớn.",
       },
       {
         en: "Laura is having dinner.",
-        vi: "Laura đang ăn tối."
+        vi: "Laura đang ăn tối.",
       },
       {
         en: "I think you're right.",
-        vi: "Tớ nghĩ là cậu đúng."
+        vi: "Tớ nghĩ rằng cậu đã đúng.",
       },
       {
         en: "What are you thinking about?",
-        vi: "Bạn đang suy nghĩ về điều gì vậy?"
+        vi: "Bạn đang suy nghĩ về điều gì vậy?",
       },
       {
         en: "I consider you my friend.",
-        vi: "Tớ xem cậu là bạn."
+        vi: "Tớ xem cậu là bạn.",
       },
       {
         en: "I am considering your advice.",
-        vi: "Tớ đang suy nghĩ kỹ về lời khuyên của cậu."
-      }
-    ]
-  }
+        vi: "Tớ đang suy nghĩ kĩ về lời khuyên của cậu.",
+      },
+    ],
+  },
+  // KHÔNG có grammar2 cho Unit 1
 };
 
 export default u1;
