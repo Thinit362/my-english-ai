@@ -1,57 +1,59 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pause, Loader2, Trash2, Download } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Play, Pause, Loader2, Download } from "lucide-react";
 import { createStore, get, set, del, keys } from "idb-keyval";
 
-/**
- * TTSPlay — nút phát âm có cache client (IndexedDB).
- * - Chỉ gọi /api/tts 1 lần cho mỗi (text, voice, rate, pitch, provider)
- * - Phát lại n lần không tốn request
- * - Có prefetch (tải sẵn vào cache)
- * - Có pause/resume, progress (thời gian)
- * - Tiện ích xoá cache
- *
- * Endpoint kỳ vọng: /api/tts  (POST JSON -> trả về MP3 bytes)
- * Body mẫu: { text, voice?, rate?, pitch?, format?: "mp3" }
- */
-
-// ====== Cấu hình & Kiểu ======
 type Provider = "custom" | "gemini" | "gcloud" | "azure" | "eleven";
 type AudioFormat = "mp3" | "wav" | "ogg";
 
 export type TTSPlayProps = {
   text: string;
-  voice?: string;       // ví dụ: "en-US-Neural2-C"
-  rate?: number;        // 0.5 .. 2 (1 = mặc định)
-  pitch?: number;       // -10 .. +10 (0 = mặc định)
-  provider?: Provider;  // chỉ dùng để làm key cache
-  format?: AudioFormat; // phải khớp với API (mặc định mp3)
+  voice?: string;
+  rate?: number;
+  pitch?: number;
+  provider?: Provider;
+  format?: AudioFormat;
   className?: string;
   ariaLabel?: string;
-  prefetch?: boolean;   // true -> tự tải sẵn vào cache khi mount
-  showDownload?: boolean; // hiện nút tải file âm thanh
+  prefetch?: boolean;
+  showDownload?: boolean;
   onPlayed?: () => void;
 };
 
-// DB (IndexedDB store) — đổi VERSION để “reset” toàn bộ cache khi bạn đổi định dạng/logic.
+// ===== IndexedDB store =====
 const CACHE_DB = createStore("my-english-ai-tts-db", "v1");
 
-// Tạo key cache ổn định
+// cacheKey CHO PHÉP voice?: string
 function cacheKey({
   text,
   voice,
   rate,
   pitch,
-  provider = "custom",
-  format = "mp3",
-}: Required<Pick<TTSPlayProps, "text" | "voice" | "rate" | "pitch" | "provider" | "format">>) {
-  return `${provider}::${format}::${voice || "default"}::r${rate.toFixed(2)}::p${pitch.toFixed(
+  provider,
+  format,
+}: {
+  text: string;
+  voice?: string;
+  rate: number;
+  pitch: number;
+  provider?: Provider;
+  format?: AudioFormat;
+}) {
+  const p = provider ?? "custom";
+  const f = format ?? "mp3";
+  const v = voice ?? "default";
+  return `${p}::${f}::${v}::r${rate.toFixed(2)}::p${pitch.toFixed(
     2
   )}::${text}`;
 }
 
-// Hash hỗ trợ key ngắn gọn (tuỳ chọn). Nếu trình duyệt có SubtleCrypto thì dùng SHA-256.
 async function hash(input: string) {
   if (globalThis.crypto?.subtle) {
     const enc = new TextEncoder().encode(input);
@@ -59,26 +61,25 @@ async function hash(input: string) {
     const arr = Array.from(new Uint8Array(buf));
     return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
-  // fallback
   return input;
 }
 
-// Gọi API tts (POST) trả Blob
-async function requestTTS(
-  { text, voice, rate, pitch, format = "mp3" }: Partial<TTSPlayProps> & { text: string }
-): Promise<Blob> {
+async function requestTTS({
+  text,
+  voice,
+  rate,
+  pitch,
+  format = "mp3",
+}: Partial<TTSPlayProps> & { text: string }): Promise<Blob> {
   const res = await fetch("/api/tts", {
     method: "POST",
-    body: JSON.stringify({ text, voice, rate, pitch, format }),
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, voice, rate, pitch, format }),
   });
-  if (!res.ok) {
-    throw new Error(`TTS ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`TTS ${res.status}`);
   return await res.blob();
 }
 
-// ====== Component chính ======
 export default function TTSPlay(props: TTSPlayProps) {
   const {
     text,
@@ -98,7 +99,7 @@ export default function TTSPlay(props: TTSPlayProps) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState<{ cur: number; dur: number }>({ cur: 0, dur: 0 });
+  const [progress, setProgress] = useState({ cur: 0, dur: 0 });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -117,7 +118,6 @@ export default function TTSPlay(props: TTSPlayProps) {
 
   const keyPromise = useMemo(() => hash(rawKey), [rawKey]);
 
-  // Lấy từ cache hoặc tải mới
   const ensureBlobUrl = useCallback(async () => {
     setError(null);
     const hashed = await keyPromise;
@@ -144,14 +144,12 @@ export default function TTSPlay(props: TTSPlayProps) {
     return url;
   }, [keyPromise, text, voice, rate, pitch, format]);
 
-  // Prefetch nếu cần
   useEffect(() => {
     if (!prefetch) return;
     ensureBlobUrl().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefetch, rawKey]);
 
-  // Gắn event audio
   useEffect(() => {
     if (!audioRef.current) return;
     const a = audioRef.current;
@@ -162,14 +160,14 @@ export default function TTSPlay(props: TTSPlayProps) {
       setPlaying(false);
       setProgress((p) => ({ ...p, cur: p.dur }));
     };
-    const onTime = () => {
+    const onTime = () =>
       setProgress({ cur: a.currentTime || 0, dur: a.duration || 0 });
-    };
 
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
     a.addEventListener("ended", onEnded);
     a.addEventListener("timeupdate", onTime);
+
     return () => {
       a.removeEventListener("play", onPlay);
       a.removeEventListener("pause", onPause);
@@ -178,25 +176,24 @@ export default function TTSPlay(props: TTSPlayProps) {
     };
   }, []);
 
-  // Phát / Tạm dừng
   const togglePlay = useCallback(async () => {
     if (!audioRef.current) return;
-    // Nếu đang phát -> pause
+
     if (playing) {
       audioRef.current.pause();
       return;
     }
+
     try {
       const url = blobUrl ?? (await ensureBlobUrl());
       audioRef.current.src = url;
       await audioRef.current.play();
       onPlayed?.();
     } catch {
-      // đã setError ở ensureBlobUrl
+      // error đã set ở ensureBlobUrl
     }
   }, [playing, blobUrl, ensureBlobUrl, onPlayed]);
 
-  // Dọn URL khi unmount
   useEffect(() => {
     return () => {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
@@ -204,7 +201,9 @@ export default function TTSPlay(props: TTSPlayProps) {
   }, [blobUrl]);
 
   const pct =
-    progress.dur > 0 ? Math.min(100, Math.round((progress.cur / progress.dur) * 100)) : 0;
+    progress.dur > 0
+      ? Math.min(100, Math.round((progress.cur / progress.dur) * 100))
+      : 0;
 
   return (
     <span className={`inline-flex items-center gap-2 ${className || ""}`}>
@@ -216,10 +215,15 @@ export default function TTSPlay(props: TTSPlayProps) {
         className="rounded-full border px-2 py-1 shadow-sm hover:scale-105 transition disabled:opacity-60"
         title={loading ? "Đang tải âm..." : playing ? "Tạm dừng" : "Nghe phát âm"}
       >
-        {loading ? <Loader2 className="animate-spin" size={16} /> : playing ? <Pause size={16} /> : <Play size={16} />}
+        {loading ? (
+          <Loader2 className="animate-spin" size={16} />
+        ) : playing ? (
+          <Pause size={16} />
+        ) : (
+          <Play size={16} />
+        )}
       </button>
 
-      {/* thanh tiến độ nhỏ gọn */}
       <div className="h-1 w-20 bg-gray-200 rounded overflow-hidden" aria-hidden>
         <div
           className="h-full bg-gray-500"
@@ -230,7 +234,7 @@ export default function TTSPlay(props: TTSPlayProps) {
       {showDownload && blobUrl && (
         <a
           href={blobUrl}
-          download={`tts-${provider}-${format}.` + format}
+          download={`tts-${provider}.${format}`}
           className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50"
           title="Tải file âm thanh"
         >
@@ -238,10 +242,8 @@ export default function TTSPlay(props: TTSPlayProps) {
         </a>
       )}
 
-      {/* audio ẩn để phát */}
       <audio ref={audioRef} preload="none" />
 
-      {/* thông báo lỗi (nếu có) */}
       {error && (
         <span className="text-xs text-red-600" role="alert">
           {error}
@@ -251,7 +253,7 @@ export default function TTSPlay(props: TTSPlayProps) {
   );
 }
 
-// ====== Tiện ích: xoá cache TTS (lọc theo provider nếu muốn) ======
+// ===== tiện ích xoá cache =====
 export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
   const all = await keys(CACHE_DB);
   const willDelete: IDBValidKey[] = [];
@@ -265,9 +267,14 @@ export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
   return willDelete.length;
 }
 
-// ====== Tiện ích: prefetch danh sách câu (ví dụ cho 1 Unit) ======
+// ===== prefetch nhiều câu 1 lúc =====
 export async function prefetchTTSBatch(
-  items: Array<Pick<TTSPlayProps, "text" | "voice" | "rate" | "pitch" | "provider" | "format">>
+  items: Array<
+    Pick<
+      TTSPlayProps,
+      "text" | "voice" | "rate" | "pitch" | "provider" | "format"
+    >
+  >
 ) {
   for (const it of items) {
     const key = await hash(
@@ -276,13 +283,19 @@ export async function prefetchTTSBatch(
         voice: it.voice,
         rate: it.rate ?? 1,
         pitch: it.pitch ?? 0,
-        provider: it.provider ?? "custom",
-        format: it.format ?? "mp3",
+        provider: it.provider,
+        format: it.format,
       })
     );
     const exist = await get(key, CACHE_DB);
     if (!exist) {
-      const blob = await requestTTS({ text: it.text, voice: it.voice, rate: it.rate, pitch: it.pitch, format: it.format });
+      const blob = await requestTTS({
+        text: it.text,
+        voice: it.voice,
+        rate: it.rate,
+        pitch: it.pitch,
+        format: it.format,
+      });
       await set(key, blob, CACHE_DB);
     }
   }
