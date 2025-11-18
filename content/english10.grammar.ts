@@ -1,31 +1,5 @@
 // content/english10.grammar.ts
 
-// ======================
-// Types cho phần Grammar
-// ======================
-
-export type ExampleItem = {
-  en: string;
-  vi?: string;
-  voice?: string; // nếu sau này bạn muốn chọn giọng khác cho TTS
-};
-
-export type GrammarBlock = {
-  title: string;
-  viExplain: string;      // có thể là markdown
-  examples: ExampleItem[];
-};
-
-export type UnitGrammar = {
-  unit: number;
-  grammar1: GrammarBlock;
-  grammar2?: GrammarBlock; // có thể có hoặc không
-};
-
-// ======================
-// Import các unit grammar
-// ======================
-
 import u1 from "./grammar/en10.u1";
 import u2 from "./grammar/en10.u2";
 import u3 from "./grammar/en10.u3";
@@ -37,9 +11,23 @@ import u8 from "./grammar/en10.u8";
 import u9 from "./grammar/en10.u9";
 import u10 from "./grammar/en10.u10";
 
-// ======================
-// Mảng tổng & helper
-// ======================
+export type ExampleItem = {
+  en: string;
+  vi?: string;
+  voice?: string;
+};
+
+export type GrammarBlock = {
+  title: string;
+  viExplain: string;       // giải thích bằng tiếng Việt (có thể dùng markdown / xuống dòng)
+  examples: ExampleItem[]; // các câu ví dụ để hiển thị + TTS
+};
+
+export type UnitGrammar = {
+  unit: number;
+  grammar1: GrammarBlock;
+  grammar2?: GrammarBlock; // có thể có hoặc không
+};
 
 export const EN10_GRAMMAR: UnitGrammar[] = [
   u1,
@@ -54,5 +42,6 @@ export const EN10_GRAMMAR: UnitGrammar[] = [
   u10,
 ];
 
-export const findGrammarByUnit = (unit: number): UnitGrammar | undefined =>
-  EN10_GRAMMAR.find((g) => g.unit === unit);
+export function findGrammarByUnit(unit: number): UnitGrammar | undefined {
+  return EN10_GRAMMAR.find((g) => g.unit === unit);
+}
