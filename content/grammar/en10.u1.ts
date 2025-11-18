@@ -1,4 +1,4 @@
-import type { UnitGrammar } from "../english10.grammar";
+import type { UnitGrammar } from "../english10.grammar1";
 
 const u1: UnitGrammar = {
   unit: 1,
