@@ -81,15 +81,15 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar1",
         lecture: {
           title: "Hiện tại đơn vs. Hiện tại tiếp diễn",
           tag: "Ngữ pháp",
-          href: u(1, "grammar"),
+          href: u(1, "grammar1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
-          href: u(1, "practice-grammar"),
+          href: u(1, "practice-grammar1"),
         },
       },
       {
