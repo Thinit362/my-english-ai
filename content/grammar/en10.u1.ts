@@ -2,7 +2,7 @@ import type { UnitGrammar } from "../english10.grammar";
 
 const u1: UnitGrammar = {
   unit: 1,
-  grammar1: {
+  grammar: {
     title: "Phân biệt Hiện tại đơn và Hiện tại tiếp diễn",
     viExplain: `
 Trong bài học này, các em sẽ được ôn lại hai thì **Hiện tại đơn (Present Simple)** 
