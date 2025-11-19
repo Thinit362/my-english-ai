@@ -7,24 +7,14 @@ import {
 } from "@/content/english10.grammar";
 import TTSPlay from "@/components/TTSPlay";
 
-type Params = {
-  unit: string;
-};
+type Params = { unit: string };
 
-/**
- * Build sẵn các đường dẫn:
- * /english-10/unit/1/grammar-1 ... /english-10/unit/10/grammar-1
- * chỉ cho những unit thật sự có grammar1.
- */
 export function generateStaticParams() {
   return EN10_GRAMMAR
     .filter((g) => !!g.grammar1)
     .map((g) => ({ unit: String(g.unit) }));
 }
 
-/**
- * SEO title cho từng bài Grammar 1
- */
 export async function generateMetadata({ params }: { params: Params }) {
   const unitNumber = Number(params.unit);
   const g = findGrammarByUnit(unitNumber);
@@ -35,55 +25,68 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-/**
- * Trang hiển thị Grammar 1 cho từng Unit
- */
 export default function Grammar1Page({ params }: { params: Params }) {
   const unitNumber = Number(params.unit);
 
-  if (Number.isNaN(unitNumber)) {
-    notFound();
-  }
+  if (Number.isNaN(unitNumber)) notFound();
 
   const grammarUnit = findGrammarByUnit(unitNumber);
+  if (!grammarUnit || !grammarUnit.grammar1) notFound();
 
-  if (!grammarUnit || !grammarUnit.grammar1) {
-    notFound();
-  }
-
-  const block = grammarUnit!.grammar1;
+  const block = grammarUnit.grammar1;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-3xl font-bold mb-2">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* Tiêu đề Unit */}
+      <h1 className="text-3xl font-bold mb-2 text-slate-900">
         Unit {unitNumber} – Grammar 1
       </h1>
 
-      {/* Tiêu đề ngữ pháp */}
-      <h2 className="text-2xl font-semibold text-blue-600">
+      {/* Tiêu đề bài ngữ pháp */}
+      <h2 className="text-2xl font-semibold text-orange-600">
         {block.title}
       </h2>
 
-      {/* Giải thích ngữ pháp (tiếng Việt) – giữ xuống dòng từ viExplain */}
-      <div className="bg-white border rounded-lg p-4 shadow-sm">
-        <p className="whitespace-pre-line text-sm leading-relaxed">
-          {block.viExplain}
-        </p>
-      </div>
+      {/* Thẻ bài ngữ pháp: gồm cả giải thích + ví dụ + TTS */}
+      <div className="rounded-2xl border border-orange-200 bg-white shadow-sm p-4 md:p-6 space-y-4">
+        {/* Giải thích (tiếng Việt), có màu sắc & tiêu đề I, II, III... */}
+        <div
+          className="text-sm leading-relaxed space-y-3"
+          // viExplain là HTML (đã có class Tailwind ở trong)
+          dangerouslySetInnerHTML={{ __html: block.viExplain }}
+        />
 
-      {/* Danh sách ví dụ + nút Play TTS */}
-      <section className="space-y-3">
-        <h3 className="text-xl font-semibold">Ví dụ</h3>
-      {block.examples.map((ex, index) => (
-        <div key={index} className="bg-white border rounded-lg p-3 shadow-sm">
-       <div className="flex items-start justify-between gap-3">
-        <p className="font-medium text-blue-700">{ex.en}</p>
-        <TTSPlay text={ex.en} />
+        {/* Đường kẻ mờ ngăn nhẹ giữa giải thích & ví dụ */}
+        {block.examples.length > 0 && (
+          <div className="border-t border-dashed border-orange-200 pt-3" />
+        )}
+
+        {/* Các câu tiếng Anh + nút TTSPlay nằm NGAY TRONG THẺ BÀI */}
+        <div className="space-y-2">
+          {block.examples.map((ex, index) => (
+            <div
+              key={index}
+              className="flex items-start justify-between gap-3 rounded-lg bg-orange-50/60 border border-orange-100 px-3 py-2"
+            >
+              <div className="flex-1">
+                <p className="font-medium text-blue-700 text-[0.95rem]">
+                  {ex.en}
+                </p>
+                {ex.vi && (
+                  <p className="text-gray-600 italic text-xs mt-1">
+                    {ex.vi}
+                  </p>
+                )}
+              </div>
+
+              {/* Nút play TTS nằm sát câu tiếng Anh */}
+              <div className="shrink-0 mt-1">
+                <TTSPlay text={ex.en} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      {ex.vi && <p className="text-gray-600 italic mt-1">{ex.vi}</p>}
-      </div>
-        ))}
-      </section>
     </div>
   );
 }
