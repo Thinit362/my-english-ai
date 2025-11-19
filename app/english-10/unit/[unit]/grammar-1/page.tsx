@@ -74,21 +74,14 @@ export default function Grammar1Page({ params }: { params: Params }) {
       {/* Danh sách ví dụ + nút Play TTS */}
       <section className="space-y-3">
         <h3 className="text-xl font-semibold">Ví dụ</h3>
-
-        {block.examples.map((ex, index) => (
-          <div
-            key={index}
-            className="bg-white border rounded-lg p-3 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="font-medium">{ex.en}</p>
-              {/* Nút tam giác phát âm dùng Cloud TTS qua TTSPlay */}
-              <TTSPlay text={ex.en} />
-            </div>
-            {ex.vi && (
-              <p className="text-gray-600 italic mt-1">{ex.vi}</p>
-            )}
-          </div>
+      {block.examples.map((ex, index) => (
+        <div key={index} className="bg-white border rounded-lg p-3 shadow-sm">
+       <div className="flex items-start justify-between gap-3">
+        <p className="font-medium text-blue-700">{ex.en}</p>
+        <TTSPlay text={ex.en} />
+      </div>
+      {ex.vi && <p className="text-gray-600 italic mt-1">{ex.vi}</p>}
+      </div>
         ))}
       </section>
     </div>
