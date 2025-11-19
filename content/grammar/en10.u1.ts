@@ -6,118 +6,159 @@ const u1: UnitGrammar = {
   grammar1: {
     title: "Present Simple vs. Present Continuous",
     viExplain: `
-Trong bài học này, các em ôn lại hai thì **Hiện tại đơn (Present Simple)** và 
-**Hiện tại tiếp diễn (Present Continuous)** thông qua so sánh sự khác nhau về **dạng thức** và **cách dùng**.
+<section class="space-y-6">
 
----
+  <!-- Tiêu đề lớn -->
+  <h1 class="text-2xl md:text-3xl font-bold text-center text-orange-600 uppercase">
+    So sánh HIỆN TẠI ĐƠN và HIỆN TẠI TIẾP DIỄN
+  </h1>
 
-## I. Khác biệt trong dạng thức của động từ
+  <!-- Khối I -->
+  <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 md:p-5 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-9 h-9 rounded-full bg-orange-500 text-white font-bold grid place-items-center">
+        I
+      </div>
+      <h2 class="font-semibold text-slate-800">
+        Khác biệt trong dạng thức của động từ
+      </h2>
+    </div>
 
-### 1. Hiện tại đơn (Present Simple)
+    <h3 class="font-semibold text-orange-700 mb-1">
+      Dạng thức của động từ ở thì hiện tại đơn và hiện tại tiếp diễn
+    </h3>
 
-- Động từ thường (V) **giữ nguyên** hoặc thêm **-s / -es** tùy theo chủ ngữ.  
-- Động từ **to be** chia thành: **am / is / are**.
+    <h4 class="font-semibold text-slate-800 underline decoration-orange-400">
+      Hiện tại đơn:
+    </h4>
+    <ul class="list-disc pl-6 text-slate-700 text-sm leading-relaxed mb-3">
+      <li>Động từ thường (V) giữ nguyên hoặc thêm <b>s/es</b> tùy theo chủ ngữ.</li>
+      <li>Động từ <i>to be</i> chia thành <b>am / is / are</b> tùy theo chủ ngữ.</li>
+    </ul>
 
-Ví dụ:
-- She often feeds her baby five times per day.  
-  ⇒ Hành động lặp lại, thói quen.
+    <h4 class="font-semibold text-slate-800 underline decoration-orange-400">
+      Hiện tại tiếp diễn:
+    </h4>
+    <ul class="list-disc pl-6 text-slate-700 text-sm leading-relaxed mb-3">
+      <li>Dạng chung: <b>am / is / are + V-ing</b>.</li>
+    </ul>
 
-### 2. Hiện tại tiếp diễn (Present Continuous)
+    <p class="font-semibold text-slate-800 mb-1">Ví dụ:</p>
+    <p class="text-blue-700 text-sm">
+      She often feeds her baby five times per day.
+    </p>
+    <p class="text-gray-600 italic text-sm mb-2">
+      (Cô ấy thường cho con ăn 5 lần một ngày.)
+    </p>
 
-- Cấu trúc: \`S + am / is / are + V-ing\`.
+    <p class="text-blue-700 text-sm">
+      She is feeding her baby at the moment.
+    </p>
+    <p class="text-gray-600 italic text-sm">
+      (Cô ấy đang cho con ăn lúc này.)
+    </p>
+  </div>
 
-Ví dụ:
-- She is feeding her baby at the moment.  
-  ⇒ Hành động đang diễn ra **ngay lúc nói**.
+  <!-- Khối II -->
+  <div class="rounded-xl border border-orange-200 bg-white p-4 md:p-5 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-9 h-9 rounded-full bg-orange-500 text-white font-bold grid place-items-center">
+        II
+      </div>
+      <h2 class="font-semibold text-slate-800">
+        Khác biệt trong cách dùng
+      </h2>
+    </div>
 
----
+    <h3 class="font-semibold text-slate-800 underline decoration-orange-400">
+      Hiện tại đơn:
+    </h3>
+    <p class="text-sm text-slate-700 mb-1">
+      Diễn tả những hành động <b>thường xuyên xảy ra, có tính lặp đi lặp lại</b>, thói quen hoặc sự thật.
+    </p>
+    <p class="text-sm text-slate-700 mb-3">
+      Dấu hiệu nhận biết: <i>never, sometimes, often, usually, always, once a week, every day, ...</i>
+    </p>
 
-## II. Khác biệt trong cách dùng
+    <h3 class="font-semibold text-slate-800 underline decoration-orange-400">
+      Hiện tại tiếp diễn:
+    </h3>
+    <p class="text-sm text-slate-700 mb-1">
+      Diễn tả hành động đang xảy ra <b>ngay tại thời điểm nói</b> hoặc xung quanh thời điểm nói.
+    </p>
+    <p class="text-sm text-slate-700 mb-3">
+      Dấu hiệu nhận biết: <i>now, at the moment, at present, ...</i> và các câu mệnh lệnh:
+      <i>Be quiet!, Listen!, ...</i>
+    </p>
 
-### 1. Hiện tại đơn – thói quen, sự thật
+    <p class="font-semibold text-slate-800 mb-1">Ví dụ:</p>
+    <p class="text-blue-700 text-sm">
+      My younger sister always does the washing-up after meals.
+    </p>
+    <p class="text-gray-600 italic text-sm mb-2">
+      (Em gái tôi luôn rửa bát sau mỗi bữa ăn.)
+    </p>
 
-Dùng để diễn tả:
+    <p class="text-blue-700 text-sm">
+      My younger sister is doing the washing-up now.
+    </p>
+    <p class="text-gray-600 italic text-sm">
+      (Em gái tôi đang rửa bát bây giờ.)
+    </p>
+  </div>
 
-- Thói quen, hành động **thường xuyên lặp lại**.  
-- Sự thật hiển nhiên.
+  <!-- Khối III -->
+  <div class="rounded-xl border border-sky-200 bg-sky-50 p-4 md:p-5 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-9 h-9 rounded-full bg-sky-500 text-white font-bold grid place-items-center">
+        III
+      </div>
+      <h2 class="font-semibold text-slate-800">
+        Các nhóm động từ đặc trưng
+      </h2>
+    </div>
 
-**Trạng từ thường gặp:**  
-\`never, sometimes, often, usually, always, every day, once a week,...\`
+    <h3 class="font-semibold text-slate-800 mb-1">
+      1. Động từ thường dùng ở Hiện tại đơn (stative verbs)
+    </h3>
+    <p class="text-sm text-slate-700 mb-2">
+      Diễn tả trạng thái, cảm xúc, sở hữu, nhận thức… thường không dùng ở hiện tại tiếp diễn:
+    </p>
+    <ul class="list-disc pl-6 text-sm text-slate-700 mb-3">
+      <li>Tri giác: <i>feel, hear, see, smell, taste, ...</i></li>
+      <li>Nhận thức: <i>agree, believe, know, think (nghĩ rằng), ...</i></li>
+      <li>Cảm xúc: <i>like, love, hate, enjoy, dislike, ...</i></li>
+      <li>Sở hữu: <i>have, own, belong, include, possess, ...</i></li>
+    </ul>
 
-Ví dụ:
-- My younger sister always does the washing-up after meals.
+    <p class="text-sm text-slate-700 mb-3">
+      Ví dụ: <b>Mary owns an expensive car.</b> (Đúng),  
+      <b>Mary is owning an expensive car.</b> (Sai).
+    </p>
 
-### 2. Hiện tại tiếp diễn – đang diễn ra
+    <h3 class="font-semibold text-slate-800 mb-1">
+      2. Động từ thường dùng ở Hiện tại tiếp diễn
+    </h3>
+    <p class="text-sm text-slate-700 mb-2">
+      Thể hiện sự thay đổi, phát triển, xu hướng:
+    </p>
+    <ul class="list-disc pl-6 text-sm text-slate-700 mb-3">
+      <li><i>get, grow, change, become, improve, increase, begin, ...</i></li>
+    </ul>
 
-Dùng để diễn tả:
-
-- Hành động đang diễn ra **ngay bây giờ**.  
-- Hành động tạm thời quanh thời điểm nói.
-
-**Trạng từ thường gặp:**  
-\`now, at the moment, at present, today,...\`  
-và các câu mệnh lệnh: \`Be quiet!\`, \`Listen!\`, ...
-
-Ví dụ:
-- My younger sister is doing the washing-up now.
-
----
-
-## III. Một số nhóm động từ đặc trưng
-
-### 1. Động từ thường chia ở Hiện tại đơn (stative verbs)
-
-Là những động từ chỉ **trạng thái**, **cảm xúc**, **sở hữu**,… thường không dùng ở dạng tiếp diễn:
-
-- Tri giác: *feel, hear, see, smell, taste,...*  
-- Nhận thức: *agree, believe, know, think (nghĩ rằng),...*  
-- Cảm xúc: *like, love, hate, enjoy, dislike,...*  
-- Sở hữu: *have, own, belong, include, possess,...*
-
-Ví dụ:
-- Mary owns an expensive car. (Đúng)  
-- Mary is owning an expensive car. (Sai)
-
-### 2. Động từ thường dùng ở Hiện tại tiếp diễn
-
-Dùng khi muốn nhấn mạnh sự **thay đổi, phát triển**:
-
-- *get, grow, change, become, improve, increase, begin,...*
-
-Ví dụ:
-- Bill is getting taller this year.  
-- Demands for Christmas gifts are growing.
-
-### 3. Động từ dùng được ở cả hai thì nhưng nghĩa khác nhau
-
-- **taste**  
-  - The soup tastes good. → món canh **có vị ngon** (trạng thái).  
-  - I am tasting the soup. → tôi **đang nếm** món canh (hành động).
-
-- **look**  
-  - They look happy together. → họ **trông có vẻ** hạnh phúc.  
-  - Why are you looking at me? → tại sao bạn **đang nhìn** tôi?
-
-- **weigh**  
-  - The oranges weigh a kilo. → cam **nặng** 1 kg.  
-  - She is weighing these oranges. → cô ấy **đang cân** cam.
-
-- **see**  
-  - I see your point. → tôi **hiểu** ý bạn.  
-  - I am seeing an old friend. → tôi **sắp gặp / đang gặp** một người bạn cũ.
-
-- **have**  
-  - Laura has a big house. → Laura **có** một ngôi nhà lớn.  
-  - Laura is having dinner. → Laura **đang ăn** tối.
-
-- **think**  
-  - I think you're right. → tôi **nghĩ rằng** bạn đúng.  
-  - What are you thinking about? → bạn **đang nghĩ** về điều gì?
-
-- **consider**  
-  - I consider you my friend. → tôi **xem** bạn là bạn.  
-  - I am considering your advice. → tôi **đang cân nhắc** lời khuyên của bạn.
-`,
+    <h3 class="font-semibold text-slate-800 mb-1">
+      3. Động từ dùng được ở cả hai thì nhưng nghĩa khác nhau
+    </h3>
+    <p class="text-sm text-slate-700 mb-1">
+      Ví dụ: <b>taste, look, weigh, see, have, think, consider, ...</b>
+    </p>
+    <p class="text-sm text-slate-700">
+      Các động từ này ở hiện tại đơn thường chỉ trạng thái;  
+      ở hiện tại tiếp diễn thường nhấn mạnh hành động đang diễn ra.
+    </p>
+  </div>
+</section>
+    `,
     examples: [
       {
         en: "She often feeds her baby five times per day.",
