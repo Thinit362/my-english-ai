@@ -1,5 +1,3 @@
-// content/english10.pronunciation.ts
-
 import u1 from "./pronunciation/en10.u1";
 import u2 from "./pronunciation/en10.u2";
 import u3 from "./pronunciation/en10.u3";
@@ -21,6 +19,19 @@ export type PronunciationItem = {
   vi?: string;                  // nghĩa hoặc chú thích tiếng Việt
   type?: "word" | "sentence";   // phân loại cho UI (không bắt buộc)
   voice?: string;               // nếu muốn chỉ định voice khác mặc định
+
+  /**
+   * CHO PHÉP HIGHLIGHT PHẦN IPA CẦN HỌC:
+   * ví dụ: "kl" -> sẽ tô đỏ /kl/ trong /klaʊn/
+   */
+  highlight?: string;
+
+  /**
+   * CHO PHÉP HIGHLIGHT PHẦN TEXT NẾU CẦN:
+   * ví dụ: highlightText: "cl" -> tô đỏ 'clown'
+   * (tùy bạn có dùng hay không)
+   */
+  highlightText?: string;
 };
 
 /**
@@ -28,8 +39,8 @@ export type PronunciationItem = {
  */
 export type PronunciationBlock = {
   title: string;          // tiêu đề: "Phụ âm cụm /tr/ /kr/ /br/"
-  focus: string;          // mô tả ngắn: "Luyện phát âm các cụm phụ âm ..."
-  viExplain: string;      // giải thích chi tiết (có thể dùng markdown)
+  focus: string;          // mô tả ngắn
+  viExplain: string;      // giải thích chi tiết
   tips?: string[];        // các gạch đầu dòng mẹo luyện phát âm
   items: PronunciationItem[]; // danh sách từ/câu để nghe + ghi âm
 };
