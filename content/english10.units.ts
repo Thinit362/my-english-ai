@@ -331,15 +331,15 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar-1",
         lecture: {
           title: "Quá khứ đơn & Quá khứ tiếp diễn",
           tag: "Ngữ pháp",
-          href: u(4, "grammar"),
+          href: u(4, "grammar-1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
-          href: u(4, "practice-grammar"),
+          href: u(4, "practice-grammar-1"),
         },
       },
       // Có thể bổ sung mục Phát âm riêng nếu bạn xây nội dung cho Unit 4
