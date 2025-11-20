@@ -9,44 +9,39 @@ import u8 from "./pronunciation/en10.u8";
 import u9 from "./pronunciation/en10.u9";
 import u10 from "./pronunciation/en10.u10";
 
-/**
- * Một item dùng cho TTS + luyện phát âm.
- * Có thể là từ đơn hoặc câu.
- */
 export type PronunciationItem = {
-  text: string;                 // từ/câu để hiển thị + gửi lên Cloud TTS
-  ipa?: string;                 // phiên âm /ˈkemɪkəl/
-  vi?: string;                  // nghĩa hoặc chú thích tiếng Việt
-  type?: "word" | "sentence";   // phân loại cho UI (không bắt buộc)
-  voice?: string;               // nếu muốn chỉ định voice khác mặc định
+  text: string;
+  ipa?: string;
+  vi?: string;
+  type?: "word" | "sentence";
+  voice?: string;
+  highlight?: string;      // cụm IPA cần tô đỏ, ví dụ "tr"
+  highlightText?: string;  // nếu sau này muốn tô đỏ ngay trong chữ
+};
 
-  /**
-   * CHO PHÉP HIGHLIGHT PHẦN IPA CẦN HỌC:
-   * ví dụ: "kl" -> sẽ tô đỏ /kl/ trong /klaʊn/
-   */
-  highlight?: string;
-
-  /**
-   * CHO PHÉP HIGHLIGHT PHẦN TEXT NẾU CẦN:
-   * ví dụ: highlightText: "cl" -> tô đỏ 'clown'
-   * (tùy bạn có dùng hay không)
-   */
-  highlightText?: string;
+export type SoundSection = {
+  key: string;            // "tr", "kr", "br"
+  label: string;          // "/tr/", "/kr/", "/br/"
+  title?: string;
+  description?: string;
+  image?: string;         // hình minh hoạ khẩu hình (nếu có)
+  items: PronunciationItem[];
 };
 
 /**
  * Khối nội dung chính của phần Pronunciation trong 1 unit.
  */
 export type PronunciationBlock = {
-  title: string;          // tiêu đề: "Phụ âm cụm /tr/ /kr/ /br/"
-  focus: string;          // mô tả ngắn
-  viExplain: string;      // giải thích chi tiết
-  tips?: string[];        // các gạch đầu dòng mẹo luyện phát âm
-  items: PronunciationItem[]; // danh sách từ/câu để nghe + ghi âm
+  title: string;
+  focus: string;
+  viExplain: string;
+  tips?: string[];
+  items?: PronunciationItem[];  // dùng cho unit đơn giản
+  sounds?: SoundSection[];      // dùng khi 1 unit có nhiều âm
 };
 
 export type UnitPronunciation = {
-  unit: number;                 // 1..10
+  unit: number;
   pronunciation: PronunciationBlock;
 };
 
