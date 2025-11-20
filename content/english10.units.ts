@@ -498,15 +498,15 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar-1",
         lecture: {
           title: "Bị động với động từ khuyết thiếu",
           tag: "Ngữ pháp",
-          href: u(6, "grammar"),
+          href: u(6, "grammar-1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
-          href: u(6, "practice-grammar"),
+          href: u(6, "practice-grammar-1"),
         },
       },
       {
@@ -640,11 +640,11 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar-1",
         lecture: {
           title: "Mệnh đề quan hệ (xác định & không xác định)",
           tag: "Ngữ pháp",
-          href: u(8, "grammar"),
+          href: u(8, "grammar-1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
@@ -723,11 +723,11 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar-1",
         lecture: {
           title: "Câu tường thuật (reported speech)",
           tag: "Ngữ pháp",
-          href: u(9, "grammar"),
+          href: u(9, "grammar-1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
@@ -806,11 +806,11 @@ export const english10Units: UnitMeta[] = [
         },
       },
       {
-        key: "grammar",
+        key: "grammar-1",
         lecture: {
           title: "Câu điều kiện loại 1 & 2",
           tag: "Ngữ pháp",
-          href: u(10, "grammar"),
+          href: u(10, "grammar-1"),
         },
         exercise: {
           title: "Thực hành ngữ pháp",
