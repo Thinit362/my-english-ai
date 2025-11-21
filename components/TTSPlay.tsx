@@ -13,7 +13,6 @@ import {
   Loader2,
   Download,
   Mic,
-  Square,
   Volume2,
   X,
 } from "lucide-react";
@@ -35,23 +34,20 @@ export type TTSPlayProps = {
   showDownload?: boolean;
   onPlayed?: () => void;
 
-  /** Bật ghi âm + chấm điểm */
+  /** Bật luyện nói + chấm điểm giống phần từ vựng */
   enableRecord?: boolean;
-  /** Câu mục tiêu để so sánh (nếu không truyền dùng text) */
+  /** Câu/từ mục tiêu để so sánh (mặc định = text) */
   expectedText?: string;
-  /** Mã ngôn ngữ gửi cho API chấm điểm */
+  /** Mã ngôn ngữ cho SpeechRecognition */
   languageCode?: string;
-  /** Endpoint backend dùng để chấm điểm phát âm */
-  scoringApiUrl?: string;
 
-  /** Chế độ nhỏ gọn: chỉ hiển thị 2 icon tròn [loa] [mic] */
+  /** Hiển thị dạng nhỏ gọn: chỉ 2 icon tròn [loa] [mic] */
   compact?: boolean;
 };
 
-// ===== IndexedDB store =====
+/* ========= IndexedDB cache (TTS) ========= */
 const CACHE_DB = createStore("my-english-ai-tts-db", "v1");
 
-// cacheKey CHO PHÉP voice?: string
 function cacheKey({
   text,
   voice,
@@ -101,6 +97,72 @@ async function requestTTS({
   return await res.blob();
 }
 
+/* ========= Helper cho chấm điểm (copy logic từ VocabLesson) ========= */
+
+function normalize(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s']/gu, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+function levenshtein(a: string, b: string) {
+  const m = a.length,
+    n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
+function calcScore(target: string, said: string) {
+  const A = normalize(target);
+  const B = normalize(said);
+  if (!A || !B) return 0;
+  const dist = levenshtein(A, B);
+  const sim = 1 - dist / Math.max(A.length, B.length);
+  return Math.max(0, Math.min(1, sim));
+}
+function pctColor(p: number | null | undefined) {
+  if (p == null) return "text-gray-500";
+  const v = Number(p);
+  if (v >= 90) return "text-green-600";
+  if (v >= 70) return "text-amber-500";
+  return "text-red-600";
+}
+function messageFor(p: number | null | undefined) {
+  if (p == null)
+    return "Nhấn Ghi âm rồi đọc lại câu ở trên để luyện và được hệ thống chấm điểm.";
+  if (p >= 90) return "Bạn rất xuất sắc. Cố gắng phát huy nhé!";
+  if (p >= 70) return "Bạn làm khá tốt. Cố gắng hơn nữa nhé!";
+  return "Bạn hãy luyện lại để đạt điểm cao hơn nhé!";
+}
+
+function setupSR(lang = "en-US") {
+  const SR: any =
+    (typeof window !== "undefined" &&
+      ((window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition)) ||
+    null;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = lang;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+/* ========= Component ========= */
+
 export default function TTSPlay(props: TTSPlayProps) {
   const {
     text,
@@ -118,12 +180,10 @@ export default function TTSPlay(props: TTSPlayProps) {
     enableRecord = false,
     expectedText,
     languageCode = "en-US",
-    scoringApiUrl = "/api/pronunciation-score",
-
     compact = false,
   } = props;
 
-  // ====== TTS playback state ======
+  // ======= playback state =======
   const [loading, setLoading] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -210,6 +270,7 @@ export default function TTSPlay(props: TTSPlayProps) {
 
     if (playing) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       return;
     }
 
@@ -234,150 +295,106 @@ export default function TTSPlay(props: TTSPlayProps) {
       ? Math.min(100, Math.round((progress.cur / progress.dur) * 100))
       : 0;
 
-  // ====== Recording + scoring state ======
-  const [recording, setRecording] = useState(false);
+  /* ======= Luyện nói + chấm điểm (giống VocabLesson) ======= */
+
+  const [practiceOpen, setPracticeOpen] = useState(false);
   const [recordError, setRecordError] = useState<string | null>(null);
-  const [scoring, setScoring] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [scoreMessage, setScoreMessage] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [recUrl, setRecUrl] = useState<string | null>(null);
+  const [said, setSaid] = useState<string>("");
+  const [percent, setPercent] = useState<number | null>(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
-  const recordAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const srRef = useRef<any>(null);
 
-  const clearRecordingState = () => {
-    chunksRef.current = [];
-    if (recordedUrl) {
-      URL.revokeObjectURL(recordedUrl);
-      setRecordedUrl(null);
+  const openPractice = () => {
+    setPracticeOpen(true);
+    setRecordError(null);
+    setRecording(false);
+    setRecUrl(null);
+    setSaid("");
+    setPercent(null);
+  };
+
+  const closePractice = () => {
+    setPracticeOpen(false);
+    try {
+      srRef.current?.stop?.();
+    } catch {}
+    if (recording) {
+      mediaRef.current?.stop();
+      setRecording(false);
     }
   };
 
-  const stopTracks = (stream?: MediaStream | null) => {
-    stream?.getTracks().forEach((t) => t.stop());
-  };
-
-  const startRecording = useCallback(async () => {
-    if (!enableRecord) return;
+  async function startPracticeRecord() {
     setRecordError(null);
-    setScore(null);
-    setScoreMessage(null);
-    setShowResult(false);
-    clearRecordingState();
+    setSaid("");
+    setPercent(null);
 
+    // SpeechRecognition cho text
+    const sr = setupSR(languageCode);
+    if (!sr) {
+      alert(
+        "Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói. Vui lòng dùng Chrome hoặc Edge."
+      );
+    } else {
+      srRef.current = sr;
+      sr.onresult = (e: any) => {
+        const saidText = e.results[0][0].transcript || "";
+        setSaid(saidText);
+      };
+      sr.onerror = () => {};
+      sr.onend = () => {
+        const target = expectedText || text;
+        const raw = Math.round(calcScore(target, said) * 100);
+        setPercent(Math.max(0, Math.min(100, raw)));
+      };
+      try {
+        sr.start();
+      } catch {}
+    }
+
+    // Ghi âm audio
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setRecordError("Trình duyệt không hỗ trợ ghi âm.");
-        return;
-      }
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
+      const m = new MediaRecorder(stream);
+      mediaRef.current = m;
       chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      recorder.onerror = (e) => {
-        console.error("Recorder error", e);
-        setRecordError("Có lỗi khi ghi âm. Vui lòng thử lại.");
-        setRecording(false);
-        stopTracks(stream);
-      };
-
-      recorder.onstop = async () => {
-        stopTracks(stream);
-        setRecording(false);
-
+      m.ondataavailable = (e) => e.data && chunksRef.current.push(e.data);
+      m.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (!blob.size) {
-          setRecordError("Không thu được âm thanh nào.");
-          return;
-        }
+        stream.getTracks().forEach((t) => t.stop());
+        if (recUrl) URL.revokeObjectURL(recUrl);
+        setRecUrl(URL.createObjectURL(blob));
 
-        const url = URL.createObjectURL(blob);
-        setRecordedUrl(url);
-
-        // gọi API chấm điểm
+        const target = expectedText || text;
+        const raw = Math.round(calcScore(target, said) * 100);
+        setPercent(Math.max(0, Math.min(100, raw)));
         try {
-          setScoring(true);
-
-          const formData = new FormData();
-          formData.append("audio", blob, "recording.webm");
-          formData.append("targetText", expectedText || text);
-          formData.append("languageCode", languageCode);
-
-          const res = await fetch(scoringApiUrl, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!res.ok) {
-            throw new Error("Không chấm điểm được.");
-          }
-
-          const data = (await res.json()) as {
-            score?: number;
-            message?: string;
-          };
-
-          const s = typeof data.score === "number" ? data.score : 0;
-          setScore(Math.max(0, Math.min(100, Math.round(s))));
-          setScoreMessage(
-            data.message ||
-              (s >= 90
-                ? "Bạn rất xuất sắc. Cố gắng phát huy nhé!"
-                : s >= 70
-                ? "Khá tốt rồi! Hãy luyện thêm một chút nữa."
-                : "Hãy thử lại và chú ý hơn đến khẩu hình và trọng âm.")
-          );
-        } catch (e: any) {
-          console.error(e);
-          setRecordError(e?.message ?? "Không chấm điểm được.");
-        } finally {
-          setScoring(false);
-          setShowResult(true);
-        }
+          srRef.current?.stop?.();
+        } catch {}
+        setRecording(false);
       };
-
-      recorder.start();
+      m.start();
       setRecording(true);
     } catch (e: any) {
       console.error(e);
-      setRecordError(e?.message ?? "Không thể bắt đầu ghi âm.");
+      setRecordError("Không thể truy cập micro. Vui lòng kiểm tra quyền truy cập.");
       setRecording(false);
     }
-  }, [enableRecord, expectedText, languageCode, scoringApiUrl, text]);
+  }
 
-  const stopRecording = useCallback(() => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      rec.stop();
-    }
-  }, []);
+  function stopPracticeRecord() {
+    mediaRef.current?.stop();
+    setRecording(false);
+  }
 
-  const toggleRecording = useCallback(() => {
-    if (!enableRecord) return;
-    if (recording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [enableRecord, recording, startRecording, stopRecording]);
+  const wrapperClass = `inline-flex items-center gap-2 ${
+    className || ""
+  }`;
 
-  const closeResult = () => {
-    setShowResult(false);
-  };
-
-  // ====== RENDER UI ======
-
-  // Nút play dạng icon tròn nhỏ
   const playButton = (
     <button
       type="button"
@@ -401,138 +418,161 @@ export default function TTSPlay(props: TTSPlayProps) {
     </button>
   );
 
-  // Nút mic
   const micButton =
     enableRecord && (
       <button
         type="button"
-        aria-label="Ghi âm và chấm điểm phát âm"
-        onClick={toggleRecording}
-        className={`flex items-center justify-center rounded-full border w-7 h-7 shadow-sm text-[11px] transition ${
-          recording
-            ? "bg-red-500 text-white border-red-500"
-            : "bg-white border-red-400 text-red-500 hover:bg-red-50"
-        }`}
-        title={
-          recording ? "Dừng ghi âm" : "Ghi âm phát âm của bạn và chấm điểm"
-        }
+        aria-label="Luyện nói & chấm điểm phát âm"
+        onClick={openPractice}
+        className="flex items-center justify-center rounded-full border w-7 h-7 shadow-sm text-[11px] bg-white border-red-400 text-red-500 hover:bg-red-50"
+        title="Mở cửa sổ luyện nói & chấm điểm"
       >
-        {recording ? <Square size={14} /> : <Mic size={14} />}
+        <Mic size={14} />
       </button>
     );
 
-  const wrapperClass = `inline-flex items-center gap-2 ${
-    className || ""
-  }`;
-
   return (
-    <span className={wrapperClass}>
-      {playButton}
-      {micButton}
+    <>
+      <span className={wrapperClass}>
+        {playButton}
+        {micButton}
 
-      {!compact && (
-        <>
-          <div
-            className="h-1 w-20 bg-gray-200 rounded overflow-hidden"
-            aria-hidden
-          >
+        {!compact && (
+          <>
             <div
-              className="h-full bg-gray-500"
-              style={{ width: `${pct}%`, transition: "width .2s linear" }}
-            />
-          </div>
-
-          {showDownload && blobUrl && (
-            <a
-              href={blobUrl}
-              download={`tts-${provider}.${format}`}
-              className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50"
-              title="Tải file âm thanh"
+              className="h-1 w-20 bg-gray-200 rounded overflow-hidden"
+              aria-hidden
             >
-              <Download size={14} /> Tải
-            </a>
-          )}
-        </>
-      )}
+              <div
+                className="h-full bg-gray-500"
+                style={{
+                  width: `${pct}%`,
+                  transition: "width .2s linear",
+                }}
+              />
+            </div>
 
-      <audio ref={audioRef} preload="none" />
-      <audio ref={recordAudioRef} src={recordedUrl ?? undefined} preload="none" />
+            {showDownload && blobUrl && (
+              <a
+                href={blobUrl}
+                download={`tts-${provider}.${format}`}
+                className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50"
+                title="Tải file âm thanh"
+              >
+                <Download size={14} /> Tải
+              </a>
+            )}
+          </>
+        )}
 
-      {error && (
-        <span className="text-xs text-red-600" role="alert">
-          {error}
-        </span>
-      )}
-      {recordError && (
-        <span className="text-xs text-red-600" role="alert">
-          {recordError}
-        </span>
-      )}
+        <audio ref={audioRef} preload="none" />
 
-      {/* Popup kết quả chấm điểm */}
-      {enableRecord && showResult && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30">
-          <div className="bg-sky-800 text-white rounded-xl shadow-xl w-full max-w-md p-4 relative">
-            <button
-              type="button"
-              onClick={closeResult}
-              className="absolute top-2 right-2 text-white/80 hover:text-white"
-              aria-label="Đóng"
-            >
-              <X size={18} />
-            </button>
+        {error && (
+          <span className="text-xs text-red-600" role="alert">
+            {error}
+          </span>
+        )}
+      </span>
 
-            <div className="bg-white text-sky-900 rounded-lg px-3 py-2 mb-3 flex items-center gap-3">
-              <div className="text-xs uppercase text-gray-500">Bạn đạt</div>
-              <div className="text-2xl font-bold text-emerald-600">
-                {scoring || score === null ? "…" : `${score}%`}
+      {/* ===== Popup luyện nói giống VocabLesson ===== */}
+      {enableRecord && practiceOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div className="font-semibold">
+                Luyện nói – Phát âm:{" "}
+                <span className="text-slate-900">{expectedText || text}</span>
               </div>
-              <div className="text-sm truncate flex-1">
-                {expectedText || text}
+              <button
+                className="rounded-full border w-8 h-8 grid place-items-center bg-gray-50 hover:bg-gray-100"
+                onClick={closePractice}
+                aria-label="Đóng"
+              >
+                ✖
+              </button>
+            </div>
+
+            {/* Khối trên: % + câu/từ mục tiêu */}
+            <div className="px-4 pt-4">
+              <div className="rounded-lg border bg-white overflow-hidden">
+                <div className="flex">
+                  <div className="w-32 min-w-[8rem] bg-gray-50 border-r p-3">
+                    <div className="text-xs text-gray-500">Bạn đạt</div>
+                    <div
+                      className={`mt-1 text-4xl font-extrabold leading-none ${pctColor(
+                        percent
+                      )}`}
+                    >
+                      {(percent ?? 0).toFixed(0)}%
+                    </div>
+                  </div>
+                  <div className="flex-1 p-3 text-sm">
+                    {expectedText || text}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <p className="text-center text-sm mb-4">
-              {scoring
-                ? "Đang chấm điểm phát âm của bạn..."
-                : scoreMessage ||
-                  "Kết quả luyện phát âm của bạn đã sẵn sàng."}
-            </p>
+            {/* Khối dưới: nền xanh + nút */}
+            <div className="mt-3 bg-[#0B5ED7] text-white px-4 py-4">
+              <div className="text-sm font-semibold text-center">
+                {messageFor(percent)}
+              </div>
 
-            <div className="flex items-center justify-center gap-3 mt-2">
-              <button
-                type="button"
-                onClick={toggleRecording}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm"
-              >
-                <Mic size={16} />
-                Ghi âm lại (Enter)
-              </button>
-
-              {recordedUrl && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!recordAudioRef.current) return;
-                    recordAudioRef.current.currentTime = 0;
-                    recordAudioRef.current.play().catch(() => {});
-                  }}
-                  className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-full text-sm"
-                >
-                  <Play size={16} />
-                  Nghe lại bài ghi âm
-                </button>
+              {recordError && (
+                <div className="mt-2 text-center text-xs text-red-100">
+                  {recordError}
+                </div>
               )}
+
+              <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                {/* Nghe mẫu: dùng luôn TTS ở trên */}
+                <button
+                  onClick={togglePlay}
+                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  🔊 Nghe mẫu
+                </button>
+
+                {!recording ? (
+                  <button
+                    onClick={startPracticeRecord}
+                    className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
+                    title="Bắt đầu ghi âm và tự động chấm điểm"
+                  >
+                    🎤 Ghi âm
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopPracticeRecord}
+                    className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    ⏹ Dừng ghi
+                  </button>
+                )}
+
+                <button
+                  disabled={!recUrl}
+                  onClick={() => recUrl && new Audio(recUrl).play()}
+                  className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50"
+                >
+                  ▶ Nghe lại bài ghi âm
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-    </span>
+    </>
   );
 }
 
-// ===== tiện ích xoá cache =====
-export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
+/* ========= Tiện ích xoá cache ========= */
+
+export async function clearTTSCache(
+  providerPrefix: Provider | "all" = "all"
+) {
   const all = await keys(CACHE_DB);
   const willDelete: IDBValidKey[] = [];
   for (const k of all) {
@@ -545,7 +585,8 @@ export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
   return willDelete.length;
 }
 
-// ===== prefetch nhiều câu 1 lúc =====
+/* ========= Prefetch nhiều câu một lúc ========= */
+
 export async function prefetchTTSBatch(
   items: Array<
     Pick<
