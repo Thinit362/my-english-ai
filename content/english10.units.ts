@@ -342,7 +342,18 @@ export const english10Units: UnitMeta[] = [
           href: u(4, "practice-grammar-1"),
         },
       },
-      // Có thể bổ sung mục Phát âm riêng nếu bạn xây nội dung cho Unit 4
+     {
+        key: "pronunciation",
+        lecture: {
+          title: "Trọng âm với những từ có cùng cách viết nhưng khác nhau về từ loại",
+          tag: "Phát âm",
+          href: u(3, "pronunciation"),
+        },
+        exercise: {
+          title: "Thực hành phát âm",
+          href: u(3, "practice-pronunciation"),
+        },
+      },
     ],
     skills: [
       {
