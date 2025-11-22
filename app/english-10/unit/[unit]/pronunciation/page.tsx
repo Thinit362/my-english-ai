@@ -14,16 +14,32 @@ interface PageProps {
 
 /**
  * Mỗi "âm" (tr, kr, br, kl, ...) sẽ là 1 trang con trong phần phát âm của Unit.
- * Bạn sẽ khai báo dữ liệu cho từng âm trong content/pronunciation/en10.uX.ts
- * (một UnitPronunciation có dạng: { unit, title?, intro?, pages: [...] }).
+ * Trong content/pronunciation/en10.uX.ts, bạn khai báo:
+ *
+ * {
+ *   unit: 1,
+ *   title: "...",
+ *   intro: "...",
+ *   pages: [
+ *     {
+ *       key: "tr",
+ *       label: "/tr/",
+ *       title: "How to pronounce /tr/",
+ *       description: "Mô tả chi tiết ...",
+ *       image: "/images/phonetics/tr.png",
+ *       items: PronunciationItem[]
+ *     },
+ *     ...
+ *   ]
+ * }
  */
 
 type SoundSection = {
-  key: string;              // "tr", "kr", "br", ...
-  label: string;            // "/tr/", "/kr/" ... (hiện trên nút tab + tiêu đề)
-  title?: string;           // tiêu đề dài hơn: "How to pronounce /tr/"
-  description?: string;     // giải thích chi tiết cho âm này (tiếng Việt)
-  image?: string;           // đường dẫn hình minh hoạ khẩu hình
+  key: string;              // "tr", "kr", ...
+  label: string;            // "/tr/", "/kr/" (hiện trên tab + tiêu đề)
+  title?: string;           // tiêu đề dài hơn
+  description?: string;     // giải thích chi tiết cho âm này
+  image?: string;           // hình minh hoạ khẩu hình
   items: PronunciationItem[];
 };
 
@@ -50,13 +66,14 @@ function renderIpa(ipa?: string, highlight?: string) {
 
 /** Một dòng ví dụ: clown /klaʊn/ (chú hề) + nút play + mic */
 function ExampleRow({ item }: { item: PronunciationItem }) {
-  const { display, ipa, vi, highlight, playText } = item;
-
-  const textForTTS = playText || display;
+  const display = item.display ?? "";
+  const playText = item.playText || display;
+  const ipa = item.ipa;
+  const vi = item.vi;
+  const highlight = item.highlight;
 
   return (
     <li className="flex items-center gap-2 text-sm">
-      {/* Bên trái: chữ + IPA + nghĩa */}
       <span className="flex-1">
         <span className="text-red-600">
           {display}{" "}
@@ -69,10 +86,10 @@ function ExampleRow({ item }: { item: PronunciationItem }) {
         </span>
       </span>
 
-      {/* Bên phải: Loa + Mic (ghi âm + popup % do TTSPlay xử lý) */}
+      {/* Loa + Mic (ghi âm + popup % do TTSPlay xử lý) */}
       <TTSPlay
-        text={textForTTS}
-        expectedText={textForTTS}
+        text={playText}
+        expectedText={playText}
         enableRecord
         compact
         className="gap-1"
@@ -87,7 +104,7 @@ export default function PronunciationPage({ params }: PageProps) {
 
   if (!data) return notFound();
 
-  // Giả định UnitPronunciation có dạng:
+  // Giả định UnitPronunciation:
   // { unit, title?: string, intro?: string, pages: SoundSection[] }
   const unitTitle = (data as any).title ?? "Pronunciation";
   const unitIntro = (data as any).intro ?? "";
