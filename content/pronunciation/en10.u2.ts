@@ -1,16 +1,25 @@
-import { UnitPronunciation } from "../english10.pronunciation";
+// content/english10.pronunciation.ts
 
-const u2: UnitPronunciation = {
-  unit: 2,
-  pronunciation: {
-    title: "",
-    focus: "",
-    viExplain: "",
-    tips: [],
-    items: [
-      // { text: "", ipa: "", vi: "", highlight: "" }
-    ],
-  },
+export type PronunciationItem = {
+  display: string;
+  playText: string;
+  ipa?: string;
+  vi?: string;
+  type?: "word" | "sentence";
+  voice?: string;
+  highlight?: string;
 };
 
-export default u2;
+export type PronunciationBlock = {
+  title: string;
+  viExplain: string;
+  items: PronunciationItem[];
+  image?: string;
+  tips?: string[];
+  targetSound?: string;
+};
+
+export type UnitPronunciation = {
+  unit: number;
+  pages: PronunciationBlock[];
+};
