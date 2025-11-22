@@ -362,64 +362,71 @@ export default function TTSPlay(props: TTSPlayProps) {
   };
 
   async function startPracticeRecord() {
-    setRecordError(null);
-    setSaid("");
-    setPercent(null);
+  setRecordError(null);
+  setSaid("");
+  setPercent(null);
 
-    // SpeechRecognition cho text
-    const sr = setupSR(languageCode);
-    if (!sr) {
-      alert(
-        "Trình duyệt chưa hỗ trợ chấm điểm bằng giọng nói. Vui lòng dùng Chrome hoặc Edge."
-      );
-    } else {
-      srRef.current = sr;
-      sr.onresult = (e: any) => {
-        const saidText = e.results[0][0].transcript || "";
-        setSaid(saidText);
-      };
-      sr.onerror = () => {};
-      sr.onend = () => {
-        const target = expectedText || text;
-        const raw = Math.round(calcScore(target, said) * 100);
-        setPercent(Math.max(0, Math.min(100, raw)));
-      };
-      try {
-        sr.start();
-      } catch {}
-    }
+  let localTranscript = "";
 
-    // Ghi âm audio
+  // --- SpeechRecognition: đảm bảo transcript luôn có trước khi chấm ---
+  const sr = setupSR(languageCode);
+  if (sr) {
+    srRef.current = sr;
+
+    sr.onresult = (e: any) => {
+      localTranscript = e.results[0][0].transcript || "";
+      setSaid(localTranscript);
+    };
+
+    sr.onerror = () => {};
+    sr.onend = () => {
+      // KHÔNG chấm điểm ở đây nữa
+      // Chỉ lưu transcript
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const m = new MediaRecorder(stream);
-      mediaRef.current = m;
-      chunksRef.current = [];
-      m.ondataavailable = (e) => e.data && chunksRef.current.push(e.data);
-      m.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        stream.getTracks().forEach((t) => t.stop());
-        if (recUrl) URL.revokeObjectURL(recUrl);
-        setRecUrl(URL.createObjectURL(blob));
-
-        const target = expectedText || text;
-        const raw = Math.round(calcScore(target, said) * 100);
-        setPercent(Math.max(0, Math.min(100, raw)));
-        try {
-          srRef.current?.stop?.();
-        } catch {}
-        setRecording(false);
-      };
-      m.start();
-      setRecording(true);
-    } catch (e: any) {
-      console.error(e);
-      setRecordError(
-        "Không thể truy cập micro. Vui lòng kiểm tra quyền truy cập."
-      );
-      setRecording(false);
-    }
+      sr.start();
+    } catch {}
   }
+
+  // --- MediaRecorder: chấm điểm khi audio kết thúc ---
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const m = new MediaRecorder(stream);
+    mediaRef.current = m;
+    chunksRef.current = [];
+    setRecording(true);
+
+    m.ondataavailable = (e) => {
+      if (e.data) chunksRef.current.push(e.data);
+    };
+
+    m.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      stream.getTracks().forEach((t) => t.stop());
+
+      if (recUrl) URL.revokeObjectURL(recUrl);
+      setRecUrl(URL.createObjectURL(blob));
+
+      // --- CHẤM ĐIỂM TẠI ĐÂY ---
+      const target = expectedText || text;
+      const raw = Math.round(calcScore(target, localTranscript) * 100);
+      setPercent(Math.max(0, Math.min(100, raw)));
+
+      try {
+        srRef.current?.stop?.();
+      } catch {}
+
+      setRecording(false);
+    };
+
+    m.start();
+  } catch (err) {
+    console.error(err);
+    setRecording(false);
+    setRecordError("Không thể truy cập micro. Vui lòng kiểm tra quyền truy cập.");
+  }
+}
 
   function stopPracticeRecord() {
     mediaRef.current?.stop();
