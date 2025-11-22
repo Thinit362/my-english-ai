@@ -71,6 +71,8 @@ export type PronunciationBlock = {
 
   /** (tuỳ chọn) key duy nhất: "tr", "kr", "br" ... */
   key?: string;
+  
+  compareTable?: PronunciationCompareTable;
 };
 
 // Cấu trúc 1 unit
