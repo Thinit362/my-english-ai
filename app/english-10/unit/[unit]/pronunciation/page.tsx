@@ -14,40 +14,20 @@ interface PageProps {
 
 /**
  * Mỗi "âm" (tr, kr, br, kl, ...) sẽ là 1 trang con trong phần phát âm của Unit.
- * Bạn sẽ khai báo dữ liệu cho từng âm trong content/pronunciation/en10.uX.ts:
- *
- * pronunciation: {
- *   title: "...",
- *   focus: "...",
- *   viExplain: "...",
- *   sounds: [
- *     {
- *       key: "kl",
- *       label: "/kl/",
- *       title: "How to pronounce /kl/",
- *       description: "Mô tả chi tiết cách phát âm /kl/ ...",
- *       image: "/images/phonetics/kl.png",
- *       items: [ ... các PronunciationItem ... ]
- *     },
- *     {
- *       key: "tr",
- *       label: "/tr/",
- *       ...
- *     },
- *   ]
- * }
+ * Bạn sẽ khai báo dữ liệu cho từng âm trong content/pronunciation/en10.uX.ts
+ * (một UnitPronunciation có dạng: { unit, title?, intro?, pages: [...] }).
  */
 
 type SoundSection = {
-  key: string;              // "kl", "tr", ...
-  label: string;            // "/kl/", "/tr/" (hiện trên nút tab + tiêu đề)
-  title?: string;           // tiêu đề dài hơn
-  description?: string;     // giải thích chi tiết cho âm này
+  key: string;              // "tr", "kr", "br", ...
+  label: string;            // "/tr/", "/kr/" ... (hiện trên nút tab + tiêu đề)
+  title?: string;           // tiêu đề dài hơn: "How to pronounce /tr/"
+  description?: string;     // giải thích chi tiết cho âm này (tiếng Việt)
   image?: string;           // đường dẫn hình minh hoạ khẩu hình
   items: PronunciationItem[];
 };
 
-/** Tô màu phần âm cần luyện trong chuỗi IPA, ví dụ highlight="kl" */
+/** Tô màu phần âm cần luyện trong chuỗi IPA, ví dụ highlight="tr" */
 function renderIpa(ipa?: string, highlight?: string) {
   if (!ipa) return null;
   if (!highlight) return <span>/{ipa}/</span>;
@@ -70,34 +50,31 @@ function renderIpa(ipa?: string, highlight?: string) {
 
 /** Một dòng ví dụ: clown /klaʊn/ (chú hề) + nút play + mic */
 function ExampleRow({ item }: { item: PronunciationItem }) {
-  // bổ sung kiểu cục bộ để đọc highlight/vi mà không ép bạn sửa type gốc ngay
-  const anyItem = item as PronunciationItem & {
-    highlight?: string;
-  };
+  const { display, ipa, vi, highlight, playText } = item;
+
+  const textForTTS = playText || display;
 
   return (
     <li className="flex items-center gap-2 text-sm">
+      {/* Bên trái: chữ + IPA + nghĩa */}
       <span className="flex-1">
         <span className="text-red-600">
-          {anyItem.text}{" "}
-          {anyItem.ipa && (
+          {display}{" "}
+          {ipa && (
             <>
-              {renderIpa(anyItem.ipa, anyItem.highlight)}{" "}
+              {renderIpa(ipa, highlight)}{" "}
             </>
           )}
-          {anyItem.vi && (
-            <span className="text-gray-600">
-              ({anyItem.vi})
-            </span>
-          )}
+          {vi && <span className="text-gray-600">({vi})</span>}
         </span>
       </span>
 
-      {/* Loa + Mic (ghi âm + popup % do TTSPlay xử lý) */}
+      {/* Bên phải: Loa + Mic (ghi âm + popup % do TTSPlay xử lý) */}
       <TTSPlay
-        text={anyItem.text}
-        expectedText={anyItem.text}
+        text={textForTTS}
+        expectedText={textForTTS}
         enableRecord
+        compact
         className="gap-1"
       />
     </li>
@@ -110,36 +87,44 @@ export default function PronunciationPage({ params }: PageProps) {
 
   if (!data) return notFound();
 
-  const block: any = data.pronunciation;
+  // Giả định UnitPronunciation có dạng:
+  // { unit, title?: string, intro?: string, pages: SoundSection[] }
+  const unitTitle = (data as any).title ?? "Pronunciation";
+  const unitIntro = (data as any).intro ?? "";
 
-  /**
-   * Chuẩn hoá danh sách "âm" (trang con).
-   * - Nếu content/en10.uX.ts đã khai báo pronunciation.sounds[] thì dùng nó.
-   * - Nếu chưa, fallback về 1 trang duy nhất chứa tất cả items (như bản cũ).
-   */
   const sections: SoundSection[] = useMemo(() => {
-    if (Array.isArray(block.sounds) && block.sounds.length > 0) {
-      return block.sounds as SoundSection[];
+    const pages = (data as any).pages as SoundSection[] | undefined;
+    if (Array.isArray(pages) && pages.length > 0) {
+      return pages;
     }
 
-    // Fallback: 1 trang duy nhất
+    // Fallback: nếu content chưa chia pages, gộp thành 1 trang
+    const fallbackItems = ((data as any).items ?? []) as PronunciationItem[];
     return [
       {
         key: "default",
-        label: block.title || "Pronunciation",
-        title: block.title,
-        description: block.viExplain,
-        image: block.image,
-        items: (block.items || []) as PronunciationItem[],
+        label: "/…/",
+        title: unitTitle,
+        description: unitIntro,
+        image: (data as any).image,
+        items: fallbackItems,
       },
     ];
-  }, [block]);
+  }, [data, unitTitle, unitIntro]);
 
   // Trang hiện tại (0 = âm đầu tiên)
   const [pageIndex, setPageIndex] = useState(0);
   const current = sections[Math.min(pageIndex, sections.length - 1)];
   const canPrev = pageIndex > 0;
   const canNext = pageIndex < sections.length - 1;
+
+  // Chọn từ mẫu đầu tiên (không phải câu) để phát âm ở dòng "/tr/"
+  const firstWordItem =
+    current.items.find((it) => (it.type ?? "word") !== "sentence") ||
+    current.items[0];
+  const headerPlayText = firstWordItem
+    ? firstWordItem.playText || firstWordItem.display
+    : current.label;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -148,11 +133,15 @@ export default function PronunciationPage({ params }: PageProps) {
         <p className="text-xs uppercase text-gray-400">
           English 10 – Unit {unitNumber}
         </p>
-        <h1 className="text-2xl font-bold">{block.title}</h1>
-        <p className="text-sm text-gray-700">{block.focus}</p>
+        <h1 className="text-2xl font-bold">{unitTitle}</h1>
+        {unitIntro && (
+          <p className="text-sm text-gray-700 whitespace-pre-line">
+            {unitIntro}
+          </p>
+        )}
       </header>
 
-      {/* Dãy nút chọn âm: /kl/, /tr/, /kr/, /br/ ... */}
+      {/* Dãy nút chọn âm: /tr/, /kr/, /br/ ... */}
       {sections.length > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-2">
@@ -177,7 +166,7 @@ export default function PronunciationPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* 1. Cách phát âm (How to pronounce /kl/) */}
+      {/* 1. Cách phát âm (How to pronounce /tr/) */}
       <section className="space-y-3 bg-white rounded-xl shadow p-4">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 flex items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold">
@@ -188,13 +177,14 @@ export default function PronunciationPage({ params }: PageProps) {
           </h2>
         </div>
 
-        {/* Dòng âm /kl/ + play + mic ngay dưới tiêu đề, giống hình bạn gửi */}
+        {/* Dòng âm /tr/ + play + mic ngay dưới tiêu đề */}
         <div className="flex items-center gap-2 text-red-600 text-sm">
           <span className="font-semibold">{current.label}</span>
           <TTSPlay
-            text={current.label}
-            expectedText={current.label}
+            text={headerPlayText}
+            expectedText={headerPlayText}
             enableRecord
+            compact
             className="gap-1"
           />
         </div>
@@ -206,7 +196,7 @@ export default function PronunciationPage({ params }: PageProps) {
         )}
 
         <p className="text-sm text-gray-700 whitespace-pre-line">
-          {current.description ?? block.viExplain}
+          {current.description || unitIntro}
         </p>
 
         {/* Hình minh hoạ khẩu hình nếu có */}
@@ -228,7 +218,7 @@ export default function PronunciationPage({ params }: PageProps) {
           <div className="w-7 h-7 flex items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold">
             2
           </div>
-        <h2 className="font-semibold text-lg text-sky-700">
+          <h2 className="font-semibold text-lg text-sky-700">
             Các ví dụ luyện phát âm
           </h2>
         </div>
