@@ -215,7 +215,21 @@ export default function TTSPlay(props: TTSPlayProps) {
         provider,
         format,
       }),
-    [text, voice, rate, pitch, provider, format]
+    [text, voice, rate, pitch, provider, format]useEffect(() => {
+  if (audioRef.current) {
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+  }
+
+  setBlobUrl((prev) => {
+    if (prev) URL.revokeObjectURL(prev);
+    return null;
+  });
+
+  setPlaying(false);
+  setProgress({ cur: 0, dur: 0 });
+}, [text, voice, rate, pitch, provider, format]);
+
   );
 
   const keyPromise = useMemo(() => hash(rawKey), [rawKey]);
