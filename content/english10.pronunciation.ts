@@ -4,11 +4,25 @@
 
 // Một mục luyện phát âm
 export type PronunciationItem = {
-  /** Chuỗi hiển thị trên UI (ví dụ: "trick /trɪk/ (trò lừa gạt)") */
-  display: string;
+  /**
+   * Chuỗi hiển thị trên UI
+   * - Kiểu mới: dùng display (ví dụ: "trick /trɪk/ (trò lừa gạt)")
+   * - Kiểu cũ: có thể chỉ có text, ta sẽ fallback sang text khi hiển thị
+   */
+  display?: string;
 
-  /** Chuỗi gửi lên Cloud TTS để đọc (ví dụ: "trick") */
-  playText: string;
+  /**
+   * Chuỗi gửi lên Cloud TTS để đọc
+   * - Kiểu mới: dùng playText (ví dụ: "trick")
+   * - Nếu không có, có thể fallback sang display hoặc text
+   */
+  playText?: string;
+
+  /**
+   * Kiểu cũ: một số file có thể đang dùng text
+   * (ví dụ: "trick" hoặc cả câu ví dụ)
+   */
+  text?: string;
 
   /** IPA (không có dấu "/" — ta sẽ tự render trong UI) */
   ipa?: string;
@@ -26,13 +40,19 @@ export type PronunciationItem = {
   highlight?: string;
 };
 
-// Một âm /tr/ /kr/ /br/ của từng unit
+// Một khối phát âm cho một âm /tr/ /kr/ /br/ trong unit
 export type PronunciationBlock = {
-  /** Tiêu đề */
+  /** Tiêu đề (How to pronounce /tr/...) */
   title: string;
 
-  /** Nội dung giải thích tiếng Việt */
-  viExplain: string;
+  /** (kiểu cũ) focus: mô tả ngắn chủ điểm phát âm của unit */
+  focus?: string;
+
+  /** Nội dung giải thích tiếng Việt (có thể bỏ trống nếu dùng description) */
+  viExplain?: string;
+
+  /** Mô tả chi tiết / giải thích (alias cho viExplain, tuỳ bạn dùng cái nào) */
+  description?: string;
 
   /** Danh sách ví dụ luyện phát âm */
   items: PronunciationItem[];
@@ -43,16 +63,39 @@ export type PronunciationBlock = {
   /** (tuỳ chọn) phần tips */
   tips?: string[];
 
-  /** Từ khoá âm cần luyện (ví dụ "tr") */
+  /** (tuỳ chọn) từ khoá âm cần luyện (ví dụ "tr") */
   targetSound?: string;
+
+  /** (tuỳ chọn) label hiển thị trên tab: "/tr/", "/kr/" ... */
+  label?: string;
+
+  /** (tuỳ chọn) key duy nhất: "tr", "kr", "br" ... */
+  key?: string;
 };
 
 // Cấu trúc 1 unit
 export type UnitPronunciation = {
   unit: number;
 
-  /** Một unit có thể có nhiều trang phát âm (ví dụ: /tr/, /kr/, /br/) */
-  pages: PronunciationBlock[];
+  /** Tiêu đề chung cho cả phần phát âm của Unit (tuỳ chọn) */
+  title?: string;
+
+  /** Đoạn giới thiệu chung cho phần phát âm của Unit (tuỳ chọn) */
+  intro?: string;
+
+  /**
+   * Kiểu cũ: một số unit có thể đang dùng 1 block duy nhất:
+   * { unit, pronunciation: PronunciationBlock }
+   */
+  pronunciation?: PronunciationBlock;
+
+  /**
+   * Kiểu mới: một unit có thể có nhiều trang phát âm (ví dụ: /tr/, /kr/, /br/)
+   */
+  pages?: PronunciationBlock[];
+
+  /** (tuỳ chọn) hình chung cho toàn bộ phần phát âm của Unit */
+  image?: string;
 };
 
 // ================================
