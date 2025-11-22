@@ -66,8 +66,8 @@ function renderIpa(ipa?: string, highlight?: string) {
 
 /** Một dòng ví dụ: clown /klaʊn/ (chú hề) + nút play + mic */
 function ExampleRow({ item }: { item: PronunciationItem }) {
-  const display = item.display ?? "";
-  const playText = item.playText || display;
+  const display = item.display ?? item.text ?? "";
+  const playText = item.playText || item.text || display;
   const ipa = item.ipa;
   const vi = item.vi;
   const highlight = item.highlight;
@@ -105,18 +105,40 @@ export default function PronunciationPage({ params }: PageProps) {
   if (!data) return notFound();
 
   // Giả định UnitPronunciation:
-  // { unit, title?: string, intro?: string, pages: SoundSection[] }
+  // { unit, title?: string, intro?: string, pages?: PronunciationBlock[], pronunciation?: PronunciationBlock }
   const unitTitle = (data as any).title ?? "Pronunciation";
   const unitIntro = (data as any).intro ?? "";
 
   const sections: SoundSection[] = useMemo(() => {
-    const pages = (data as any).pages as SoundSection[] | undefined;
+    // Kiểu mới: data.pages
+    const pages = (data as any).pages as any[] | undefined;
     if (Array.isArray(pages) && pages.length > 0) {
-      return pages;
+      return pages.map((p, idx) => ({
+        key: p.key ?? `page-${idx}`,
+        label: p.label ?? `/…/`,
+        title: p.title,
+        description: p.description ?? p.viExplain,
+        image: p.image,
+        items: (p.items || []) as PronunciationItem[],
+      }));
     }
 
-    // Fallback: nếu content chưa chia pages, gộp thành 1 trang
-    const fallbackItems = ((data as any).items ?? []) as PronunciationItem[];
+    // Kiểu cũ: data.pronunciation
+    const legacy = (data as any).pronunciation;
+    if (legacy && legacy.items) {
+      return [
+        {
+          key: legacy.key ?? "default",
+          label: legacy.label ?? (legacy.targetSound ? `/${legacy.targetSound}/` : "/…/"),
+          title: legacy.title,
+          description: legacy.description ?? legacy.viExplain,
+          image: legacy.image,
+          items: (legacy.items || []) as PronunciationItem[],
+        },
+      ];
+    }
+
+    // Fallback cuối cùng: nếu chưa có gì, tạo trang rỗng
     return [
       {
         key: "default",
@@ -124,7 +146,7 @@ export default function PronunciationPage({ params }: PageProps) {
         title: unitTitle,
         description: unitIntro,
         image: (data as any).image,
-        items: fallbackItems,
+        items: [],
       },
     ];
   }, [data, unitTitle, unitIntro]);
@@ -139,9 +161,14 @@ export default function PronunciationPage({ params }: PageProps) {
   const firstWordItem =
     current.items.find((it) => (it.type ?? "word") !== "sentence") ||
     current.items[0];
-  const headerPlayText = firstWordItem
-    ? firstWordItem.playText || firstWordItem.display
-    : current.label;
+
+  const headerPlayText: string =
+    (firstWordItem &&
+      (firstWordItem.playText ||
+        firstWordItem.text ||
+        firstWordItem.display)) ||
+    current.label ||
+    "/";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
