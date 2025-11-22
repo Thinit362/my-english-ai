@@ -3,186 +3,171 @@ import { UnitPronunciation } from "../english10.pronunciation";
 
 const u4: UnitPronunciation = {
   unit: 4,
-  pronunciation: {
-    title: "Stress in two-syllable words with derivatives",
-    focus: "Trọng âm của những từ có 2 âm tiết có cùng cách viết nhưng khác từ loại",
-    viExplain: `
-Trong tiếng Anh, một số từ có 2 âm tiết có cùng cách viết nhưng lại khác nhau về từ loại.
-Cùng một từ đó có thể làm danh từ, động từ, hoặc tính từ – và vị trí trọng âm sẽ thay đổi theo từ loại.
+  pages: [
+    {
+      title:
+        "Trọng âm những từ có 2 âm tiết cùng cách viết nhưng khác về từ loại",
+      viExplain: `Khi một từ có 2 âm tiết mà đóng vai trò là danh từ và tính từ thì trọng âm vẫn là âm tiết thứ nhất. 
+Còn khi từ đó đóng vai trò là động từ thì trọng âm chuyển sang âm tiết thứ 2.
+Các em hãy theo dõi bảng dưới đây, nhấn vào biểu tượng loa để nghe và phát âm theo, chú ý đến phần
+nhận trọng âm đã được in đậm của các từ có cùng cách viết nhưng khác nhau về từ loại.`,
+      items: [
+        // Các câu ví dụ sau bảng
+        {
+          text: "His parents object to his objects in life.",
+          ipa: "hɪz ˈpeərənts əbˈdʒekt tə hɪz ˈɒbdʒekts ɪn laɪf",
+          vi: "Bố mẹ cậu ấy phản đối những mục tiêu của cậu ấy trong cuộc sống.",
+          type: "sentence",
+        },
+        {
+          text: "Some teenagers rebel against their parents, they act as rebels.",
+          ipa: "sʌm ˈtiːneɪdʒəz rɪˈbel əˈgeɪnst ðeə ˈpeərənts, ðeɪ ækt æz ˈrebəlz",
+          vi: "Một số thanh thiếu niên nổi loạn chống đối bố mẹ mình, họ hành xử như những kẻ nổi loạn.",
+          type: "sentence",
+        },
+        {
+          text: "The couple will present their thanks after receiving presents from the guests.",
+          ipa: "ðə ˈkʌpl wɪl prɪˈzent ðeə θæŋks ˈɑːftə rɪˈsiːvɪŋ ˈpreznts frəm ðə gests",
+          vi: "Cặp đôi sẽ bày tỏ sự cám ơn sau khi nhận quà từ các vị khách.",
+          type: "sentence",
+        },
+        {
+          text: "People increase the prices of roses because of the increase in the demand for them.",
+          ipa: "ˈpiːpl ɪnˈkriːs ðə ˈpraɪsɪz əv ˈrəʊzɪz bɪˈkɒz əv ði ˈɪnkriːs ɪn ðə dɪˈmɑːnd fə ðem",
+          vi: "Người ta tăng giá các loại hoa hồng vì sự gia tăng nhu cầu dành cho chúng.",
+          type: "sentence",
+        },
+      ],
 
-Ví dụ:
-She wants to perfect (1) herself to find a perfect (2) life partner.
-Từ perfect (1) là động từ /pəˈfekt/ – hoàn thiện.
-Từ perfect (2) là tính từ /ˈpɜːfɪkt/ – hoàn hảo.
-
-Khi từ đóng vai trò danh từ hoặc tính từ, trọng âm **thường rơi vào âm tiết thứ nhất**.
-Khi từ đó đóng vai trò động từ, trọng âm **thường chuyển sang âm tiết thứ hai**.
-    `.trim(),
-    tips: [
-      "Luôn xác định từ loại (n., adj., v.) trước rồi mới đặt trọng âm.",
-      "Danh từ / tính từ: thường nhấn âm tiết thứ nhất.",
-      "Động từ: thường nhấn âm tiết thứ hai.",
-      "So sánh cặp phiên âm để thấy vị trí dấu ' thay đổi.",
-    ],
-    sounds: [
-      {
-        key: "same-spelling",
-        label: "/N-Adj vs V/",
-        title:
-          "Trọng âm những từ có cùng cách viết nhưng khác nhau về từ loại",
-        description:
-          "Luyện nghe – so sánh các cặp danh từ/tính từ và động từ 2 âm tiết có cùng cách viết nhưng khác trọng âm.",
-        items: [
-          // ===== Bảng cặp từ: Noun / Adj  vs Verb =====
-          // increase
+      // ===== BẢNG SO SÁNH =====
+      compareTable: {
+        leftHeader: "Danh từ / Tính từ",
+        rightHeader: "Động từ",
+        rows: [
           {
-            text: "increase",
-            ipa: "ˈɪnkriːs",
-            vi: "n. sự gia tăng",
+            left: {
+              text: "increase (n.)",
+              ipa: "/ˈɪŋkriːs/",
+              vi: "sự gia tăng",
+            },
+            right: {
+              text: "increase (v.)",
+              ipa: "/ɪnˈkriːs/",
+              vi: "tăng",
+            },
           },
           {
-            text: "increase",
-            ipa: "ɪnˈkriːs",
-            vi: "v. tăng",
-          },
-
-          // decrease
-          {
-            text: "decrease",
-            ipa: "ˈdiːkriːs",
-            vi: "n. sự giảm xuống",
-          },
-          {
-            text: "decrease",
-            ipa: "dɪˈkriːs",
-            vi: "v. làm giảm",
-          },
-
-          // import
-          {
-            text: "import",
-            ipa: "ˈɪmpɔːt",
-            vi: "n. sự nhập khẩu",
+            left: {
+              text: "decrease (n.)",
+              ipa: "/ˈdiːkriːs/",
+              vi: "sự giảm xuống",
+            },
+            right: {
+              text: "decrease (v.)",
+              ipa: "/dɪˈkriːs/",
+              vi: "làm giảm",
+            },
           },
           {
-            text: "import",
-            ipa: "ɪmˈpɔːt",
-            vi: "v. nhập khẩu",
-          },
-
-          // export
-          {
-            text: "export",
-            ipa: "ˈekspɔːt",
-            vi: "n. sự xuất khẩu",
-          },
-          {
-            text: "export",
-            ipa: "ɪkˈspɔːt",
-            vi: "v. xuất khẩu",
-          },
-
-          // perfect
-          {
-            text: "perfect",
-            ipa: "ˈpɜːfɪkt",
-            vi: "adj. hoàn hảo",
+            left: {
+              text: "import (n.)",
+              ipa: "/ˈɪmpɔːt/",
+              vi: "sự nhập khẩu",
+            },
+            right: {
+              text: "import (v.)",
+              ipa: "/ɪmˈpɔːt/",
+              vi: "nhập khẩu",
+            },
           },
           {
-            text: "perfect",
-            ipa: "pəˈfekt",
-            vi: "v. hoàn thiện, làm cho tốt hơn",
-          },
-
-          // present
-          {
-            text: "present",
-            ipa: "ˈpreznt",
-            vi: "n. món quà",
-          },
-          {
-            text: "present",
-            ipa: "prɪˈzent",
-            vi: "v. tặng, trình bày",
-          },
-
-          // protest
-          {
-            text: "protest",
-            ipa: "ˈprəʊtest",
-            vi: "n. sự phản đối, cuộc biểu tình",
+            left: {
+              text: "export (n.)",
+              ipa: "/ˈekspɔːt/",
+              vi: "sự xuất khẩu",
+            },
+            right: {
+              text: "export (v.)",
+              ipa: "/ɪkˈspɔːt/",
+              vi: "xuất khẩu",
+            },
           },
           {
-            text: "protest",
-            ipa: "prəˈtest",
-            vi: "v. phản đối, biểu tình",
-          },
-
-          // object
-          {
-            text: "object",
-            ipa: "ˈɒbdʒɪkt",
-            vi: "n. đồ vật, mục tiêu",
-          },
-          {
-            text: "object",
-            ipa: "əbˈdʒekt",
-            vi: "v. phản đối",
-          },
-
-          // rebel
-          {
-            text: "rebel",
-            ipa: "ˈrebl",
-            vi: "n. kẻ nổi loạn",
+            left: {
+              text: "perfect (adj.)",
+              ipa: "/ˈpɜːfɪkt/",
+              vi: "hoàn hảo",
+            },
+            right: {
+              text: "perfect (v.)",
+              ipa: "/pəˈfekt/",
+              vi: "hoàn thiện, làm cho tốt hơn",
+            },
           },
           {
-            text: "rebel",
-            ipa: "rɪˈbel",
-            vi: "v. nổi loạn",
-          },
-
-          // contrast
-          {
-            text: "contrast",
-            ipa: "ˈkɒntrɑːst",
-            vi: "n. sự tương phản",
-          },
-          {
-            text: "contrast",
-            ipa: "kənˈtrɑːst",
-            vi: "v. làm tương phản, đối chiếu",
-          },
-
-          // ===== Câu ví dụ có cả hai dạng trong cùng câu =====
-          {
-            text: "His parents object to his objects in life.",
-            ipa: "",
-            vi: "Bố mẹ cậu ấy phản đối những mục tiêu của cậu ấy trong cuộc sống.",
-            type: "sentence",
+            left: {
+              text: "present (n.)",
+              ipa: "/ˈpreznt/",
+              vi: "món quà",
+            },
+            right: {
+              text: "present (v.)",
+              ipa: "/prɪˈzent/",
+              vi: "tặng, trình bày",
+            },
           },
           {
-            text: "Some teenagers rebel against their parents, they act as rebels.",
-            ipa: "",
-            vi: "Một số thanh thiếu niên nổi loạn chống đối bố mẹ mình, họ hành xử như những kẻ nổi loạn.",
-            type: "sentence",
+            left: {
+              text: "protest (n.)",
+              ipa: "/ˈprəʊtest/",
+              vi: "sự phản đối, cuộc biểu tình",
+            },
+            right: {
+              text: "protest (v.)",
+              ipa: "/prəˈtest/",
+              vi: "phản đối, biểu tình",
+            },
           },
           {
-            text: "The couple will present their thanks after receiving presents from the guests.",
-            ipa: "",
-            vi: "Cặp đôi sẽ bày tỏ sự cảm ơn sau khi nhận quà từ các vị khách.",
-            type: "sentence",
+            left: {
+              text: "object (n.)",
+              ipa: "/ˈɒbdʒekt/",
+              vi: "đồ vật, mục tiêu",
+            },
+            right: {
+              text: "object (v.)",
+              ipa: "/əbˈdʒekt/",
+              vi: "phản đối",
+            },
           },
           {
-            text: "People increase the prices of roses because of the increase in the demand for them.",
-            ipa: "",
-            vi: "Người ta tăng giá các loại hoa hồng vì sự gia tăng nhu cầu dành cho chúng.",
-            type: "sentence",
+            left: {
+              text: "rebel (n.)",
+              ipa: "/ˈrebəl/",
+              vi: "kẻ nổi loạn",
+            },
+            right: {
+              text: "rebel (v.)",
+              ipa: "/rɪˈbel/",
+              vi: "nổi loạn",
+            },
+          },
+          {
+            left: {
+              text: "contrast (n.)",
+              ipa: "/ˈkɒntrɑːst/",
+              vi: "sự tương phản",
+            },
+            right: {
+              text: "contrast (v.)",
+              ipa: "/kənˈtrɑːst/",
+              vi: "làm tương phản",
+            },
           },
         ],
       },
-    ],
-  },
+    },
+  ],
 };
 
 export default u4;
