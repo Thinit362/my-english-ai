@@ -1,7 +1,17 @@
 // =============================================
 //  ENGLISH 10 – PRONUNCIATION DATA STRUCTURE
 // =============================================
+// ===== Bảng so sánh Danh từ/Tính từ vs Động từ (Unit 4) =====
+export type PronunciationPairRow = {
+  left: PronunciationItem;   // cột Danh từ / Tính từ
+  right: PronunciationItem;  // cột Động từ
+};
 
+export type PronunciationCompareTable = {
+  leftHeader: string;              // "Danh từ / Tính từ"
+  rightHeader: string;             // "Động từ"
+  rows: PronunciationPairRow[];    // từng dòng so sánh
+};
 // Một mục luyện phát âm
 export type PronunciationItem = {
   /**
