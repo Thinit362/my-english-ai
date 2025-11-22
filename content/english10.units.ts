@@ -347,11 +347,11 @@ export const english10Units: UnitMeta[] = [
         lecture: {
           title: "Trọng âm với những từ có cùng cách viết nhưng khác nhau về từ loại",
           tag: "Phát âm",
-          href: u(3, "pronunciation"),
+          href: u(4, "pronunciation"),
         },
         exercise: {
           title: "Thực hành phát âm",
-          href: u(3, "practice-pronunciation"),
+          href: u(4, "practice-pronunciation"),
         },
       },
     ],
