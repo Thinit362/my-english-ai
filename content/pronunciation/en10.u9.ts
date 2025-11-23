@@ -11,8 +11,7 @@ Sự xen kẽ giữa các âm tiết nhấn – không nhấn tạo nên nhịp 
 Trong câu, chúng ta thường nhấn: danh từ, động từ thường, tính từ và trạng từ; 
 ít nhấn hơn vào: đại từ, từ hạn định, giới từ, liên từ và trợ động từ.
 
-Âm tiết nhấn được phát âm chậm, to và rõ ràng hơn; 
-âm tiết không nhấn thường được đọc nhanh và nhẹ hơn.`,
+Nhũng âm tiết nhấn được phát âm chậm, to và rõ ràng hơn, những âm tiết không nhấn thường được đọc nhanh và nhẹ hơn.`,
 
       tips: [
         "Khi nói câu, hãy tìm các từ mang nội dung chính (danh từ, động từ, tính từ, trạng từ) để nhấn.",
