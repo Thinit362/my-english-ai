@@ -1,25 +1,21 @@
-// components/PracticePage.tsx
 "use client";
 
 import React, { useState } from "react";
 import { PracticeTask } from "@/content/practice/types";
-import { renderGame } from "@/components/PracticeGameRenderer";
+import PracticeGameRenderer from "@/components/PracticeGameRenderer";
 
 interface Props {
   unit: number;
-  sectionKey: string;      // "vocabulary-1" | "grammar-1" | "pronunciation"
-  sectionTitle: string;    // "Thực hành phát âm"
+  sectionTitle: string;
   tasks: PracticeTask[];
 }
 
-const PracticePage: React.FC<Props> = ({
-  unit,
-  sectionKey,
-  sectionTitle,
-  tasks,
-}) => {
-  const [activeId, setActiveId] = useState<string>(tasks[0].id);
-  const active = tasks.find((t) => t.id === activeId) ?? tasks[0];
+const PracticePage: React.FC<Props> = ({ unit, sectionTitle, tasks }) => {
+  const [activeId, setActiveId] = useState<string | undefined>(
+    tasks[0]?.id
+  );
+  const activeTask =
+    tasks.find((t) => t.id === activeId) || tasks[0] || null;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
@@ -35,30 +31,38 @@ const PracticePage: React.FC<Props> = ({
         {tasks.map((task) => (
           <button
             key={task.id}
+            type="button"
             onClick={() => setActiveId(task.id)}
-            className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left shadow-sm bg-white
-            ${
+            className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left shadow-sm bg-white ${
               activeId === task.id
                 ? "border-orange-500"
                 : "border-slate-200"
             }`}
           >
             <div>
-              <div className="font-semibold text-blue-600">{task.title}</div>
+              <div className="font-semibold text-sky-700">
+                {task.title}
+              </div>
               {task.description && (
-                <p className="text-sm text-slate-500">{task.description}</p>
+                <p className="text-sm text-slate-500">
+                  {task.description}
+                </p>
               )}
             </div>
             <span className="text-xs text-slate-400">
-              {activeId === task.id ? "Đang làm" : "Chưa làm"}
+              {activeId === task.id ? "Đang làm" : ""}
             </span>
           </button>
         ))}
       </div>
 
-      {/* Vùng làm bài – chỗ này sẽ dùng lại các game cũ + popup chấm điểm */}
+      {/* Vùng làm bài */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        {renderGame(active)}
+        {activeTask ? (
+          <PracticeGameRenderer task={activeTask} />
+        ) : (
+          <p>Chưa có bài tập nào.</p>
+        )}
       </div>
     </div>
   );
