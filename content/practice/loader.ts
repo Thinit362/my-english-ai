@@ -1,19 +1,20 @@
 // content/practice/loader.ts
 import { PracticeTask, SectionKey } from "./types";
-import { pronunciationPractice } from "./pronunciation";
-// sau này bạn có thể import thêm: vocabularyPractice, grammarPractice...
+import { vocabularyPractice } from "./vocabulary";
 
-export function getPracticeTasksFor(
+// Sau này bạn có thể import thêm:
+// import { grammarPractice } from "./grammar";
+// import { pronunciationPractice } from "./pronunciation";
+
+export function getPracticeTasks(
   unit: number,
-  sectionKey: string
-): PracticeTask[] | undefined {
-  const key = sectionKey as SectionKey;
+  section: SectionKey
+): PracticeTask[] {
+  const all: PracticeTask[] = [
+    ...vocabularyPractice,
+    // ...grammarPractice,
+    // ...pronunciationPractice,
+  ];
 
-  // Pronunciation
-  if (pronunciationPractice[unit]?.[key]) {
-    return pronunciationPractice[unit][key];
-  }
-
-  // TODO: vocabularyPractice, grammarPractice...
-  return undefined;
+  return all.filter((t) => t.unit === unit && t.section === section);
 }
