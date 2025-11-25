@@ -1,24 +1,26 @@
 // content/practice/types.ts
+
 export type SectionKey =
   | "vocabulary-1"
   | "vocabulary-2"
   | "grammar-1"
   | "grammar-2"
-  | "grammar-1" // có thể thêm "grammar" nếu cần
   | "pronunciation";
 
 export type GameType =
+  | "flash-audio-match"    // 🟢 thêm để fix lỗi build
   | "listen-choose"
   | "listen-fill-blank"
   | "match"
   | "true-false"
   | "drag-drop"
-  | "record-sentence";
+  | "record-sentence"
+  | "coming-soon";         // tuỳ chọn: fallback cho các dạng khác
 
 export interface PracticeTask {
-  id: string;             // "ex1"
-  title: string;          // "Bài tập 1"
-  description?: string;   // "Nghe và chọn từ bạn nghe thấy."
-  gameType: GameType;
-  datasetId: string;      // id để load bộ câu hỏi / audio / đáp án
+  id: string;              // "ex1"
+  title: string;           // "Bài tập 1"
+  description?: string;    // "Nghe và chọn đáp án đúng"
+  gameType: GameType;      // dạng bài tập
+  datasetId: string;       // id để load dữ liệu tương ứng
 }
