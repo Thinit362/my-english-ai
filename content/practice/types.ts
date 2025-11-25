@@ -1,29 +1,24 @@
 // content/practice/types.ts
-export type PracticeSection =
+export type SectionKey =
   | "vocabulary-1"
   | "vocabulary-2"
   | "grammar-1"
   | "grammar-2"
+  | "grammar-1" // có thể thêm "grammar" nếu cần
   | "pronunciation";
 
 export type GameType =
-  | "listen-choose"      // nghe và chọn đáp án
-  | "listen-fill-blank"  // nghe và điền từ còn thiếu
-  | "match"              // nối hai cột
-  | "true-false"         // chọn đúng/sai
-  | "drag-drop"          // kéo thả
-  | "record-sentence";   // đọc câu, ghi âm & chấm điểm
+  | "listen-choose"
+  | "listen-fill-blank"
+  | "match"
+  | "true-false"
+  | "drag-drop"
+  | "record-sentence";
 
-export interface PracticeExerciseMeta {
-  id: string;              // "ex1"
-  slug: string;            // "bai-tap-1" (dùng cho URL nếu cần)
-  unit: number;            // 1..10
-  section: PracticeSection;
-
-  title: string;           // "Bài tập 1"
-  subtitle: string;        // "Nghe và chọn từ bạn nghe thấy."
-  icon?: string;           // đường dẫn icon hoặc tên icon
-
-  gameType: GameType;      // dạng bài
-  datasetId: string;       // id bộ dữ liệu (để load câu hỏi/audio)
+export interface PracticeTask {
+  id: string;             // "ex1"
+  title: string;          // "Bài tập 1"
+  description?: string;   // "Nghe và chọn từ bạn nghe thấy."
+  gameType: GameType;
+  datasetId: string;      // id để load bộ câu hỏi / audio / đáp án
 }
