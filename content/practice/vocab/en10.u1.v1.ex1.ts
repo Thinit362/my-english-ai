@@ -3,12 +3,12 @@
 export type WordType = "noun phrase" | "verb phrase" | "conjunction";
 
 export interface VocabTriple {
-  id: string;          // dùng để ghép 3 ô với nhau
-  en: string;          // từ / cụm từ tiếng Anh
-  vi: string;          // nghĩa tiếng Việt
-  typeLabel: string;   // "Noun phrase (n. phr.)" ...
+  id: string;        // id chung cho bộ 3
+  en: string;        // từ/cụm từ tiếng Anh
+  vi: string;        // nghĩa tiếng Việt
+  typeLabel: string; // nhãn từ loại hiển thị
   wordType: WordType;
-  audioId?: string;    // id audio nếu bạn muốn dùng TTSPlay
+  audioText?: string; // text dùng cho đọc (nếu khác en)
 }
 
 export const u1V1Ex1Data: VocabTriple[] = [
@@ -18,7 +18,6 @@ export const u1V1Ex1Data: VocabTriple[] = [
     vi: "rửa bát",
     typeLabel: "Verb phrase (v. phr.)",
     wordType: "verb phrase",
-    audioId: "en10.u1.v1.w1",
   },
   {
     id: "w2",
@@ -26,15 +25,34 @@ export const u1V1Ex1Data: VocabTriple[] = [
     vi: "đổ rác",
     typeLabel: "Verb phrase (v. phr.)",
     wordType: "verb phrase",
-    audioId: "en10.u1.v1.w2",
   },
   {
     id: "w3",
     en: "household chores",
-    vi: "việc vặt trong nhà",
+    vi: "những công việc vặt trong nhà",
     typeLabel: "Noun phrase (n. phr.)",
     wordType: "noun phrase",
-    audioId: "en10.u1.v1.w3",
   },
-  // ... bạn thêm cho đủ 9 từ giống đề gốc
+  {
+    id: "w4",
+    en: "tidy up the house",
+    vi: "dọn dẹp nhà cửa",
+    typeLabel: "Verb phrase (v. phr.)",
+    wordType: "verb phrase",
+  },
+  {
+    id: "w5",
+    en: "help with the heavy lifting",
+    vi: "giúp những việc nặng",
+    typeLabel: "Verb phrase (v. phr.)",
+    wordType: "verb phrase",
+  },
+  {
+    id: "w6",
+    en: "conjunction",
+    vi: "liên từ",
+    typeLabel: "Conjunction (conj.)",
+    wordType: "conjunction",
+  },
+  // Bạn thêm tiếp cho đủ 9 từ giống đề nhé
 ];
