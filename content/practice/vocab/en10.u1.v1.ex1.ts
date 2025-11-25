@@ -1,58 +1,75 @@
 // content/practice/vocab/en10.u1.v1.ex1.ts
 
-export type WordType = "noun phrase" | "verb phrase" | "conjunction";
-
 export interface VocabTriple {
-  id: string;        // id chung cho bộ 3
-  en: string;        // từ/cụm từ tiếng Anh
+  id: string;        // id duy nhất (dùng để ghép 3 ô)
+  en: string;        // từ tiếng Anh
   vi: string;        // nghĩa tiếng Việt
-  typeLabel: string; // nhãn từ loại hiển thị
-  wordType: WordType;
-  audioText?: string; // text dùng cho đọc (nếu khác en)
+  typeLabel: string; // từ loại hiển thị
+  audioText?: string;
 }
 
 export const u1V1Ex1Data: VocabTriple[] = [
   {
-    id: "w1",
-    en: "do the washing-up",
-    vi: "rửa bát",
+    id: "sort-rubbish",
+    en: "sort rubbish",
+    vi: "phân loại rác",
     typeLabel: "Verb phrase (v. phr.)",
-    wordType: "verb phrase",
+    audioText: "sort rubbish",
   },
   {
-    id: "w2",
-    en: "take out the rubbish",
-    vi: "đổ rác",
+    id: "wash-dishes",
+    en: "wash the dishes",
+    vi: "rửa bát đĩa",
     typeLabel: "Verb phrase (v. phr.)",
-    wordType: "verb phrase",
+    audioText: "wash the dishes",
   },
   {
-    id: "w3",
-    en: "household chores",
-    vi: "những công việc vặt trong nhà",
-    typeLabel: "Noun phrase (n. phr.)",
-    wordType: "noun phrase",
-  },
-  {
-    id: "w4",
-    en: "tidy up the house",
-    vi: "dọn dẹp nhà cửa",
+    id: "do-laundry",
+    en: "do the laundry",
+    vi: "giặt quần áo",
     typeLabel: "Verb phrase (v. phr.)",
-    wordType: "verb phrase",
+    audioText: "do the laundry",
   },
   {
-    id: "w5",
-    en: "help with the heavy lifting",
-    vi: "giúp những việc nặng",
+    id: "water-plants",
+    en: "water the plants",
+    vi: "tưới cây",
+    typeLabel: "Verb (v.)",
+    audioText: "water the plants",
+  },
+  {
+    id: "take-care-baby",
+    en: "take care of the baby",
+    vi: "chăm em bé",
     typeLabel: "Verb phrase (v. phr.)",
-    wordType: "verb phrase",
+    audioText: "take care of the baby",
   },
   {
-    id: "w6",
-    en: "conjunction",
-    vi: "liên từ",
-    typeLabel: "Conjunction (conj.)",
-    wordType: "conjunction",
+    id: "do-groceries",
+    en: "do the groceries",
+    vi: "đi mua sắm",
+    typeLabel: "Verb phrase (v. phr.)",
+    audioText: "do the groceries",
   },
-  // Bạn thêm tiếp cho đủ 9 từ giống đề nhé
+  {
+    id: "cook-meals",
+    en: "cook meals",
+    vi: "nấu ăn",
+    typeLabel: "Verb (v.)",
+    audioText: "cook meals",
+  },
+  {
+    id: "sweep-house",
+    en: "sweep the house",
+    vi: "quét/ dọn nhà",
+    typeLabel: "Verb phrase (v. phr.)",
+    audioText: "sweep the house",
+  },
+  {
+    id: "heavy-lifting",
+    en: "do the heavy lifting",
+    vi: "làm việc nặng",
+    typeLabel: "Verb phrase (v. phr.)",
+    audioText: "do the heavy lifting",
+  },
 ];
