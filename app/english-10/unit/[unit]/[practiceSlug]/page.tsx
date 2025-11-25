@@ -1,48 +1,49 @@
 // app/english-10/unit/[unit]/[practiceSlug]/page.tsx
 import { notFound } from "next/navigation";
 import EnglishLayout from "@/components/EnglishLayout";
-import PracticePage from "@/components/PracticePage";
 import english10Units, {
   UnitMeta,
   LectureExercise,
 } from "@/content/english10.units";
-import { PracticeTask } from "@/content/practice/types";
-import { getPracticeTasksFor } from "@/content/practice/loader";
+import PracticePage from "@/components/PracticePage";
+import { getPracticeTasks } from "@/content/practice/loader";
+import { SectionKey } from "@/content/practice/types";
 
 interface PageProps {
   params: { unit: string; practiceSlug: string };
 }
 
-export default function PracticePageRouter({ params }: PageProps) {
+export default function UnitPracticePage({ params }: PageProps) {
   const unitId = Number(params.unit);
-  const practiceSlug = params.practiceSlug; // ví dụ: "practice-pronunciation"
+  const slug = params.practiceSlug;
 
-  const unitMeta: UnitMeta | undefined = english10Units.find(
+  const unit: UnitMeta | undefined = english10Units.find(
     (u) => u.id === unitId
   );
-  if (!unitMeta) return notFound();
+  if (!unit) return notFound();
 
-  // tìm đúng hàng (row) trong english10Units.rows có exercise.href trùng slug hiện tại
-  const row: LectureExercise | undefined = unitMeta.rows.find((r) =>
-    r.exercise.href.endsWith("/" + practiceSlug)
+  // tìm đúng row có exercise.href kết thúc bằng practiceSlug
+  const row: LectureExercise | undefined = unit.rows.find((r) =>
+    r.exercise.href.endsWith("/" + slug)
   );
   if (!row) return notFound();
 
-  // row.key cho biết loại phần: "vocabulary-1", "grammar-2", "pronunciation"...
-  const sectionKey = row.key;
+  const sectionKey = row.key as SectionKey;
 
-  // lấy danh sách task (câu hỏi/bài tương tác) cho Unit + Section
-  const tasks: PracticeTask[] | undefined = getPracticeTasksFor(
-    unitId,
-    sectionKey
-  );
-  if (!tasks || tasks.length === 0) {
-    // chưa tạo dữ liệu practice
+  const tasks = getPracticeTasks(unitId, sectionKey);
+
+  if (!tasks.length) {
+    // Chưa có dữ liệu practice cho phần này → hiện thông báo
     return (
       <EnglishLayout>
-        <div className="max-w-3xl mx-auto px-4 py-10">
-          <h1 className="text-2xl font-bold mb-2">{row.exercise.title}</h1>
-          <p>Phần này chưa có dữ liệu bài tập. Bạn có thể bổ sung sau.</p>
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <h1 className="text-2xl font-bold mb-2">
+            {row.exercise.title}
+          </h1>
+          <p>
+            Phần này hiện chưa có dữ liệu bài tập trong hệ thống. Bạn
+            có thể bổ sung sau trong thư mục <code>content/practice</code>.
+          </p>
         </div>
       </EnglishLayout>
     );
@@ -52,7 +53,6 @@ export default function PracticePageRouter({ params }: PageProps) {
     <EnglishLayout>
       <PracticePage
         unit={unitId}
-        sectionKey={sectionKey}
         sectionTitle={row.exercise.title}
         tasks={tasks}
       />
