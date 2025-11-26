@@ -3,7 +3,10 @@
 
 import React from "react";
 import { PracticeTask } from "@/content/practice/types";
+
+// Game components
 import FlashAudioMatchGame from "@/components/games/FlashAudioMatchGame";
+import DragFillGame from "@/components/games/DragFillGame"; // ⬅ quan trọng
 
 interface Props {
   task: PracticeTask;
@@ -20,9 +23,11 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
 
   switch (task.gameType) {
     case "flash-audio-match":
-      return <FlashAudioMatchGame datasetId={task.datasetId} />
+      return <FlashAudioMatchGame datasetId={task.datasetId} />;
+
     case "drag-fill":
       return <DragFillGame datasetId={task.datasetId} />;
+
     default:
       return (
         <div className="p-4 text-slate-600">
