@@ -21,6 +21,21 @@ export function getPracticeTasks(
 
   // Sau này bạn chỉ việc thêm else-if cho các unit / section khác
   // if (unit === 1 && sectionKey === "vocabulary-2") { ... }
+  // Unit 1 – Vocabulary 2 → game drag-fill
+  if (unit === 1 && sectionKey === "vocabulary-2") {
+    return [
+      {
+        id: "u1-v2-ex1",
+        title:
+          "Bài tập 1: Hoàn thành câu với các cụm từ cho sẵn",
+        description:
+          "Chọn cụm từ và điền vào chỗ trống. Có 2 cụm từ không cần dùng.",
+        gameType: "drag-fill",
+        datasetId: "en10.u1.v2.ex1",
+      },
+    ];
+  }
+
   // if (unit === 2 && sectionKey === "grammar-1") { ... }
 
   return tasks;
