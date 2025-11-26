@@ -2,8 +2,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-// CHÚ Ý: đường dẫn này phải đúng với thư mục bạn tạo trong repo
-// Ví dụ: content/practice/dragFill/en10.u1.v2.ex1.ts
 import { en10u1v2ex1 } from "@/content/practice/dragFill/en10.u1.v2.ex1";
 
 interface Props {
@@ -57,21 +55,50 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
     return <p>Chưa có dữ liệu cho bài tập này.</p>;
   }
 
+  /** ---- CLICK chọn cụm từ ---- */
   const handlePhraseClick = (phrase: string) => {
     setSelectedPhrase((prev) => (prev === phrase ? null : phrase));
   };
 
-  const handleSlotClick = (itemId: string) => {
-    if (!selectedPhrase) return;
-
+  /** ---- DROP cụm từ vào ô trống ---- */
+  const fillSlotWithPhrase = (itemId: string, phrase: string) => {
+    if (!phrase) return;
     setSlots((prev) =>
       prev.map((s) =>
-        s.itemId === itemId ? { ...s, phrase: selectedPhrase } : s
+        s.itemId === itemId ? { ...s, phrase } : s
       )
     );
+  };
+
+  const handleSlotClick = (itemId: string) => {
+    if (!selectedPhrase) return;
+    fillSlotWithPhrase(itemId, selectedPhrase);
     setSelectedPhrase(null);
   };
 
+  const handlePhraseDragStart = (
+    e: React.DragEvent<HTMLButtonElement>,
+    phrase: string
+  ) => {
+    e.dataTransfer.setData("text/plain", phrase);
+  };
+
+  const handleSlotDrop = (
+    e: React.DragEvent<HTMLButtonElement>,
+    itemId: string
+  ) => {
+    e.preventDefault();
+    const phrase = e.dataTransfer.getData("text/plain");
+    if (!phrase) return;
+    fillSlotWithPhrase(itemId, phrase);
+    setSelectedPhrase(null);
+  };
+
+  const handleSlotDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // cho phép drop
+  };
+
+  /** ---- Chấm điểm ---- */
   const handleSubmit = () => {
     let correct = 0;
     dataset.items.forEach((item) => {
@@ -115,7 +142,8 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
       {/* Cụm từ cho sẵn */}
       <div className="mb-4">
         <p className="text-sm text-slate-700 mb-2">
-          (Gợi ý: Bấm vào cụm từ rồi bấm vào ô trống để điền.)
+          (Gợi ý: Kéo thả cụm từ vào ô trống, hoặc bấm vào cụm từ rồi bấm vào ô
+          trống để điền.)
         </p>
         <div className="flex flex-wrap gap-2">
           {dataset.phrases.map((ph) => {
@@ -136,6 +164,8 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
                 type="button"
                 className={className}
                 onClick={() => handlePhraseClick(ph)}
+                draggable
+                onDragStart={(e) => handlePhraseDragStart(e, ph)}
               >
                 {ph}
               </button>
@@ -178,6 +208,8 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
                     type="button"
                     className={slotClass}
                     onClick={() => handleSlotClick(item.id)}
+                    onDrop={(e) => handleSlotDrop(e, item.id)}
+                    onDragOver={handleSlotDragOver}
                   >
                     {slot?.phrase ?? " ? "}
                   </button>
