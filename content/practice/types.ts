@@ -15,7 +15,7 @@ export type GameType =
   | "true-false"
   | "drag-drop"
   | "record-sentence"
-  | "coming-soon";         // tuỳ chọn: fallback cho các dạng khác
+  | "coming-soon"         // tuỳ chọn: fallback cho các dạng khác
   | "drag-fill";          // game kéo / click cụm từ điền vào chỗ trống
 
 export interface PracticeTask {
