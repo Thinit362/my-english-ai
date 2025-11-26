@@ -15,6 +15,7 @@ export type GameType =
   | "true-false"
   | "drag-drop"
   | "record-sentence"
+  |  "gap-fill"
   | "coming-soon"         // tuỳ chọn: fallback cho các dạng khác
   | "drag-fill";          // game kéo / click cụm từ điền vào chỗ trống
 
