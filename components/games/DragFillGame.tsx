@@ -2,8 +2,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+// CHÚ Ý: đường dẫn này phải đúng với thư mục bạn tạo trong repo
+// Ví dụ: content/practice/dragFill/en10.u1.v2.ex1.ts
 import { en10u1v2ex1 } from "@/content/practice/dragFill/en10.u1.v2.ex1";
-import { loadDragFillDataset } from "@/content/practice/dragfill/loader";
 
 interface Props {
   datasetId: string;
@@ -114,7 +115,7 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
       {/* Cụm từ cho sẵn */}
       <div className="mb-4">
         <p className="text-sm text-slate-700 mb-2">
-          (Gợi ý: Bạn có thể bấm vào cụm từ rồi bấm vào ô trống để điền.)
+          (Gợi ý: Bấm vào cụm từ rồi bấm vào ô trống để điền.)
         </p>
         <div className="flex flex-wrap gap-2">
           {dataset.phrases.map((ph) => {
@@ -160,10 +161,7 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
               "inline-block min-w-[160px] px-2 py-1 rounded bg-red-100 border border-red-500 text-red-800 text-sm cursor-pointer text-center align-middle";
           }
 
-          const displaySentence = item.sentence.replace(
-            "___",
-            " ________ "
-          );
+          const [before, after] = item.sentence.split("___");
 
           return (
             <div
@@ -174,34 +172,16 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
                 {index + 1}.
               </div>
               <div className="flex-1">
-                {/* Câu với slot */}
                 <p>
-                  {displaySentence.split("___").length === 1 ? (
-                    <>
-                      {displaySentence.split(" ________ ")[0]}
-                      <button
-                        type="button"
-                        className={slotClass}
-                        onClick={() => handleSlotClick(item.id)}
-                      >
-                        {slot?.phrase ?? " ? "}
-                      </button>
-                      {displaySentence.split(" ________ ")[1] ?? ""}
-                    </>
-                  ) : (
-                    // fallback nếu bạn dùng trực tiếp "___" nhiều lần
-                    <>
-                      {item.sentence.split("___")[0]}
-                      <button
-                        type="button"
-                        className={slotClass}
-                        onClick={() => handleSlotClick(item.id)}
-                      >
-                        {slot?.phrase ?? " ? "}
-                      </button>
-                      {item.sentence.split("___")[1] ?? ""}
-                    </>
-                  )}
+                  {before}
+                  <button
+                    type="button"
+                    className={slotClass}
+                    onClick={() => handleSlotClick(item.id)}
+                  >
+                    {slot?.phrase ?? " ? "}
+                  </button>
+                  {after ?? ""}
                 </p>
               </div>
             </div>
