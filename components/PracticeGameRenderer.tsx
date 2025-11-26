@@ -20,7 +20,7 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
 
   switch (task.gameType) {
     case "flash-audio-match":
-      return <FlashAudioMatchGame datasetId={task.datasetId} />;
+      return <FlashAudioMatchGame datasetId={task.datasetId} />
     case "drag-fill":
       return <DragFillGame datasetId={task.datasetId} />;
     default:
