@@ -27,6 +27,9 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
 
     case "drag-fill":
       return <DragFillGame datasetId={task.datasetId} />;
+      
+    case "gap-fill":
+      return <GapFillGame datasetId={task.datasetId} />;
 
     default:
       return (
