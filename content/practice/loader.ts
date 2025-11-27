@@ -1,45 +1,70 @@
 // content/practice/loader.ts
 import { PracticeTask, SectionKey } from "./types";
 
-// HÀM CHÍNH: dùng cho toàn bộ hệ thống
+/**
+ * Mỗi task trong ALL_TASKS mang theo unit + section
+ * để PracticePage lọc theo đường dẫn /unit/[unit]/[practiceSlug]
+ */
+type TaskConfig = PracticeTask & {
+  unit: number;
+  section: SectionKey;
+};
+
+// =====================
+// DANH SÁCH TẤT CẢ BÀI TẬP
+// =====================
+const ALL_TASKS: TaskConfig[] = [
+  // -----------------------------
+  // UNIT 1 — VOCABULARY 1 — Bài 1
+  // -----------------------------
+  {
+    id: "u1-v1-ex1",
+    unit: 1,
+    section: "vocabulary-1",
+    title: "Bài tập 1",
+    description: "Nghe và nối từ với nghĩa và từ loại tương ứng.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u1.v1.ex1",
+  },
+
+  // -----------------------------
+  // UNIT 1 — VOCABULARY 2 — Bài 1
+  // -----------------------------
+  {
+    id: "u1-v2-ex1",
+    unit: 1,
+    section: "vocabulary-2",
+    title: "Bài tập 1: Hoàn thành câu với các cụm từ cho sẵn",
+    description:
+      "Chọn cụm từ và điền vào chỗ trống. Có 2 cụm từ không cần dùng.",
+    gameType: "drag-fill",
+    datasetId: "en10.u1.v2.ex1",
+  },
+
+  // -----------------------------
+  // UNIT 1 — GRAMMAR 1 — Bài 4
+  // -----------------------------
+  {
+    id: "u1-g1-ex4",
+    unit: 1,
+    section: "grammar-1",
+    title: "Bài tập 4: Điền vào chỗ trống dạng đúng của động từ",
+    description:
+      "Hiện tại đơn & hiện tại tiếp diễn. Có thể dùng một động từ hai lần.",
+    gameType: "gap-fill",
+    datasetId: "en10.u1.g1.ex4",
+  },
+];
+
+// =====================
+// HÀM CHÍNH
+// =====================
 export function getPracticeTasks(
   unit: number,
-  sectionKey: SectionKey
+  section: SectionKey
 ): PracticeTask[] {
-  const tasks: PracticeTask[] = [];
-
-  // Unit 1 — Vocabulary 1 — Bài tập 1 (flash card)
-  if (unit === 1 && sectionKey === "vocabulary-1") {
-    tasks.push({
-      id: "u1-v1-ex1",
-      title: "Bài tập 1",
-      description: "Nghe và nối từ với nghĩa và từ loại tương ứng.",
-      gameType: "flash-audio-match",
-      datasetId: "en10.u1.v1.ex1",
-    });
-  }
-
-  // Sau này bạn chỉ việc thêm else-if cho các unit / section khác
-  // if (unit === 1 && sectionKey === "vocabulary-2") { ... }
-  // Unit 1 – Vocabulary 2 → game drag-fill
-  if (unit === 1 && sectionKey === "vocabulary-2") {
-    return [
-      {
-        id: "u1-v2-ex1",
-        title:
-          "Bài tập 1: Hoàn thành câu với các cụm từ cho sẵn",
-        description:
-          "Chọn cụm từ và điền vào chỗ trống. Có 2 cụm từ không cần dùng.",
-        gameType: "drag-fill",
-        datasetId: "en10.u1.v2.ex1",
-      },
-    ];
-  }
-
-  // if (unit === 2 && sectionKey === "grammar-1") { ... }
-
-  return tasks;
+  return ALL_TASKS.filter((t) => t.unit === unit && t.section === section);
 }
 
-// Alias để nếu chỗ nào lỡ dùng loadPracticeTasks vẫn không lỗi
+// alias an toàn
 export const loadPracticeTasks = getPracticeTasks;
