@@ -1,76 +1,61 @@
-// content/practice/gapfill/en10.u1.g1.ex4.ts
-
-export interface GapFillItem {
-  id: string;
-  sentence: string;   // chứa "___" là chỗ trống
-  answer: string;     // đáp án đúng
-}
-
-export interface GapFillDataset {
-  id: string;
-  title: string;
-  instructionsEn?: string;
-  instructionsVi?: string;
-  words: string[];           // danh sách động từ cho sẵn
-  items: GapFillItem[];      // danh sách câu hỏi
-}
+// content/practice/gapFill/en10.u1.g1.ex4.ts
+import type { GapFillDataset } from "@/components/games/GapFillGame";
 
 export const en10u1g1ex4: GapFillDataset = {
   id: "en10.u1.g1.ex4",
-  title: "Hiện tại đơn & Hiện tại tiếp diễn – Bài tập 4",
-
+  title: "Hiện tại đơn & Hiện tại tiếp diễn - Bài tập 4",
   instructionsEn:
     "Fill in the blanks with the correct forms of the verbs given. Use negative form if necessary. You can use a word twice.",
   instructionsVi:
-    "(Điền vào chỗ trống dạng đúng của các động từ đã cho. Dùng dạng phủ định nếu cần thiết. Có thể sử dụng một từ hai lần.)",
-
-  words: ["have", "take out", "take", "split", "prepare", "shop", "do"],
-
+    "Điền vào chỗ trống dạng đúng của các động từ đã cho. Dùng dạng phủ định nếu cần thiết và không viết hoa. Bạn có thể sử dụng một từ hai lần.",
+  givenWords: ["have", "take out", "take", "split", "prepare", "shop", "do"],
   items: [
     {
-      id: "q1",
-      sentence: "I usually ___ the bus to school, but this morning I'm walking.",
-      answer: "take"
+      id: "1",
+      sentence:
+        "I usually ___ the bus to school, but this morning I'm walking.",
+      answers: ["take"],
     },
     {
-      id: "q2",
+      id: "2",
       sentence: "My mom is not at home. She ___ for groceries now.",
-      answer: "is shopping"
+      answers: ["is shopping"],
     },
     {
-      id: "q3",
-      sentence: "I'm very busy, so I only ___ the laundry every Saturday morning.",
-      answer: "do"
+      id: "3",
+      sentence:
+        "I'm very busy, so I only ___ the laundry every Saturday morning.",
+      answers: ["do"],
     },
     {
-      id: "q4",
+      id: "4",
       sentence:
         "They ___ housework among members in Ann's family. She has to do all the chores.",
-      answer: "don't split"
+      answers: ["don't split", "do not split"],
     },
     {
-      id: "q5",
+      id: "5",
       sentence:
         "Kate always ___ her dog fed by her neighbor every time she goes on business trips.",
-      answer: "has"
+      answers: ["has"],
     },
     {
-      id: "q6",
+      id: "6",
       sentence:
         "I always cook, but today is Women's Day, so my husband ___ dinner in the kitchen.",
-      answer: "is preparing"
+      answers: ["is preparing"],
     },
     {
-      id: "q7",
+      id: "7",
       sentence:
         "The residents in my neighborhood ___ the garbage at 5 p.m. every day when the bin lorry comes.",
-      answer: "take out"
+      answers: ["take out"],
     },
     {
-      id: "q8",
+      id: "8",
       sentence:
         "Kris's wrist was broken once, so now she rarely ___ the heavy lifting.",
-      answer: "does"
-    }
-  ]
+      answers: ["does"],
+    },
+  ],
 };
