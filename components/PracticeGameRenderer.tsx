@@ -3,10 +3,9 @@
 
 import React from "react";
 import { PracticeTask } from "@/content/practice/types";
-
-// Game components
 import FlashAudioMatchGame from "@/components/games/FlashAudioMatchGame";
-import DragFillGame from "@/components/games/DragFillGame"; // ⬅ quan trọng
+import DragFillGame from "@/components/games/DragFillGame";
+import GapFillGame from "@/components/games/GapFillGame"; // ✅ IMPORT MỚI
 
 interface Props {
   task: PracticeTask;
@@ -27,9 +26,9 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
 
     case "drag-fill":
       return <DragFillGame datasetId={task.datasetId} />;
-      
+
     case "gap-fill":
-      return <GapFillGame datasetId={task.datasetId} />;
+      return <GapFillGame datasetId={task.datasetId} />;  {/* ✅ dùng được */}
 
     default:
       return (
