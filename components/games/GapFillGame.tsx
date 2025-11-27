@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-
+import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
 interface Props {
   datasetId: string;
 }
@@ -34,7 +34,7 @@ export interface GapFillDataset {
  *     "en10.u1.g1.ex4": en10u1g1ex4,
  *   };
  */
-const DATASETS: Record<string, GapFillDataset> = {};
+import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
 
 const GapFillGame: React.FC<Props> = ({ datasetId }) => {
   const dataset = DATASETS[datasetId];
