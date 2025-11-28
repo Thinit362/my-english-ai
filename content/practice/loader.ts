@@ -55,6 +55,17 @@ const ALL_TASKS: TaskConfig[] = [
     datasetId: "en10.u1.g1.ex4",
   },
 ];
+if (unit === 1 && sectionKey === "pronunciation") {
+  return [
+    {
+      id: "u1-p1-ex1",
+      title: "Bài tập 1: Nghe và chọn đáp án đúng",
+      description: "Nghe audio và chọn đáp án A/B vào chỗ trống.",
+      gameType: "listen-choose",
+      datasetId: "en10.u1.p1.ex1",
+    },
+  ];
+}
 
 // =====================
 // HÀM CHÍNH
