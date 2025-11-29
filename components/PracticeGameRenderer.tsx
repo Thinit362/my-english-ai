@@ -8,6 +8,7 @@ import DragFillGame from "@/components/games/DragFillGame";
 import GapFillGame from "@/components/games/GapFillGame"; // ✅ IMPORT MỚI
 import ListenChooseGame from "@/components/games/ListenChooseGame";
 import { LISTEN_CHOOSE_DATASETS } from "@/content/practice/listenChoose/datasets";
+
 interface Props {
   task: PracticeTask;
 }
@@ -32,7 +33,10 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
       return <GapFillGame datasetId={task.datasetId} />; 
     case "listen-choose":
       return (
-      <ListenChooseGame dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]} />);  {/* ✅ dùng được */}
+        <ListenChooseGame
+        dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]}
+        />
+    );
 
     default:
       return (
