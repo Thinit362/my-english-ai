@@ -1,197 +1,137 @@
-// components/games/DragFillGame.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { en10u1v2ex1 } from "@/content/practice/dragFill/en10.u1.v2.ex1";
+import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
 
 interface Props {
   datasetId: string;
 }
 
-/** ----- Kiểu dữ liệu dataset dùng chung cho mọi bài drag-fill ----- */
-export interface DragFillItem {
+/** ===== Kiểu dataset dùng chung cho mọi bài gap-fill ===== */
+export interface GapFillItem {
   id: string;
-  sentence: string; // câu có chỗ trống, dùng "___" để đánh dấu
-  answer: string;   // cụm từ đúng
+  sentence: string; // có "___" là chỗ trống
+  answers: string[]; // đáp án đúng (chữ thường, bỏ khoảng trắng thừa)
 }
 
-export interface DragFillDataset {
+export interface GapFillDataset {
   id: string;
   title: string;
   instructionsEn?: string;
   instructionsVi?: string;
-  phrases: string[];     // tất cả cụm từ cho sẵn (có thể dư)
-  items: DragFillItem[]; // danh sách câu
+  givenWords: string[];
+  items: GapFillItem[];
 }
 
-/** Map datasetId -> dataset cụ thể */
-const DATASETS: Record<string, DragFillDataset> = {
-  "en10.u1.v2.ex1": en10u1v2ex1,
+// Map id -> dataset
+const DATASETS: Record<string, GapFillDataset> = {
+  "en10.u1.g1.ex4": en10u1g1ex4,
 };
 
-type SlotState = {
-  itemId: string;
-  phrase: string | null;
-};
-
-const DragFillGame: React.FC<Props> = ({ datasetId }) => {
+const GapFillGame: React.FC<Props> = ({ datasetId }) => {
   const dataset = DATASETS[datasetId];
 
-  const [slots, setSlots] = useState<SlotState[]>(
-    dataset
-      ? dataset.items.map((it) => ({ itemId: it.id, phrase: null }))
-      : []
-  );
-  const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null);
+  if (!dataset) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-orange-50 p-4">
+        <p className="font-semibold text-slate-800 mb-1">
+          Chưa cấu hình dữ liệu cho bài tập này.
+        </p>
+        <p className="text-sm text-slate-600">
+          Kiểm tra lại datasetId trong <code>loader.ts</code>.
+        </p>
+      </div>
+    );
+  }
+
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
-  const usedPhrases = useMemo(
-    () => new Set(slots.map((s) => s.phrase).filter(Boolean) as string[]),
-    [slots]
-  );
+  const normalisedAnswers = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    dataset.items.forEach((item) => {
+      map[item.id] = item.answers.map((a) => a.trim().toLowerCase());
+    });
+    return map;
+  }, [dataset.items]);
 
-  if (!dataset) {
-    return <p>Chưa có dữ liệu cho bài tập này.</p>;
-  }
-
-  /** ---- CLICK chọn cụm từ ---- */
-  const handlePhraseClick = (phrase: string) => {
-    setSelectedPhrase((prev) => (prev === phrase ? null : phrase));
+  const handleChange = (itemId: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [itemId]: value }));
   };
 
-  /** ---- DROP cụm từ vào ô trống ---- */
-  const fillSlotWithPhrase = (itemId: string, phrase: string) => {
-    if (!phrase) return;
-    setSlots((prev) =>
-      prev.map((s) =>
-        s.itemId === itemId ? { ...s, phrase } : s
-      )
-    );
-  };
-
-  const handleSlotClick = (itemId: string) => {
-    if (!selectedPhrase) return;
-    fillSlotWithPhrase(itemId, selectedPhrase);
-    setSelectedPhrase(null);
-  };
-
-  const handlePhraseDragStart = (
-    e: React.DragEvent<HTMLButtonElement>,
-    phrase: string
-  ) => {
-    e.dataTransfer.setData("text/plain", phrase);
-  };
-
-  const handleSlotDrop = (
-    e: React.DragEvent<HTMLButtonElement>,
-    itemId: string
-  ) => {
-    e.preventDefault();
-    const phrase = e.dataTransfer.getData("text/plain");
-    if (!phrase) return;
-    fillSlotWithPhrase(itemId, phrase);
-    setSelectedPhrase(null);
-  };
-
-  const handleSlotDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // cho phép drop
-  };
-
-  /** ---- Chấm điểm ---- */
   const handleSubmit = () => {
     let correct = 0;
+
     dataset.items.forEach((item) => {
-      const slot = slots.find((s) => s.itemId === item.id);
-      if (slot && slot.phrase === item.answer) correct++;
+      const userRaw = answers[item.id] ?? "";
+      const user = userRaw.trim().toLowerCase();
+      if (!user) return;
+      const valid = normalisedAnswers[item.id] || [];
+      if (valid.includes(user)) correct++;
     });
+
     setScore(correct);
     setChecked(true);
   };
 
   const handleReset = () => {
-    setSlots((prev) => prev.map((s) => ({ ...s, phrase: null })));
-    setSelectedPhrase(null);
+    setAnswers({});
     setChecked(false);
     setScore(null);
   };
 
-  const getSlotStatus = (itemId: string) => {
+  const getItemStatus = (item: GapFillItem) => {
     if (!checked) return "normal" as const;
-    const item = dataset.items.find((i) => i.id === itemId);
-    const slot = slots.find((s) => s.itemId === itemId);
-    if (!item || !slot || !slot.phrase) return "normal" as const;
-    return slot.phrase === item.answer ? "correct" : "incorrect";
+    const user = (answers[item.id] ?? "").trim().toLowerCase();
+    if (!user) return "normal" as const;
+    const valid = normalisedAnswers[item.id] || [];
+    return valid.includes(user) ? ("correct" as const) : ("incorrect" as const);
   };
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-orange-50 p-4 md:p-6">
       <h2 className="font-semibold text-lg mb-2">{dataset.title}</h2>
 
-      <div className="text-sm text-slate-700 mb-4">
-        {dataset.instructionsEn && (
-          <p className="font-semibold text-blue-700">
-            {dataset.instructionsEn}
-          </p>
-        )}
-        {dataset.instructionsVi && (
-          <p className="text-orange-700 italic">{dataset.instructionsVi}</p>
-        )}
-      </div>
-
-      {/* Cụm từ cho sẵn */}
-      <div className="mb-4">
-        <p className="text-sm text-slate-700 mb-2">
-          (Gợi ý: Kéo thả cụm từ vào ô trống, hoặc bấm vào cụm từ rồi bấm vào ô
-          trống để điền.)
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {dataset.phrases.map((ph) => {
-            const isUsed = usedPhrases.has(ph);
-            const isSelected = selectedPhrase === ph;
-            let className =
-              "px-3 py-1.5 rounded-full border text-sm cursor-pointer transition bg-white border-amber-300 shadow-sm";
-
-            if (isSelected) {
-              className += " bg-orange-500 text-white border-orange-500";
-            } else if (isUsed) {
-              className += " bg-slate-100 text-slate-400 border-slate-200";
-            }
-
-            return (
-              <button
-                key={ph}
-                type="button"
-                className={className}
-                onClick={() => handlePhraseClick(ph)}
-                draggable
-                onDragStart={(e) => handlePhraseDragStart(e, ph)}
-              >
-                {ph}
-              </button>
-            );
-          })}
+      {(dataset.instructionsEn || dataset.instructionsVi) && (
+        <div className="text-sm text-slate-700 mb-4">
+          {dataset.instructionsEn && (
+            <p className="font-semibold text-blue-700">
+              {dataset.instructionsEn}
+            </p>
+          )}
+          {dataset.instructionsVi && (
+            <p className="italic text-orange-700">{dataset.instructionsVi}</p>
+          )}
         </div>
+      )}
+
+      {/* từ / cụm từ cho sẵn */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {dataset.givenWords.map((w) => (
+          <span
+            key={w}
+            className="px-3 py-1 rounded-full border border-slate-300 bg-white text-sm shadow-sm"
+          >
+            {w}
+          </span>
+        ))}
       </div>
 
-      {/* Các câu */}
+      {/* các câu */}
       <div className="space-y-3">
         {dataset.items.map((item, index) => {
-          const slot = slots.find((s) => s.itemId === item.id);
-          const status = getSlotStatus(item.id);
+          const status = getItemStatus(item);
+          const parts = item.sentence.split("___");
+          const value = answers[item.id] ?? "";
 
-          let slotClass =
-            "inline-block min-w-[160px] px-2 py-1 border border-dashed rounded bg-white text-sm cursor-pointer text-center align-middle";
-
+          let inputClass =
+            "border-b border-slate-400 px-2 py-0.5 min-w-[120px] outline-none bg-transparent";
           if (status === "correct") {
-            slotClass =
-              "inline-block min-w-[160px] px-2 py-1 rounded bg-emerald-100 border border-emerald-500 text-emerald-800 text-sm cursor-default text-center align-middle";
+            inputClass += " border-emerald-500 text-emerald-700 font-semibold";
           } else if (status === "incorrect") {
-            slotClass =
-              "inline-block min-w-[160px] px-2 py-1 rounded bg-red-100 border border-red-500 text-red-800 text-sm cursor-pointer text-center align-middle";
+            inputClass += " border-red-500 text-red-700 font-semibold";
           }
-
-          const [before, after] = item.sentence.split("___");
 
           return (
             <div
@@ -203,17 +143,14 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
               </div>
               <div className="flex-1">
                 <p>
-                  {before}
-                  <button
-                    type="button"
-                    className={slotClass}
-                    onClick={() => handleSlotClick(item.id)}
-                    onDrop={(e) => handleSlotDrop(e, item.id)}
-                    onDragOver={handleSlotDragOver}
-                  >
-                    {slot?.phrase ?? " ? "}
-                  </button>
-                  {after ?? ""}
+                  {parts[0]}
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => handleChange(item.id, e.target.value)}
+                    className={inputClass}
+                  />
+                  {parts[1] ?? ""}
                 </p>
               </div>
             </div>
@@ -221,7 +158,6 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
         })}
       </div>
 
-      {/* Nút Submit / Reset + kết quả */}
       <div className="mt-6 flex flex-col md:flex-row items-center gap-3">
         <button
           type="button"
@@ -251,4 +187,4 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
   );
 };
 
-export default DragFillGame;
+export default GapFillGame;
