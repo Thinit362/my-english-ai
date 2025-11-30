@@ -4,8 +4,7 @@ import React, { useState } from "react";
 
 interface ListenChooseItem {
   id: string;
-  audio: string;
-  question: string;
+  question: string;   // dùng làm text gửi lên TTS
   optionA: string;
   optionB: string;
   correct: "A" | "B";
@@ -25,6 +24,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleSelect = (id: string, choice: "A" | "B") => {
     setAnswers((prev) => ({ ...prev, [id]: choice }));
@@ -45,6 +45,35 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
+  // 🔊 GOOGLE CLOUD TTS
+  const playAudio = async (text: string, id: string) => {
+    try {
+      setLoadingId(id);
+
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        console.error("TTS error");
+        setLoadingId(null);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
+      audio.onended = () => URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Play error:", err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div className="rounded-xl border border-amber-200 bg-orange-50 p-4 md:p-6">
       <h2 className="font-semibold text-lg mb-4">{dataset.title}</h2>
@@ -56,14 +85,24 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
             key={item.id}
             className="mb-4 p-3 rounded-lg bg-white shadow-sm border border-slate-200"
           >
-            <div className="flex items-center gap-2 mb-2">
+            {/* 🔊 NÚT NGHE (không dùng file mp3 nữa) */}
+            <div className="flex items-center gap-3 mb-2">
               <span className="w-8 h-8 flex items-center justify-center bg-amber-200 rounded font-semibold">
                 {index + 1}.
               </span>
-              <audio controls src={item.audio} className="h-8" />
+
+              <button
+                onClick={() => playAudio(item.question, item.id)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                disabled={loadingId === item.id}
+              >
+                {loadingId === item.id ? "Đang phát..." : "🔊 Nghe"}
+              </button>
             </div>
+
             <p className="mb-2 text-sm text-slate-800">{item.question}</p>
 
+            {/* A / B OPTIONS */}
             <div className="space-y-1 text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -85,6 +124,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                   A. {item.optionA}
                 </span>
               </label>
+
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -118,6 +158,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
         >
           Submit
         </button>
+
         <button
           type="button"
           onClick={handleReset}
@@ -125,6 +166,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
         >
           Làm lại
         </button>
+
         {score !== null && (
           <p className="ml-0 md:ml-4 text-sm font-semibold text-slate-800">
             Kết quả:{" "}
