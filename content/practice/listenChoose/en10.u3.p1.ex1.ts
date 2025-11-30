@@ -1,0 +1,77 @@
+// content/practice/listenChoose/en10.u3.p1.ex1.ts
+export const en10u3p1ex1 = {
+  id: "en10.u3.p1.ex1",
+  title: "Word stress - Bài tập 1: Nghe và chọn trọng âm đúng của từ.",
+  items: [
+    {
+      id: "q1",
+      question: "Choose the correct word stress:",
+      optionA: "aGREE",
+      optionB: "Agree",
+      correct: "B",
+    },
+    {
+      id: "q2",
+      question: "Choose the correct word stress:",
+      optionA: "hopeLESS",
+      optionB: "HOPEless",
+      correct: "B",
+    },
+    {
+      id: "q3",
+      question: "Choose the correct word stress:",
+      optionA: "REquire",
+      optionB: "reQUIRE",
+      correct: "B",
+    },
+    {
+      id: "q4",
+      question: "Choose the correct word stress:",
+      optionA: "workFORCE",
+      optionB: "WORKforce",
+      correct: "B",
+    },
+    {
+      id: "q5",
+      question: "Choose the correct word stress:",
+      optionA: "HARDship",
+      optionB: "HardSHIP",
+      correct: "B",
+    },
+    {
+      id: "q6",
+      question: "Choose the correct word stress:",
+      optionA: "ENrol",
+      optionB: "enROL",
+      correct: "B",
+    },
+    {
+      id: "q7",
+      question: "Choose the correct word stress:",
+      optionA: "CAREful",
+      optionB: "CareFUL",
+      correct: "B",
+    },
+    {
+      id: "q8",
+      question: "Choose the correct word stress:",
+      optionA: "Attend",
+      optionB: "aTTEND",
+      correct: "B",
+    },
+    {
+      id: "q9",
+      question: "Choose the correct word stress:",
+      optionA: "DEmand",
+      optionB: "deMAND",
+      correct: "B",
+    },
+    {
+      id: "q10",
+      question: "Choose the correct word stress:",
+      optionA: "Attract",
+      optionB: "aTTRACT",
+      correct: "B",
+    },
+  ],
+};
