@@ -1,99 +1,89 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
+import {
+  en10u1v2ex1,
+  DragFillDataset,
+} from "@/content/practice/dragFill/en10.u1.v2.ex1";
 
 interface Props {
   datasetId: string;
 }
 
-/** ===== Kiểu dataset dùng chung cho mọi bài gap-fill ===== */
-export interface GapFillItem {
-  id: string;
-  sentence: string; // có "___" là chỗ trống
-  answers: string[]; // đáp án đúng (chữ thường, bỏ khoảng trắng thừa)
-}
-
-export interface GapFillDataset {
-  id: string;
-  title: string;
-  instructionsEn?: string;
-  instructionsVi?: string;
-  givenWords: string[];
-  items: GapFillItem[];
-}
-
 // Map id -> dataset
-const DATASETS: Record<string, GapFillDataset> = {
-  "en10.u1.g1.ex4": en10u1g1ex4,
+const DATASETS: Record<string, DragFillDataset> = {
+  "en10.u1.v2.ex1": en10u1v2ex1,
 };
 
-const GapFillGame: React.FC<Props> = ({ datasetId }) => {
+type SlotState = {
+  itemId: string;
+  phrase: string | null;
+};
+
+const DragFillGame: React.FC<Props> = ({ datasetId }) => {
   const dataset = DATASETS[datasetId];
 
-  if (!dataset) {
-    return (
-      <div className="rounded-2xl border border-amber-200 bg-orange-50 p-4">
-        <p className="font-semibold text-slate-800 mb-1">
-          Chưa cấu hình dữ liệu cho bài tập này.
-        </p>
-        <p className="text-sm text-slate-600">
-          Kiểm tra lại datasetId trong <code>loader.ts</code>.
-        </p>
-      </div>
-    );
-  }
-
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [slots, setSlots] = useState<SlotState[]>(
+    dataset ? dataset.items.map((it) => ({ itemId: it.id, phrase: null })) : []
+  );
+  const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
-  const normalisedAnswers = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    dataset.items.forEach((item) => {
-      map[item.id] = item.answers.map((a) => a.trim().toLowerCase());
-    });
-    return map;
-  }, [dataset.items]);
+  const usedPhrases = useMemo(
+    () => new Set(slots.map((s) => s.phrase).filter(Boolean) as string[]),
+    [slots]
+  );
 
-  const handleChange = (itemId: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [itemId]: value }));
+  if (!dataset) {
+    return <p>Chưa có dữ liệu cho bài tập này.</p>;
+  }
+
+  const handlePhraseClick = (phrase: string) => {
+    setSelectedPhrase((prev) => (prev === phrase ? null : phrase));
+  };
+
+  const handleSlotClick = (itemId: string) => {
+    if (!selectedPhrase) return;
+
+    setSlots((prev) =>
+      prev.map((s) =>
+        s.itemId === itemId ? { ...s, phrase: selectedPhrase } : s
+      )
+    );
+    setSelectedPhrase(null);
   };
 
   const handleSubmit = () => {
     let correct = 0;
-
     dataset.items.forEach((item) => {
-      const userRaw = answers[item.id] ?? "";
-      const user = userRaw.trim().toLowerCase();
-      if (!user) return;
-      const valid = normalisedAnswers[item.id] || [];
-      if (valid.includes(user)) correct++;
+      const slot = slots.find((s) => s.itemId === item.id);
+      if (slot && slot.phrase === item.answer) correct++;
     });
-
     setScore(correct);
     setChecked(true);
   };
 
   const handleReset = () => {
-    setAnswers({});
+    setSlots((prev) => prev.map((s) => ({ ...s, phrase: null })));
+    setSelectedPhrase(null);
     setChecked(false);
     setScore(null);
   };
 
-  const getItemStatus = (item: GapFillItem) => {
+  const getSlotStatus = (itemId: string) => {
     if (!checked) return "normal" as const;
-    const user = (answers[item.id] ?? "").trim().toLowerCase();
-    if (!user) return "normal" as const;
-    const valid = normalisedAnswers[item.id] || [];
-    return valid.includes(user) ? ("correct" as const) : ("incorrect" as const);
+    const item = dataset.items.find((i) => i.id === itemId);
+    const slot = slots.find((s) => s.itemId === itemId);
+    if (!item || !slot || !slot.phrase) return "normal" as const;
+    return slot.phrase === item.answer ? "correct" : "incorrect";
   };
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-orange-50 p-4 md:p-6">
       <h2 className="font-semibold text-lg mb-2">{dataset.title}</h2>
 
-      {(dataset.instructionsEn || dataset.instructionsVi) && (
+      {dataset.instructionsEn || dataset.instructionsVi ? (
         <div className="text-sm text-slate-700 mb-4">
           {dataset.instructionsEn && (
             <p className="font-semibold text-blue-700">
@@ -104,34 +94,58 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
             <p className="italic text-orange-700">{dataset.instructionsVi}</p>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* từ / cụm từ cho sẵn */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {dataset.givenWords.map((w) => (
-          <span
-            key={w}
-            className="px-3 py-1 rounded-full border border-slate-300 bg-white text-sm shadow-sm"
-          >
-            {w}
-          </span>
-        ))}
+      {/* cụm từ cho sẵn */}
+      <div className="mb-4">
+        <p className="text-sm text-slate-700 mb-2">
+          (Chọn cụm từ rồi bấm vào ô trống để điền.)
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {dataset.phrases.map((ph) => {
+            const isUsed = usedPhrases.has(ph);
+            const isSelected = selectedPhrase === ph;
+            let className =
+              "px-3 py-1.5 rounded-full border text-sm cursor-pointer transition bg-white border-amber-300 shadow-sm";
+
+            if (isSelected) {
+              className += " bg-orange-500 text-white border-orange-500";
+            } else if (isUsed) {
+              className += " bg-slate-100 text-slate-400 border-slate-200";
+            }
+
+            return (
+              <button
+                key={ph}
+                type="button"
+                className={className}
+                onClick={() => handlePhraseClick(ph)}
+              >
+                {ph}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* các câu */}
       <div className="space-y-3">
         {dataset.items.map((item, index) => {
-          const status = getItemStatus(item);
-          const parts = item.sentence.split("___");
-          const value = answers[item.id] ?? "";
+          const slot = slots.find((s) => s.itemId === item.id);
+          const status = getSlotStatus(item.id);
 
-          let inputClass =
-            "border-b border-slate-400 px-2 py-0.5 min-w-[120px] outline-none bg-transparent";
+          let slotClass =
+            "inline-block min-w-[160px] px-2 py-1 border border-dashed rounded bg-white text-sm cursor-pointer text-center align-middle";
+
           if (status === "correct") {
-            inputClass += " border-emerald-500 text-emerald-700 font-semibold";
+            slotClass =
+              "inline-block min-w-[160px] px-2 py-1 rounded bg-emerald-100 border border-emerald-500 text-emerald-800 text-sm cursor-default text-center align-middle";
           } else if (status === "incorrect") {
-            inputClass += " border-red-500 text-red-700 font-semibold";
+            slotClass =
+              "inline-block min-w-[160px] px-2 py-1 rounded bg-red-100 border border-red-500 text-red-800 text-sm cursor-pointer text-center align-middle";
           }
+
+          const parts = item.sentence.split("___");
 
           return (
             <div
@@ -144,12 +158,13 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
               <div className="flex-1">
                 <p>
                   {parts[0]}
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => handleChange(item.id, e.target.value)}
-                    className={inputClass}
-                  />
+                  <button
+                    type="button"
+                    className={slotClass}
+                    onClick={() => handleSlotClick(item.id)}
+                  >
+                    {slot?.phrase ?? " ? "}
+                  </button>
                   {parts[1] ?? ""}
                 </p>
               </div>
@@ -158,6 +173,7 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
         })}
       </div>
 
+      {/* nút submit / reset */}
       <div className="mt-6 flex flex-col md:flex-row items-center gap-3">
         <button
           type="button"
@@ -187,4 +203,4 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
   );
 };
 
-export default GapFillGame;
+export default DragFillGame;
