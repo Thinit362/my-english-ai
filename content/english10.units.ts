@@ -175,7 +175,18 @@ export const english10Units: UnitMeta[] = [
           href: u(2, "practice-grammar-2"),
         },
       },
-      // (Trang nguồn không hiện rõ mục Phát âm; có thể bổ sung sau khi bạn có nội dung riêng)
+      {
+        key: "pronunciation",
+        lecture: {
+          title: "Phụ âm cụm /tr/ /kr/ /br/",
+          tag: "Phát âm",
+          href: u(2, "pronunciation"),
+        },
+        exercise: {
+          title: "Thực hành phát âm",
+          href: u(2, "practice-pronunciation"),
+        },
+      },
     ],
     skills: [
       {
