@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 interface ListenChooseItem {
   id: string;
-  question: string;   // dùng làm text gửi lên TTS
+  question: string;   // chứa câu với ______
   optionA: string;
   optionB: string;
   correct: "A" | "B";
@@ -45,15 +45,29 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
-  // 🔊 GOOGLE CLOUD TTS
-  const playAudio = async (text: string, id: string) => {
+  // 🔊 GOOGLE TTS – đọc câu đã điền từ đúng
+  const playAudio = async (item: ListenChooseItem) => {
     try {
-      setLoadingId(id);
+      setLoadingId(item.id);
+
+      // 1) Xác định từ đúng
+      const correctWord = item.correct === "A" ? item.optionA : item.optionB;
+
+      // 2) Tạo câu để đọc:
+      // nếu có "______" thì thay bằng từ đúng, nếu không thì đọc nguyên câu
+      let textToSpeak = item.question;
+      if (item.question.includes("______")) {
+        textToSpeak = item.question.replace("______", correctWord);
+      }
 
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text: textToSpeak,
+          languageCode: "en-US",
+          voice: "en-US-Wavenet-D",
+        }),
       });
 
       if (!res.ok) {
@@ -85,14 +99,15 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
             key={item.id}
             className="mb-4 p-3 rounded-lg bg-white shadow-sm border border-slate-200"
           >
-            {/* 🔊 NÚT NGHE (không dùng file mp3 nữa) */}
+            {/* STT + Nút nghe */}
             <div className="flex items-center gap-3 mb-2">
               <span className="w-8 h-8 flex items-center justify-center bg-amber-200 rounded font-semibold">
                 {index + 1}.
               </span>
 
               <button
-                onClick={() => playAudio(item.question, item.id)}
+                type="button"
+                onClick={() => playAudio(item)}
                 className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
                 disabled={loadingId === item.id}
               >
@@ -100,9 +115,10 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
               </button>
             </div>
 
+            {/* Câu hỏi */}
             <p className="mb-2 text-sm text-slate-800">{item.question}</p>
 
-            {/* A / B OPTIONS */}
+            {/* Lựa chọn A / B */}
             <div className="space-y-1 text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
