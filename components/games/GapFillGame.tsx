@@ -2,18 +2,16 @@
 
 import React, { useMemo, useState } from "react";
 import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
+
 interface Props {
   datasetId: string;
 }
 
 /** ===== Kiểu dataset dùng chung cho mọi bài gap-fill ===== */
-
 export interface GapFillItem {
   id: string;
-  // Câu có ký hiệu ___ là chỗ trống
-  sentence: string;
-  // Đáp án đúng (hoặc nhiều đáp án)
-  answers: string[]; // luôn lưu dạng chữ thường, không khoảng trắng thừa
+  sentence: string;   // có "___" là chỗ trống
+  answers: string[];  // đáp án đúng (chữ thường, bỏ khoảng trắng thừa)
 }
 
 export interface GapFillDataset {
@@ -21,25 +19,18 @@ export interface GapFillDataset {
   title: string;
   instructionsEn?: string;
   instructionsVi?: string;
-  // list động từ / cụm từ cho sẵn phía trên
   givenWords: string[];
   items: GapFillItem[];
 }
 
-/**
- * Tạm thời: chưa import dữ liệu thật, nên DATASETS rỗng.
- * Sau này bạn chỉ cần:
- *   import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
- *   const DATASETS: Record<string, GapFillDataset> = {
- *     "en10.u1.g1.ex4": en10u1g1ex4,
- *   };
- */
-import { en10u1g1ex4 } from "@/content/practice/gapFill/en10.u1.g1.ex4";
+// Map id -> dataset
+const DATASETS: Record<string, GapFillDataset> = {
+  "en10.u1.g1.ex4": en10u1g1ex4,
+};
 
 const GapFillGame: React.FC<Props> = ({ datasetId }) => {
   const dataset = DATASETS[datasetId];
 
-  // Nếu chưa cấu hình dataset → báo nhẹ để build không lỗi
   if (!dataset) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-orange-50 p-4">
@@ -47,14 +38,12 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
           Chưa cấu hình dữ liệu cho bài tập này.
         </p>
         <p className="text-sm text-slate-600">
-          Hãy tạo file dataset và map vào <code>DATASETS</code> trong
-          <code>GapFillGame.tsx</code>.
+          Kiểm tra lại <code>datasetId</code> trong <code>loader.ts</code>.
         </p>
       </div>
     );
   }
 
-  // state lưu câu trả lời người học
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState<number | null>(null);
@@ -78,7 +67,6 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
       const userRaw = answers[item.id] ?? "";
       const user = userRaw.trim().toLowerCase();
       if (!user) return;
-
       const valid = normalisedAnswers[item.id] || [];
       if (valid.includes(user)) correct++;
     });
@@ -118,7 +106,7 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
         </div>
       )}
 
-      {/* Dòng động từ cho sẵn */}
+      {/* động từ cho sẵn */}
       <div className="flex flex-wrap gap-2 mb-4">
         {dataset.givenWords.map((w) => (
           <span
@@ -130,7 +118,7 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
         ))}
       </div>
 
-      {/* Danh sách câu */}
+      {/* các câu */}
       <div className="space-y-3">
         {dataset.items.map((item, index) => {
           const status = getItemStatus(item);
@@ -170,7 +158,6 @@ const GapFillGame: React.FC<Props> = ({ datasetId }) => {
         })}
       </div>
 
-      {/* Nút Submit / Làm lại + điểm */}
       <div className="mt-6 flex flex-col md:flex-row items-center gap-3">
         <button
           type="button"
