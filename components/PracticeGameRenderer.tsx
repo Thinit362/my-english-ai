@@ -8,6 +8,7 @@ import DragFillGame from "@/components/games/DragFillGame";
 import GapFillGame from "@/components/games/GapFillGame"; // ✅ IMPORT MỚI
 import ListenChooseGame from "@/components/games/ListenChooseGame";
 import { LISTEN_CHOOSE_DATASETS } from "@/content/practice/listenChoose/datasets";
+import RecordCompareGame from "./games/RecordCompareGame";
 
 interface Props {
   task: PracticeTask;
@@ -37,6 +38,8 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
         dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]}
         />
     );
+    case "record-compare":
+      return <RecordCompareGame dataset={dataset as any} />;
 
     default:
       return (
