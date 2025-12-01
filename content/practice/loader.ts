@@ -1,4 +1,5 @@
 import { PracticeTask, SectionKey } from "./types";
+import { en10u5p1ex4 } from "./vocab/en10.u5.p1.ex4"; 
 
 export function getPracticeTasks(
   unit: number,
@@ -91,6 +92,17 @@ if (unit === 4 && sectionKey === "pronunciation") {
     description: "Chọn xem trọng âm rơi vào âm tiết thứ 1 hay thứ 2.",
     gameType: "listen-choose",
     datasetId: "en10.u4.p1.ex1",
+  });
+}
+  // Unit 5 – Pronunciation: Record & compare
+if (unit === 5 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u5-p1-ex4",
+    title: "Bài tập 4: Nghe và thu âm để so sánh",
+    description:
+      "Nghe câu mẫu, thu âm lại giọng nói của bạn và so sánh trọng âm của các danh từ 3 âm tiết.",
+    gameType: "record-compare",
+    datasetId: "en10.u5.p1.ex4",
   });
 }
   // Các unit khác (4–10) tạm thời chưa đăng ký
