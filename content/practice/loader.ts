@@ -105,6 +105,17 @@ if (unit === 5 && sectionKey === "pronunciation") {
     datasetId: "en10.u5.p1.ex4",
   });
 }
+// Unit 6 – Pronunciation (word stress – 3 lựa chọn)
+if (unit === 6 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u6-p1-ex1",
+    title: "Bài tập 1: Nghe và chọn trọng âm đúng của từ",
+    description:
+      "Nghe và chọn xem trọng âm rơi vào âm tiết thứ nhất, thứ hai hay thứ ba.",
+    gameType: "listen-choose",
+    datasetId: "en10.u6.p1.ex1",
+  });
+}  
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
