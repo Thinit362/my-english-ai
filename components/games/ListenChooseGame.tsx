@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 interface ListenChooseItem {
   id: string;
-  question: string;   // chứa câu với ______
+  question: string; // câu hiển thị (có thể có hoặc không có ______)
   optionA: string;
   optionB: string;
   correct: "A" | "B";
@@ -45,21 +45,26 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
-  // 🔊 GOOGLE TTS – đọc câu đã điền từ đúng
+  // 🔊 GOOGLE TTS – luôn đọc đúng TỪ cần nghe (correctWord)
   const playAudio = async (item: ListenChooseItem) => {
     try {
       setLoadingId(item.id);
 
       // 1) Xác định từ đúng
-      const correctWord = item.correct === "A" ? item.optionA : item.optionB;
+      const correctWord =
+        item.correct === "A" ? item.optionA : item.optionB;
 
-      // 2) Tạo câu để đọc:
-      // nếu có "______" thì thay bằng từ đúng, nếu không thì đọc nguyên câu
-      let textToSpeak = item.question;
-      if (item.question.includes("______")) {
-        textToSpeak = item.question.replace("______", correctWord);
+      // 2) Chuẩn hoá text để đọc (hạ chữ hoa, bỏ dấu gạch dưới nếu có)
+      //    Ví dụ "hopeLESS" -> "hopeless"
+      const textToSpeak = correctWord.replace(/\s+/g, " ").trim();
+
+      if (!textToSpeak) {
+        console.error("No text to speak");
+        setLoadingId(null);
+        return;
       }
 
+      // 3) Gửi sang API TTS
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,7 +104,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
             key={item.id}
             className="mb-4 p-3 rounded-lg bg-white shadow-sm border border-slate-200"
           >
-            {/* STT + Nút nghe */}
+            {/* Số thứ tự + nút nghe */}
             <div className="flex items-center gap-3 mb-2">
               <span className="w-8 h-8 flex items-center justify-center bg-amber-200 rounded font-semibold">
                 {index + 1}.
