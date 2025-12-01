@@ -83,7 +83,16 @@ export function getPracticeTasks(
       datasetId: "en10.u3.p1.ex1",
     });
   }
-
+// Unit 4 – Pronunciation
+if (unit === 4 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u4-p1-ex1",
+    title: "Bài tập 1: Nghe và xác định trọng âm của từ",
+    description: "Chọn xem trọng âm rơi vào âm tiết thứ 1 hay thứ 2.",
+    gameType: "listen-choose",
+    datasetId: "en10.u4.p1.ex1",
+  });
+}
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
