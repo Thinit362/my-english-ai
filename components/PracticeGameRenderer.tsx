@@ -8,6 +8,7 @@ import DragFillGame from "@/components/games/DragFillGame";
 import GapFillGame from "@/components/games/GapFillGame"; // ✅ IMPORT MỚI
 import ListenChooseGame from "@/components/games/ListenChooseGame";
 import { LISTEN_CHOOSE_DATASETS } from "@/content/practice/listenChoose/datasets";
+import { VOCAB_DATASETS } from "@/content/practice/vocab/datasets";
 import RecordCompareGame from "./games/RecordCompareGame";
 
 interface Props {
@@ -38,8 +39,17 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
         dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]}
         />
     );
-    case "record-compare":
-      return <RecordCompareGame dataset={dataset as any} />;
+    case "record-compare": {
+  const ds = VOCAB_DATASETS[task.datasetId];
+  if (!ds) {
+    return (
+      <p className="text-sm text-red-600">
+        Không tìm thấy dữ liệu cho {task.datasetId}
+      </p>
+    );
+  }
+  return <RecordCompareGame dataset={ds} />;
+}
 
     default:
       return (
