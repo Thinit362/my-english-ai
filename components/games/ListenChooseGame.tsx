@@ -7,7 +7,10 @@ interface ListenChooseItem {
   question: string; // câu hiển thị (có thể có hoặc không có ______)
   optionA: string;
   optionB: string;
-  correct: "A" | "B";
+  optionC?: string; // dùng cho bài có 3 lựa chọn (Unit 6)
+  correct: "A" | "B" | "C";
+  word?: string; // từ cần phát âm (word stress,…)
+  explanation?: string; // lời giải thích hiển thị sau khi chấm
 }
 
 interface ListenChooseDataset {
@@ -26,7 +29,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
   const [score, setScore] = useState<number | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handleSelect = (id: string, choice: "A" | "B") => {
+  const handleSelect = (id: string, choice: "A" | "B" | "C") => {
     setAnswers((prev) => ({ ...prev, [id]: choice }));
   };
 
@@ -45,25 +48,29 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
-  // 🔊 GOOGLE TTS – Unit 1: đọc cả câu + từ; Unit 2,3: chỉ đọc từ đúng
+  // 🔊 GOOGLE TTS
   const playAudio = async (item: ListenChooseItem) => {
     try {
       setLoadingId(item.id);
 
-      // 1) Từ đúng
-      const correctWord =
-        item.correct === "A" ? item.optionA : item.optionB;
+      // 1) Lấy từ đúng từ A/B/C (phòng khi không có item.word)
+      let correctWord = "";
+      if (item.correct === "A") correctWord = item.optionA;
+      else if (item.correct === "B") correctWord = item.optionB;
+      else if (item.correct === "C" && item.optionC)
+        correctWord = item.optionC;
 
       // 2) Quyết định text cần đọc:
       //    - Nếu câu có "______" (Unit 1) -> thay bằng từ đúng => đọc CẢ CÂU
-      //    - Nếu không (Unit 2,3)         -> chỉ đọc MỖI TỪ đúng
+      //    - Nếu có item.word            -> đọc CHÍNH TỪ đó (Unit 4, 6)
+      //    - Ngược lại                   -> đọc correctWord (Unit 2, 3)
       let textToSpeak: string;
 
-      if (item.question.includes("______")) {
-        // Unit 1 style
+      if (item.question.includes("______") && correctWord) {
         textToSpeak = item.question.replace("______", correctWord);
+      } else if (item.word) {
+        textToSpeak = item.word;
       } else {
-        // Unit 2,3 style
         textToSpeak = correctWord;
       }
 
@@ -108,12 +115,21 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
 
       {dataset.items.map((item, index) => {
         const selected = answers[item.id];
+
+        const optionClass = (opt: "A" | "B" | "C") => {
+          if (!checked) return "";
+          if (item.correct === opt) return "text-green-600 font-semibold";
+          if (selected === opt && item.correct !== opt)
+            return "text-red-600 font-semibold";
+          return "";
+        };
+
         return (
           <div
             key={item.id}
             className="mb-4 p-3 rounded-lg bg-white shadow-sm border border-slate-200"
           >
-            {/* Số thứ tự + nút nghe */}
+            {/* STT + Nút nghe */}
             <div className="flex items-center gap-3 mb-2">
               <span className="w-8 h-8 flex items-center justify-center bg-amber-200 rounded font-semibold">
                 {index + 1}.
@@ -132,7 +148,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
             {/* Câu hỏi */}
             <p className="mb-2 text-sm text-slate-800">{item.question}</p>
 
-            {/* Lựa chọn A / B */}
+            {/* Lựa chọn A / B / C */}
             <div className="space-y-1 text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -142,15 +158,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                   checked={selected === "A"}
                   onChange={() => handleSelect(item.id, "A")}
                 />
-                <span
-                  className={
-                    checked && item.correct === "A"
-                      ? "text-green-600 font-semibold"
-                      : checked && selected === "A" && item.correct !== "A"
-                      ? "text-red-600 font-semibold"
-                      : ""
-                  }
-                >
+                <span className={optionClass("A")}>
                   A. {item.optionA}
                 </span>
               </label>
@@ -163,19 +171,33 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                   checked={selected === "B"}
                   onChange={() => handleSelect(item.id, "B")}
                 />
-                <span
-                  className={
-                    checked && item.correct === "B"
-                      ? "text-green-600 font-semibold"
-                      : checked && selected === "B" && item.correct !== "B"
-                      ? "text-red-600 font-semibold"
-                      : ""
-                  }
-                >
+                <span className={optionClass("B")}>
                   B. {item.optionB}
                 </span>
               </label>
+
+              {item.optionC && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={item.id}
+                    value="C"
+                    checked={selected === "C"}
+                    onChange={() => handleSelect(item.id, "C")}
+                  />
+                  <span className={optionClass("C")}>
+                    C. {item.optionC}
+                  </span>
+                </label>
+              )}
             </div>
+
+            {/* Lời giải – hiện sau khi Submit */}
+            {checked && item.explanation && (
+              <p className="mt-2 text-xs text-slate-700 italic">
+                {item.explanation}
+              </p>
+            )}
           </div>
         );
       })}
