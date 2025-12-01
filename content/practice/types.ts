@@ -17,7 +17,8 @@ export type GameType =
   | "record-sentence"
   |  "gap-fill"
   | "coming-soon"        
-  | "listen-choose"    // tuỳ chọn: fallback cho các dạng khác
+  | "listen-choose" 
+  | "record-compare"// tuỳ chọn: fallback cho các dạng khác
   | "drag-fill";          // game kéo / click cụm từ điền vào chỗ trống
 
 export interface PracticeTask {
