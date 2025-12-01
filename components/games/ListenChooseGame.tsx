@@ -45,26 +45,35 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
-  // 🔊 GOOGLE TTS – luôn đọc đúng TỪ cần nghe (correctWord)
+  // 🔊 GOOGLE TTS – Unit 1: đọc cả câu + từ; Unit 2,3: chỉ đọc từ đúng
   const playAudio = async (item: ListenChooseItem) => {
     try {
       setLoadingId(item.id);
 
-      // 1) Xác định từ đúng
+      // 1) Từ đúng
       const correctWord =
         item.correct === "A" ? item.optionA : item.optionB;
 
-      // 2) Chuẩn hoá text để đọc (hạ chữ hoa, bỏ dấu gạch dưới nếu có)
-      //    Ví dụ "hopeLESS" -> "hopeless"
-      const textToSpeak = correctWord.replace(/\s+/g, " ").trim();
+      // 2) Quyết định text cần đọc:
+      //    - Nếu câu có "______" (Unit 1) -> thay bằng từ đúng => đọc CẢ CÂU
+      //    - Nếu không (Unit 2,3)         -> chỉ đọc MỖI TỪ đúng
+      let textToSpeak: string;
 
+      if (item.question.includes("______")) {
+        // Unit 1 style
+        textToSpeak = item.question.replace("______", correctWord);
+      } else {
+        // Unit 2,3 style
+        textToSpeak = correctWord;
+      }
+
+      textToSpeak = textToSpeak.replace(/\s+/g, " ").trim();
       if (!textToSpeak) {
         console.error("No text to speak");
         setLoadingId(null);
         return;
       }
 
-      // 3) Gửi sang API TTS
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
