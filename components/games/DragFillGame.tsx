@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { en10u1v2ex1 } from "@/content/practice/dragFill/en10.u1.v2.ex1";
+import { en10u2v2ex1 } from "@/content/practice/dragFill/en10.u2.v2.ex1";
 
 interface Props {
   datasetId: string;
