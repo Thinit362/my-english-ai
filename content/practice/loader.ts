@@ -1,6 +1,6 @@
 import { PracticeTask, SectionKey } from "./types";
 import { en10u5p1ex4 } from "./vocab/en10.u5.p1.ex4"; 
- 
+ import { en10u2v2ex1 } from "./dragFill/en10.u2.v2.ex1";
 
 export function getPracticeTasks(
   unit: number,
