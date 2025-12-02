@@ -116,6 +116,17 @@ if (unit === 6 && sectionKey === "pronunciation") {
     datasetId: "en10.u6.p1.ex1",
   });
 }  
+// Unit 7 – Pronunciation (record-compare)
+if (unit === 7 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u7-p3-ex1",
+    title: "Bài tập 3: Luyện tập về trọng âm ở từ có hơn ba âm tiết",
+    description:
+      "Nghe lần lượt các từ in đậm trong câu và thu âm để so sánh phát âm.",
+    gameType: "record-compare",
+    datasetId: "en10.u7.p3.ex1",
+  });
+}  
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
