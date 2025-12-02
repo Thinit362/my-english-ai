@@ -151,7 +151,18 @@ if (unit === 9 && sectionKey === "pronunciation") {
     datasetId: "en10.u9.p1.ex1", // 👈 trùng với id trong dataset
   });
 }
-  // Các unit khác (4–10) tạm thời chưa đăng ký
+  // Unit 10 – Pronunciation / Intonation (record-compare)
+if (unit === 10 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u10-p3-ex3",
+    title: "Bài tập 3: Luyện tập về ngữ điệu của câu",
+    description:
+      "Nghe từng câu và thu âm lại để so sánh ngữ điệu (intonation).",
+    gameType: "record-compare",
+    datasetId: "en10.u10.p3.ex3",
+  });
+}
+ // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
   return tasks;
