@@ -34,7 +34,18 @@ export function getPracticeTasks(
       datasetId: "en10.u1.v2.ex1",
     });
   }
-
+// Unit 2 – Vocabulary 1 (drag-fill)
+  if (unit === 2 && sectionKey === "vocabulary-1") {
+    tasks.push({
+      id: "u2-v2-ex1",
+      title: "Bài tập 1: Hoàn thành câu với các cụm từ cho sẵn",
+      description:
+        "Chọn cụm từ và điền vào chỗ trống. Có 2 cụm từ không cần dùng.",
+      gameType: "drag-fill",
+      datasetId: "en10.u2.v2.ex1",
+    });
+  }
+ 
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
     tasks.push({
