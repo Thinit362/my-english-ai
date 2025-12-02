@@ -48,65 +48,66 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     setScore(null);
   };
 
-  // 🔊 GOOGLE TTS
-  const playAudio = async (item: ListenChooseItem) => {
-    try {
-      setLoadingId(item.id);
-
-      // 1) Lấy từ đúng từ A/B/C (phòng khi không có item.word)
-      let correctWord = "";
-      if (item.correct === "A") correctWord = item.optionA;
-      else if (item.correct === "B") correctWord = item.optionB;
-      else if (item.correct === "C" && item.optionC)
-        correctWord = item.optionC;
-
-      // 2) Quyết định text cần đọc:
-      //    - Nếu câu có "______" (Unit 1) -> thay bằng từ đúng => đọc CẢ CÂU
-      //    - Nếu có item.word            -> đọc CHÍNH TỪ đó (Unit 4, 6)
-      //    - Ngược lại                   -> đọc correctWord (Unit 2, 3)
-      let textToSpeak: string;
-
-      if (item.question.includes("______") && correctWord) {
-        textToSpeak = item.question.replace("______", correctWord);
-      } else if (item.word) {
-        textToSpeak = item.word;
-      } else {
-        textToSpeak = correctWord;
-      }
-
-      textToSpeak = textToSpeak.replace(/\s+/g, " ").trim();
-      if (!textToSpeak) {
-        console.error("No text to speak");
-        setLoadingId(null);
-        return;
-      }
-
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: textToSpeak,
-          languageCode: "en-US",
-          voice: "en-US-Wavenet-D",
-        }),
-      });
-
-      if (!res.ok) {
-        console.error("TTS error");
-        setLoadingId(null);
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
-      audio.onended = () => URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Play error:", err);
-    } finally {
-      setLoadingId(null);
+  // 🔊 TTS dùng Web Speech API (Cách 2)
+  const playAudio = (item: ListenChooseItem) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      console.error("Trình duyệt không hỗ trợ SpeechSynthesis");
+      return;
     }
+
+    setLoadingId(item.id);
+
+    // 1) Lấy từ đúng từ A/B/C (dùng cho Unit 1, 2, 3, 6...)
+    let correctWord = "";
+    if (item.correct === "A") correctWord = item.optionA;
+    else if (item.correct === "B") correctWord = item.optionB;
+    else if (item.correct === "C" && item.optionC) correctWord = item.optionC;
+
+    // 2) Xác định text cần đọc
+    let textToSpeak = "";
+
+    if (item.question.includes("______")) {
+      // 🔹 Với Unit 8: có question chứa "______" + có item.word
+      //    => thay "______" bằng item.word (John, he, was, favourite, ...)
+      // 🔹 Với Unit 1: không có item.word
+      //    => thay "______" bằng correctWord
+      const wordToInsert = item.word || correctWord;
+      if (wordToInsert) {
+        textToSpeak = item.question.replace("______", wordToInsert);
+      } else {
+        // fallback: đọc nguyên câu nếu không có từ nào chèn được
+        textToSpeak = item.question;
+      }
+    } else if (item.word) {
+      // Câu không có "______" nhưng có word → đọc từ (dùng cho bài kiểu word stress)
+      textToSpeak = item.word;
+    } else {
+      // fallback cuối cùng: đọc từ đúng theo đáp án A/B/C
+      textToSpeak = correctWord;
+    }
+
+    textToSpeak = textToSpeak.replace(/\s+/g, " ").trim();
+    if (!textToSpeak) {
+      console.error("No text to speak");
+      setLoadingId(null);
+      return;
+    }
+
+    // 3) Gọi Web Speech API
+    window.speechSynthesis.cancel(); // dừng mọi giọng đang đọc trước đó
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = "en-US"; // có thể đổi thành "en-GB" nếu muốn giọng Anh-Anh
+
+    utterance.onend = () => {
+      setLoadingId(null);
+    };
+    utterance.onerror = (e) => {
+      console.error("Speech error:", e);
+      setLoadingId(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -158,9 +159,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                   checked={selected === "A"}
                   onChange={() => handleSelect(item.id, "A")}
                 />
-                <span className={optionClass("A")}>
-                  A. {item.optionA}
-                </span>
+                <span className={optionClass("A")}>A. {item.optionA}</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -171,9 +170,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                   checked={selected === "B"}
                   onChange={() => handleSelect(item.id, "B")}
                 />
-                <span className={optionClass("B")}>
-                  B. {item.optionB}
-                </span>
+                <span className={optionClass("B")}>B. {item.optionB}</span>
               </label>
 
               {item.optionC && (
@@ -185,9 +182,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
                     checked={selected === "C"}
                     onChange={() => handleSelect(item.id, "C")}
                   />
-                  <span className={optionClass("C")}>
-                    C. {item.optionC}
-                  </span>
+                  <span className={optionClass("C")}>C. {item.optionC}</span>
                 </label>
               )}
             </div>
