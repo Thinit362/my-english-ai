@@ -125,9 +125,9 @@ if (unit === 7 && sectionKey === "pronunciation") {
     description:
       "Nghe lần lượt các từ in đậm trong câu và thu âm để so sánh phát âm.",
     gameType: "record-compare",
-    datasetId: "en10.u7.p3.ex1",
+    datasetId: "en10.u7.p3.ex1",   // 👈 phải đúng y chang
   });
-}  
+}
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
