@@ -611,7 +611,7 @@ export const english10Units: UnitMeta[] = [
         },
         exercise: {
           title: "Thực hành phát âm",
-          href: u(7, "practice-pronunciation"),
+          href: "/english-10/unit/7/practice-record-compare",
         },
       },
     ],
