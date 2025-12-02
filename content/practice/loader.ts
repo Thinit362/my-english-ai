@@ -140,6 +140,17 @@ if (unit === 8 && sectionKey === "pronunciation") {
     datasetId: "en10.u8.p1.ex2", // 👈 trùng với id dataset mình tạo
   });
 }
+ // Unit 9 – Pronunciation (record-compare câu về môi trường)
+if (unit === 9 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u9-p1-ex1",
+    title: "Bài luyện tập: Luyện tập về nhịp điệu của câu",
+    description:
+      "Nghe từng câu, thu âm lại giọng nói của bạn và so sánh nhịp điệu, trọng âm câu.",
+    gameType: "record-compare",
+    datasetId: "en10.u9.p1.ex1", // 👈 trùng với id trong dataset
+  });
+}
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
