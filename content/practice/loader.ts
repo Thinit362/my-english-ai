@@ -128,6 +128,18 @@ if (unit === 7 && sectionKey === "pronunciation") {
     datasetId: "en10.u7.p3.ex1",   // 👈 phải đúng y chang
   });
 }
+// Unit 8 – Pronunciation (sentence stress: stressed / unstressed)
+if (unit === 8 && sectionKey === "pronunciation") {
+  tasks.push({
+    id: "u8-p1-ex2",
+    title:
+      "Bài tập 2: Nghe và xác định xem từ trong chỗ trống được đọc nhấn mạnh hay không.",
+    description:
+      "Nghe câu và chọn xem từ còn thiếu trong chỗ trống là stressed hay unstressed.",
+    gameType: "listen-choose",
+    datasetId: "en10.u8.p1.ex2", // 👈 trùng với id dataset mình tạo
+  });
+}
   // Các unit khác (4–10) tạm thời chưa đăng ký
   // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
 
