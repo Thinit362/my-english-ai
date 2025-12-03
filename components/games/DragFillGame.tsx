@@ -23,18 +23,13 @@ export interface DragFillDataset {
   items: DragFillItem[];
 }
 
-/** ===== MAP DATASETS ===== */
-const DATASETS: Record<string, DragFillDataset> = {
-  "en10.u1.v2.ex1": en10u1v2ex1,
-};
-
 type SlotState = {
   itemId: string;
   phrase: string | null;
 };
 
 const DragFillGame: React.FC<Props> = ({ datasetId }) => {
-  const dataset = DATASETS[datasetId];
+  const dataset = DRAG_FILL_DATASETS[datasetId];
 
   if (!dataset) {
     return <p>❌ Không tìm thấy dataset cho bài {datasetId}</p>;
@@ -166,7 +161,7 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
               "inline-block min-w-[150px] px-2 py-1 rounded bg-emerald-100 border border-emerald-500 text-emerald-800 text-sm cursor-default text-center";
           } else if (status === "incorrect") {
             slotClass =
-              "inline-block min-w-[150px] px-2 py-1 rounded bg-red-100 border border-red-500 text-red-800 text-sm cursor-pointer text-center";
+              "inline-block min-w-[150px] px-2 py-1 rounded bg-red-100 border-red-500 text-red-800 text-sm cursor-pointer text-center";
           }
 
           return (
