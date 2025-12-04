@@ -85,7 +85,17 @@ export function getPracticeTasks(
       datasetId: "en10.u2.p1.ex1",
     });
   }
-
+// Unit 3 – Vocabulary 1 (multiple choice 3 lựa chọn)
+if (unit === 3 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u3-v1-ex1",
+    title: "Bài tập 1: Chọn đáp án đúng điền vào chỗ trống",
+    description:
+      "Chọn phương án A, B hoặc C để hoàn thành câu.",
+    gameType: "listen-choose",       // dùng lại ListenChooseGame
+    datasetId: "en10.u3.v1.ex1",
+  });
+}
   // Unit 3 – Pronunciation (word stress)
   if (unit === 3 && sectionKey === "pronunciation") {
     tasks.push({
