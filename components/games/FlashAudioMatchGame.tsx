@@ -5,6 +5,7 @@ import {
   u1V1Ex1Data,
   VocabTriple,
 } from "@/content/practice/vocab/en10.u1.v1.ex1";
+import { u3V2Ex2Data } from "@/content/practice/vocab/en10.u3.v2.ex2";
 
 interface Props {
   datasetId: string; // nhận id để chọn bộ dữ liệu
@@ -13,6 +14,7 @@ interface Props {
 // Map datasetId -> dữ liệu (sau này có thể thêm nhiều bộ khác)
 const DATASETS: Record<string, VocabTriple[]> = {
   "en10.u1.v1.ex1": u1V1Ex1Data,
+  "en10.u3.v2.ex2": u3V2Ex2Data,
 };
 
 type CardKind = "audio" | "meaning" | "type";
