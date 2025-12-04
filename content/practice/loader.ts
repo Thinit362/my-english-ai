@@ -96,6 +96,17 @@ if (unit === 3 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u3.v1.ex1",
   });
 }
+ // Unit 3 – Vocabulary 2 (flash-audio-match)
+if (unit === 3 && sectionKey === "vocabulary-2") {
+  tasks.push({
+    id: "u3-v2-ex2",
+    title: "Bài tập 2: Nghe và nối từ với nghĩa và từ loại",
+    description:
+      "Nghe từ, chọn nghĩa tiếng Việt và loại từ tương ứng.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u3.v2.ex2", // 👈 trùng với key DATASETS
+  });
+}
   // Unit 3 – Pronunciation (word stress)
   if (unit === 3 && sectionKey === "pronunciation") {
     tasks.push({
