@@ -129,7 +129,7 @@ if (unit === 3 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u3.v2.ex2", // 👈 trùng với key DATASETS
   });
 }
-
+ 
  // Unit 5 – Vocabulary 1 (flashcard nghe + nối nghĩa & từ loại)
 if (unit === 5 && sectionKey === "vocabulary-1") {
   tasks.push({
@@ -141,6 +141,18 @@ if (unit === 5 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u5.v1.ex1",
   });
 }
+// Unit 5 – Vocabulary 2 (listen-choose)
+if (unit === 5 && sectionKey === "vocabulary-2") {
+  tasks.push({
+    id: "u5-v2-ex1",
+    title: "Bài tập 1: Chọn đáp án đúng hoàn thành câu",
+    description:
+      "Nghe câu và chọn từ/ cụm từ đúng để điền vào chỗ trống.",
+    gameType: "listen-choose",
+    datasetId: "en10.u5.v2.ex1",
+  });
+}
+ 
   // Unit 3 – Pronunciation (word stress)
   if (unit === 3 && sectionKey === "pronunciation") {
     tasks.push({
