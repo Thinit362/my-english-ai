@@ -7,6 +7,7 @@ import {
 } from "@/content/practice/vocab/en10.u1.v1.ex1";
 import { u3V2Ex2Data } from "@/content/practice/vocab/en10.u3.v2.ex2";
 import { u4V1Ex1Data } from "@/content/practice/vocab/en10.u4.v1.ex1";
+import { u5V1Ex1Data } from "@/content/practice/vocab/en10.u5.v1.ex1";
 
 interface Props {
   datasetId: string; // nhận id để chọn bộ dữ liệu
@@ -17,6 +18,7 @@ const DATASETS: Record<string, VocabTriple[]> = {
   "en10.u1.v1.ex1": u1V1Ex1Data,
   "en10.u3.v2.ex2": u3V2Ex2Data,
   "en10.u4.v1.ex1": u4V1Ex1Data,
+  "en10.u5.v1.ex1": u5V1Ex1Data,
 };
 
 type CardKind = "audio" | "meaning" | "type";
