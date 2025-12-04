@@ -56,6 +56,17 @@ if (unit === 4 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u4.v1.ex1",
   });
 }
+// Unit 4 – Vocabulary 2 (listen-choose: chọn đáp án hoàn thành câu)
+if (unit === 4 && sectionKey === "vocabulary-2") {
+  tasks.push({
+    id: "u4-v2-ex1",
+    title: "Bài tập 1: Chọn đáp án đúng hoàn thành câu",
+    description:
+      "Nghe câu và chọn từ/ cụm từ đúng để điền vào chỗ trống.",
+    gameType: "listen-choose",
+    datasetId: "en10.u4.v2.ex1",
+  });
+}
  
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
