@@ -6,10 +6,6 @@ import {
   VocabTriple,
 } from "@/content/practice/vocab/en10.u1.v1.ex1";
 import { u3V2Ex2Data } from "@/content/practice/vocab/en10.u3.v2.ex2";
-import {
-  u1V1Ex1Data,
-  VocabTriple,
-} from "@/content/practice/vocab/en10.u1.v1.ex1";
 import { u4V1Ex1Data } from "@/content/practice/vocab/en10.u4.v1.ex1";
 
 interface Props {
