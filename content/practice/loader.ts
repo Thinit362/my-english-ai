@@ -45,6 +45,17 @@ export function getPracticeTasks(
       datasetId: "en10.u2.v2.ex1",
     });
   }
+// Unit 4 – Vocabulary 1 (flash-audio-match)
+if (unit === 4 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u4-v1-ex1",
+    title: "Bài tập 1: Nghe và nối từ với nghĩa và từ loại tương ứng",
+    description:
+      "Nghe từ rồi chọn nghĩa tiếng Việt và loại từ phù hợp.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u4.v1.ex1",
+  });
+}
  
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
