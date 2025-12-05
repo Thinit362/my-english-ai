@@ -67,6 +67,17 @@ if (unit === 4 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u4.v2.ex1",
   });
 }
+// Unit 8 – Vocabulary 1 (flashcard)
+if (unit === 8 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u8-v1-ex1",
+    title: "Bài tập 1: Nghe và nối từ với nghĩa và từ loại tương ứng.",
+    description:
+      "Nghe từ, chọn nghĩa tiếng Việt và từ loại phù hợp.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u8.v1.ex1",
+  });
+}
  
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
