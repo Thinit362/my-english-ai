@@ -78,6 +78,17 @@ if (unit === 8 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u8.v1.ex1",
   });
 }
+ // Unit 9 – Vocabulary 1 (flashcard)
+if (unit === 9 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u9-v1-ex1",
+    title: "Bài tập 1: Nghe và nối từ với nghĩa và từ loại tương ứng",
+    description:
+      "Nghe từ, ghép với nghĩa tiếng Việt và loại từ phù hợp về chủ đề bảo vệ môi trường.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u9.v1.ex1",
+  });
+}
  
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
