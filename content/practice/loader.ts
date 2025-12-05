@@ -163,7 +163,17 @@ if (unit === 6 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u6.v1.ex1",
   });
 }
- 
+ // Unit 7 – Vocabulary 1 (flashcard)
+if (unit === 7 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u7-v1-ex1",
+    title: "Bài tập 1: Hãy nghe và nối từ với nghĩa và từ loại tương ứng.",
+    description:
+      "Nghe từ, chọn đúng nghĩa tiếng Việt và loại từ (noun, verb, adjective...).",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u7.v1.ex1",
+  });
+}
   // Unit 3 – Pronunciation (word stress)
   if (unit === 3 && sectionKey === "pronunciation") {
     tasks.push({
