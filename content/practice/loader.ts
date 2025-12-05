@@ -89,7 +89,17 @@ if (unit === 9 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u9.v1.ex1",
   });
 }
- 
+// Unit 10 – Vocabulary 1 (flashcard)
+ if (unit === 10 && sectionKey === "vocabulary-1") {
+  tasks.push({
+    id: "u10-v1-ex1",
+    title: "Bài tập 1: Hãy nghe và nối từ với nghĩa và từ loại tương ứng.",
+    description:
+      "Nghe flashcard và ghép nghĩa tiếng Việt với loại từ phù hợp.",
+    gameType: "flash-audio-match",
+    datasetId: "en10.u10.v1.ex1",
+  });
+}
   // Unit 1 – Grammar 1
   if (unit === 1 && sectionKey === "grammar-1") {
     tasks.push({
