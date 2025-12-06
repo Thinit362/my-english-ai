@@ -195,6 +195,17 @@ if (unit === 6 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u6.v1.ex1",
   });
 }
+ // Unit 6 – Vocabulary 2 (multiple choice 3 lựa chọn)
+if (unit === 6 && sectionKey === "vocabulary-2") {
+  tasks.push({
+    id: "u6-v2-ex1",
+    title: "Bài tập 1: Chọn đáp án đúng điền vào chỗ trống",
+    description:
+      "Chọn phương án A, B hoặc C để hoàn thành câu.",
+    gameType: "listen-choose",       // dùng lại ListenChooseGame
+    datasetId: "en10.u6.v2.ex1",
+  });
+}
  // Unit 7 – Vocabulary 1 (flashcard)
 if (unit === 7 && sectionKey === "vocabulary-1") {
   tasks.push({
