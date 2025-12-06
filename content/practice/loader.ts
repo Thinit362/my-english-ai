@@ -89,6 +89,17 @@ if (unit === 9 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u9.v1.ex1",
   });
 }
+ // Unit 9 – Vocabulary 2 (multiple choice 3 lựa chọn)
+if (unit === 9 && sectionKey === "vocabulary-2") {
+  tasks.push({
+    id: "u9-v2-ex1",
+    title: "Bài tập 1: Chọn đáp án đúng điền vào chỗ trống",
+    description:
+      "Chọn phương án A, B hoặc C để hoàn thành câu.",
+    gameType: "listen-choose",       // dùng lại ListenChooseGame
+    datasetId: "en10.u9.v2.ex1",
+  });
+}
 // Unit 10 – Vocabulary 1 (flashcard)
  if (unit === 10 && sectionKey === "vocabulary-1") {
   tasks.push({
