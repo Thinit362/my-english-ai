@@ -66,16 +66,23 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     // 2) Xác định text cần đọc
     let textToSpeak = "";
 
-    if (item.question.includes("______")) {
+    // ✅ Sửa ở đây: bắt mọi cụm gạch dưới liên tiếp (_ , __ , ______ , …)
+    const hasBlank = /_+/.test(item.question);
+
+    if (hasBlank) {
       const wordToInsert = item.word || correctWord;
       if (wordToInsert) {
-        textToSpeak = item.question.replace("______", wordToInsert);
+        // Thay TẤT CẢ các cụm gạch dưới bằng từ cần điền
+        textToSpeak = item.question.replace(/_+/g, wordToInsert);
       } else {
-        textToSpeak = item.question;
+        // Nếu không có từ nào để chèn, bỏ luôn gạch dưới cho sạch
+        textToSpeak = item.question.replace(/_+/g, "");
       }
     } else if (item.word) {
+      // Câu không có "______" nhưng có word → đọc từ (dùng cho bài kiểu word stress)
       textToSpeak = item.word;
     } else {
+      // fallback cuối cùng: đọc từ đúng theo đáp án A/B/C
       textToSpeak = correctWord;
     }
 
@@ -96,16 +103,14 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     utterance.lang = "en-US";
 
     // 👉 Đọc chậm & rõ hơn
-    // 1.0 = tốc độ mặc định, 0.7–0.85 thường là chậm vừa phải
     utterance.rate = 0.8;   // chậm lại cho học sinh nghe rõ
     utterance.pitch = 1.0;  // cao độ bình thường
-    utterance.volume = 1.0; // âm lượng tối đa (học sinh tự chỉnh bằng volume máy)
+    utterance.volume = 1.0; // âm lượng tối đa
 
     // 👉 Chọn giọng nữ Anh Mỹ nếu có
     try {
       const voices = synth.getVoices();
 
-      // Một số tên giọng nữ en-US phổ biến trên Chrome / Edge / Windows
       const preferredVoiceNames = [
         "Google US English",
         "Google US English Female",
@@ -114,18 +119,12 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
         "Microsoft Zira Desktop - English (United States)",
       ];
 
-      // 1. Ưu tiên các giọng có tên trong preferredVoiceNames
       let selectedVoice =
         voices.find((v) => preferredVoiceNames.includes(v.name)) ||
-        // 2. Nếu không có, chọn bất kỳ giọng en-US có từ "female" trong tên (nếu có)
         voices.find(
-          (v) =>
-            v.lang === "en-US" &&
-            v.name.toLowerCase().includes("female")
+          (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
         ) ||
-        // 3. Nếu vẫn không có, chọn bất kỳ giọng en-US
         voices.find((v) => v.lang === "en-US") ||
-        // 4. Fallback: để trình duyệt tự chọn
         null;
 
       if (selectedVoice) {
@@ -242,7 +241,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
           Submit
         </button>
 
-          <button
+        <button
           type="button"
           onClick={handleReset}
           className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-sm font-medium"
