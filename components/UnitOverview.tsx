@@ -40,6 +40,8 @@ const ICON_MAP: Record<string, string> = {
   "khoi dong": "/icons/warmup1.png",
   "tu vung": "/icons/vocabulary.png",
   "ngu phap": "/icons/grammar.png",
+  "ngu phap 1": "/icons/grammar.png",
+  "ngu phap 2": "/icons/grammar.png",
   "phat am": "/icons/pronunciation.png",
   "luyen nghe": "/icons/listening.png",
   "luyen doc": "/icons/reading.png",
