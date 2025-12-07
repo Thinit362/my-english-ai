@@ -1,4 +1,4 @@
-// components/PracticeGameRenderer.tsx
+// components/PracticeGameRenderer.tsx Kết nối game
 
 "use client";
 
