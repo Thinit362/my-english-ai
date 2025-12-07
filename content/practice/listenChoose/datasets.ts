@@ -16,6 +16,7 @@ import { en10u2g1ex1 } from "./en10.u2.g1.ex1";
 import { en10u2g1ex2 } from "./en10.u2.g1.ex2";
 import { en10u2g2ex1 } from "./en10.u2.g2.ex1";
 import { en10u2g2ex2 } from "./en10.u2.g2.ex2";
+import { en10u4g1ex2 } from "./en10.u4.g1.ex2";
 
 // Map toàn bộ dataset listen-choose
 export const LISTEN_CHOOSE_DATASETS: Record<string, any> = {
@@ -36,6 +37,7 @@ export const LISTEN_CHOOSE_DATASETS: Record<string, any> = {
   "en10.u4.p1.ex1": en10u4p1ex1,
   "en10.u4.v2.ex1": en10u4v2ex1,
   "en10.u5.v2.ex1": en10u5v2ex1,
+  "en10.u4.g1.ex2": en10u4g1ex2,
   // Unit 6
   "en10.u6.p1.ex1": en10u6p1ex1,
   "en10.u6.v2.ex1": en10u6v2ex1,
