@@ -7,7 +7,7 @@ interface Props {
   datasetId: string;
 }
 
-/** ===== KIỂU DỮ LIỆU CHUẨN CHO DRAG-FILL (định nghĩa ngay trong file) ===== */
+/** ===== KIỂU DỮ LIỆU CHUẨN CHO DRAG-FILL ===== */
 export interface DragFillItem {
   id: string;
   sentence: string;   // câu có ___
@@ -19,7 +19,13 @@ export interface DragFillDataset {
   title: string;
   instructionsEn?: string;
   instructionsVi?: string;
-  phrases: string[];
+  /** 
+   * Nếu đã khai báo phrases thủ công thì game sẽ dùng luôn.
+   * Nếu không, game sẽ tự sinh từ các answer + extraPhrases.
+   */
+  phrases?: string[];
+  /** Các từ/cụm từ "nhiễu" (tối đa 2) thêm ngoài đáp án */
+  extraPhrases?: string[];
   items: DragFillItem[];
 }
 
@@ -35,17 +41,29 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
     return <p>❌ Không tìm thấy dataset cho bài {datasetId}</p>;
   }
 
+  // 🔹 TỰ ĐỘNG TẠO DANH SÁCH CỤM TỪ GỢI Ý
+  const phrasesToShow = useMemo(() => {
+    // Nếu dataset đã cung cấp phrases thủ công thì dùng luôn
+    if (dataset.phrases && dataset.phrases.length > 0) {
+      return dataset.phrases;
+    }
+
+    // Ngược lại: lấy tất cả đáp án (duy nhất) + thêm extraPhrases (tối đa 2 cái)
+    const uniqueAnswers = Array.from(
+      new Set(dataset.items.map((it) => it.answer))
+    );
+
+    const extras = dataset.extraPhrases ?? [];
+
+    return [...uniqueAnswers, ...extras];
+  }, [dataset]);
+
   const [slots, setSlots] = useState<SlotState[]>(
     dataset.items.map((it) => ({ itemId: it.id, phrase: null }))
   );
   const [selectedPhrase, setSelectedPhrase] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-
-  const usedPhrases = useMemo(
-    () => new Set(slots.map((s) => s.phrase).filter(Boolean) as string[]),
-    [slots]
-  );
 
   /** --- chọn cụm từ --- */
   const handlePhraseClick = (phrase: string) => {
@@ -62,6 +80,7 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
       )
     );
 
+    // Sau khi gán xong thì bỏ chọn
     setSelectedPhrase(null);
   };
 
@@ -91,7 +110,6 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
     const item = dataset.items.find((i) => i.id === itemId);
 
     if (!slot?.phrase) return "normal";
-
     return slot.phrase === item?.answer ? "correct" : "incorrect";
   };
 
@@ -119,8 +137,7 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {dataset.phrases.map((ph) => {
-            const isUsed = usedPhrases.has(ph);
+          {phrasesToShow.map((ph, idx) => {
             const isSelected = selectedPhrase === ph;
 
             let className =
@@ -128,13 +145,11 @@ const DragFillGame: React.FC<Props> = ({ datasetId }) => {
 
             if (isSelected) {
               className += " bg-orange-500 text-white border-orange-500";
-            } else if (isUsed) {
-              className += " bg-slate-200 text-slate-400 border-slate-300";
             }
 
             return (
               <button
-                key={ph}
+                key={`${ph}-${idx}`}
                 type="button"
                 className={className}
                 onClick={() => handlePhraseClick(ph)}
