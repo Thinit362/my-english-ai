@@ -359,6 +359,25 @@ if (unit === 6 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u6.v2.ex1",
   });
 }
+// Unit 6 – Grammar 1
+if (unit === 6 && sectionKey === "grammar-1") {
+  tasks.push({
+    id: "u6-g1-mc1",
+    title: "Bài 1: Multiple Choice – phủ định, nghi vấn, Present Perfect & Past Simple",
+    description: "Chọn đáp án đúng A/B/C/D để hoàn thành câu.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u6.g1.mc1",
+  });
+  tasks.push({
+    id: "u6-g1-ex2",
+    title: "Bài 2: Drag-Fill – điền đúng thì, phủ định, nghi vấn",
+    description:
+      "Hoàn thành câu bằng cách điền đúng động từ (bare infinitive, V-ed, present perfect, did ...).",
+    gameType: "drag-fill",
+    datasetId: "en10.u6.g1.ex2",
+  });
+}
+ 
  // Unit 7 – Vocabulary 1 (flashcard)
 if (unit === 7 && sectionKey === "vocabulary-1") {
   tasks.push({
