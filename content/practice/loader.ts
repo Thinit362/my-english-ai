@@ -183,6 +183,27 @@ if (unit === 2 && sectionKey === "grammar-1") {
     datasetId: "en10.u2.g1.ex2", // 👈 trùng với key DATASETS
   });
 } 
+// Unit 2 – Grammar 2 (Passive Voice – listen-choose)
+if (unit === 2 && sectionKey === "grammar-2") {
+  tasks.push({
+    id: "u2-g2-ex1",
+    title: "Bài tập 1: Chọn dạng bị động đúng ở các thì cơ bản.",
+    description:
+      "Ôn lại thể bị động ở hiện tại đơn, hiện tại tiếp diễn, quá khứ đơn, tương lai đơn, be going to, hiện tại hoàn thành.",
+    gameType: "listen-choose",
+    datasetId: "en10.u2.g2.ex1",
+  });
+
+  tasks.push({
+    id: "u2-g2-ex2",
+    title: "Bài tập 2: Dùng câu bị động đúng trong ngữ cảnh.",
+    description:
+      "Chọn câu ở thể bị động phù hợp với thời và nghĩa của câu.",
+    gameType: "listen-choose",
+    datasetId: "en10.u2.g2.ex2",
+  });
+}
+ 
 // Unit 3 – Vocabulary 1 (multiple choice 3 lựa chọn)
 if (unit === 3 && sectionKey === "vocabulary-1") {
   tasks.push({
