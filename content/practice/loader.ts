@@ -325,7 +325,18 @@ if (unit === 5 && sectionKey === "grammar-1") {
     datasetId: "en10.u5.g1.mc1",
   });
 }
- 
+ // Unit 5 – Grammar 2 (Gerund & to-infinitive for purpose)
+if (unit === 5 && sectionKey === "grammar-2") {
+  tasks.push({
+    id: "u5-g2-ex1",
+    title:
+      "Bài 1: Hoàn thành câu với for + V-ing hoặc to V để miêu tả chức năng của vật",
+    description:
+      "Chọn cụm từ thích hợp (for + V-ing / to V) để hoàn thành câu.",
+    gameType: "drag-fill",
+    datasetId: "en10.u5.g2.ex1",
+  });
+}
 // Unit 6 – Vocabulary 1 (flashcard)
 if (unit === 6 && sectionKey === "vocabulary-1") {
   tasks.push({
