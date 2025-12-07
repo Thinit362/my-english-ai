@@ -7,7 +7,7 @@ interface ListenChooseItem {
   question: string; // câu hiển thị (có thể có hoặc không có ______)
   optionA: string;
   optionB: string;
-  optionC?: string; // dùng cho bài có 3 lựa chọn (Unit 6)
+  optionC?: string; // dùng cho bài có 3 lựa chọn
   correct: "A" | "B" | "C";
   word?: string; // từ cần phát âm (word stress,…)
   explanation?: string; // lời giải thích hiển thị sau khi chấm
@@ -17,6 +17,7 @@ interface ListenChooseDataset {
   id: string;
   title: string;
   items: ListenChooseItem[];
+  hideAudio?: boolean; // 👈 nếu true thì ẩn nút loa, không cho nghe
 }
 
 interface Props {
@@ -50,6 +51,9 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
 
   // 🔊 TTS dùng Web Speech API (giọng nữ, Anh Mỹ, đọc chậm & rõ hơn)
   const playAudio = (item: ListenChooseItem) => {
+    // Nếu dataset yêu cầu ẩn audio thì không làm gì
+    if (dataset.hideAudio) return;
+
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       console.error("Trình duyệt không hỗ trợ SpeechSynthesis");
       return;
@@ -66,7 +70,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     // 2) Xác định text cần đọc
     let textToSpeak = "";
 
-    // ✅ Sửa ở đây: bắt mọi cụm gạch dưới liên tiếp (_ , __ , ______ , …)
+    // Bắt mọi cụm gạch dưới liên tiếp (_ , __ , ______ , …)
     const hasBlank = /_+/.test(item.question);
 
     if (hasBlank) {
@@ -103,9 +107,9 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
     utterance.lang = "en-US";
 
     // 👉 Đọc chậm & rõ hơn
-    utterance.rate = 0.8;   // chậm lại cho học sinh nghe rõ
-    utterance.pitch = 1.0;  // cao độ bình thường
-    utterance.volume = 1.0; // âm lượng tối đa
+    utterance.rate = 0.8; // chậm lại cho học sinh nghe rõ
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
 
     // 👉 Chọn giọng nữ Anh Mỹ nếu có
     try {
@@ -165,24 +169,29 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
             key={item.id}
             className="mb-4 p-3 rounded-lg bg-white shadow-sm border border-slate-200"
           >
-            {/* STT + Nút nghe */}
+            {/* STT + (tuỳ chọn) Nút nghe */}
             <div className="flex items-center gap-3 mb-2">
               <span className="w-8 h-8 flex items-center justify-center bg-amber-200 rounded font-semibold">
                 {index + 1}.
               </span>
 
-              <button
-                type="button"
-                onClick={() => playAudio(item)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
-                disabled={loadingId === item.id}
-              >
-                {loadingId === item.id ? "Đang phát..." : "🔊 Nghe"}
-              </button>
+              {/* Chỉ hiển thị nút nghe nếu KHÔNG hideAudio */}
+              {!dataset.hideAudio && (
+                <button
+                  type="button"
+                  onClick={() => playAudio(item)}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                  disabled={loadingId === item.id}
+                >
+                  {loadingId === item.id ? "Đang phát..." : "🔊 Nghe"}
+                </button>
+              )}
             </div>
 
             {/* Câu hỏi */}
-            <p className="mb-2 text-sm text-slate-800">{item.question}</p>
+            <p className="mb-2 text-sm text-slate-800 whitespace-pre-line">
+              {item.question}
+            </p>
 
             {/* Lựa chọn A / B / C */}
             <div className="space-y-1 text-sm">
@@ -236,7 +245,7 @@ const ListenChooseGame: React.FC<Props> = ({ dataset }) => {
         <button
           type="button"
           onClick={handleSubmit}
-          className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold"
+          className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold"
         >
           Submit
         </button>
