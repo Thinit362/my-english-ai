@@ -18,6 +18,7 @@ export type GameType =
   |  "gap-fill"
   | "coming-soon"        
   | "listen-choose" 
+  | "multiple-choice"
   | "record-compare"// tuỳ chọn: fallback cho các dạng khác
   | "drag-fill";          // game kéo / click cụm từ điền vào chỗ trống
 
