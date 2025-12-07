@@ -162,7 +162,7 @@ if (unit === 10 && sectionKey === "vocabulary-2") {
     });
   }
 // Unit 2 – Grammar-1 (flash-audio-match)
-if (unit === 2 && sectionKey === "Grammar-1") {
+if (unit === 2 && sectionKey === "grammar-1") {
   tasks.push({
     id: "u2-g1-ex1",
     title: "Bài tập 1: Chọn will / be going to / hiện tại đơn cho đúng nghĩa (dự định, quyết định tức thời, dự đoán có bằng chứng…).",
@@ -173,7 +173,7 @@ if (unit === 2 && sectionKey === "Grammar-1") {
   });
 }
 // Unit 2 – Grammar-1 -bài tập 2 (flash-audio-match)
-if (unit === 2 && sectionKey === "Grammar-1") {
+if (unit === 2 && sectionKey === "grammar-1") {
   tasks.push({
     id: "u2-g1-ex2",
     title: "Bài tập 2: Thực hành các cách dùng khác của will: offer, promise, request, invitation, warning…",
