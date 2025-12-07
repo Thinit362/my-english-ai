@@ -479,6 +479,31 @@ if (unit === 8 && sectionKey === "pronunciation") {
     datasetId: "en10.u8.p1.ex2", // 👈 trùng với id dataset mình tạo
   });
 }
+// Unit 8 – Grammar 1 (Relative clauses: defining & non-defining)
+if (unit === 8 && sectionKey === "grammar-1") {
+  // Bài 1: DragFill
+  tasks.push({
+    id: "u8-g1-ex1",
+    title:
+      "Bài 1: Hoàn thành câu với mệnh đề quan hệ cho sẵn",
+    description:
+      "Chọn hoặc kéo các cụm mệnh đề quan hệ (who, which, when, where,...) để hoàn thành câu.",
+    gameType: "drag-fill",
+    datasetId: "en10.u8.g1.ex1",
+  });
+
+  // Bài 2: Multiple Choice
+  tasks.push({
+    id: "u8-g1-mc1",
+    title:
+      "Bài 2: Mệnh đề quan hệ xác định & không xác định",
+    description:
+      "Đọc tình huống, chọn câu A hoặc B cho đúng (có/không dấu phẩy). Sau khi nộp bài sẽ xem được giải thích chi tiết.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u8.g1.mc1",
+  });
+}
+ 
  // Unit 9 – Pronunciation (record-compare câu về môi trường)
 if (unit === 9 && sectionKey === "pronunciation") {
   tasks.push({
