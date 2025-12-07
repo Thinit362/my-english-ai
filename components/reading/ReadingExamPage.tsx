@@ -1,4 +1,4 @@
-//components/reading/ReadingExamPage.tsx
+//components/reading/ReadingExamPage.tsx Bài luyện đọc
 "use client";
 
 import { useState } from "react";
