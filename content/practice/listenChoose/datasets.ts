@@ -17,6 +17,7 @@ import { en10u2g1ex2 } from "./en10.u2.g1.ex2";
 import { en10u2g2ex1 } from "./en10.u2.g2.ex1";
 import { en10u2g2ex2 } from "./en10.u2.g2.ex2";
 import { en10u4g1ex2 } from "./en10.u4.g1.ex2";
+import { en10u10g1ex1 } from "./en10.u10.g1.ex1";
 
 // Map toàn bộ dataset listen-choose
 export const LISTEN_CHOOSE_DATASETS: Record<string, any> = {
@@ -43,6 +44,7 @@ export const LISTEN_CHOOSE_DATASETS: Record<string, any> = {
   "en10.u6.v2.ex1": en10u6v2ex1,
   "en10.u9.v2.ex1": en10u9v2ex1,
   "en10.u10.v2.ex1": en10u10v2ex1,
+  "en10.u10.g1.ex1": en10u10g1ex1,
   // Unit 8 – Pronunciation, Bài tập 2
   "en10.u8.p1.ex2": en10u8p1ex2,
   // Unit 3 – Vocabulary 1 (MCQ)
