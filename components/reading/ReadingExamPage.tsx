@@ -50,7 +50,7 @@ type ReadingLesson = {
 export default function ReadingExamPage({ unit }: { unit: number }) {
   const lesson = getReadingByUnit(unit) as ReadingLesson | undefined;
 
-  // trạng thái làm bài
+  // trạng thái làm bài của bài luyện đọc
   const [pageIndex, setPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
