@@ -389,6 +389,31 @@ if (unit === 7 && sectionKey === "vocabulary-1") {
     datasetId: "en10.u7.v1.ex1",
   });
 }
+// Unit 7 – Grammar 1 (comparatives & superlatives)
+if (unit === 7 && sectionKey === "grammar-1") {
+  // Bài 1: DragFill
+  tasks.push({
+    id: "u7-g1-ex1",
+    title:
+      "Bài 1: Hoàn thành câu với các cụm so sánh hơn / so sánh nhất cho sẵn",
+    description:
+      "Kéo thả hoặc chọn cụm từ để điền vào chỗ trống.",
+    gameType: "drag-fill",
+    datasetId: "en10.u7.g1.ex1",
+  });
+
+  // Bài 2: Multiple Choice
+  tasks.push({
+    id: "u7-g1-mc1",
+    title:
+      "Bài 2: Multiple Choice – So sánh hơn & so sánh nhất",
+    description:
+      "Chọn đáp án A, B, C hoặc D để hoàn thành câu.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u7.g1.mc1",
+  });
+}
+ 
   // Unit 3 – Pronunciation (word stress)
   if (unit === 3 && sectionKey === "pronunciation") {
     tasks.push({
