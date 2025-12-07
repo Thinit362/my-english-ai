@@ -4,13 +4,20 @@
 
 import React from "react";
 import { PracticeTask } from "@/content/practice/types";
+
 import FlashAudioMatchGame from "@/components/games/FlashAudioMatchGame";
 import DragFillGame from "@/components/games/DragFillGame";
-import GapFillGame from "@/components/games/GapFillGame"; // ✅ IMPORT MỚI
+import GapFillGame from "@/components/games/GapFillGame";
 import ListenChooseGame from "@/components/games/ListenChooseGame";
+import RecordCompareGame from "@/components/games/RecordCompareGame";
+
+// DATASETS
 import { LISTEN_CHOOSE_DATASETS } from "@/content/practice/listenChoose/datasets";
 import { VOCAB_DATASETS } from "@/content/practice/vocab/datasets";
-import RecordCompareGame from "./games/RecordCompareGame";
+import { MULTIPLE_CHOICE_DATASETS } from "@/content/practice/multipleChoice/datasets";
+
+// GAME mới (Multiple Choice)
+import MultipleChoiceGame from "@/components/games/MultipleChoiceGame";
 
 interface Props {
   task: PracticeTask;
@@ -33,24 +40,34 @@ const PracticeGameRenderer: React.FC<Props> = ({ task }) => {
       return <DragFillGame datasetId={task.datasetId} />;
 
     case "gap-fill":
-      return <GapFillGame datasetId={task.datasetId} />; 
+      return <GapFillGame datasetId={task.datasetId} />;
+
     case "listen-choose":
       return (
         <ListenChooseGame
-        dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]}
+          dataset={LISTEN_CHOOSE_DATASETS[task.datasetId]}
         />
-    );
+      );
+
     case "record-compare": {
-  const ds = VOCAB_DATASETS[task.datasetId];
-  if (!ds) {
-    return (
-      <p className="text-sm text-red-600">
-        Không tìm thấy dữ liệu cho {task.datasetId}
-      </p>
-    );
-  }
-  return <RecordCompareGame dataset={ds} />;
-}
+      const ds = VOCAB_DATASETS[task.datasetId];
+      if (!ds) {
+        return (
+          <p className="text-sm text-red-600">
+            Không tìm thấy dữ liệu cho {task.datasetId}
+          </p>
+        );
+      }
+      return <RecordCompareGame dataset={ds} />;
+    }
+
+    /** ⭐ GAME MỚI: MULTIPLE CHOICE (A–D) ⭐ */
+    case "multiple-choice":
+      return (
+        <MultipleChoiceGame
+          dataset={MULTIPLE_CHOICE_DATASETS[task.datasetId]}
+        />
+      );
 
     default:
       return (
