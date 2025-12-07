@@ -515,6 +515,15 @@ if (unit === 9 && sectionKey === "pronunciation") {
     datasetId: "en10.u9.p1.ex1", // 👈 trùng với id trong dataset
   });
 }
+ if (unit === 9 && sectionKey === "grammar-1") {
+  tasks.push({
+    id: "u9-g1-ex1",
+    title: "Bài tập Multiple Choice: Reported Speech",
+    description: "Chọn đáp án A, B, C hoặc D để hoàn thành câu tường thuật.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u9.g1.mc1",
+  });
+}
   // Unit 10 – Pronunciation / Intonation (record-compare)
 if (unit === 10 && sectionKey === "pronunciation") {
   tasks.push({
