@@ -67,6 +67,30 @@ if (unit === 4 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u4.v2.ex1",
   });
 }
+// Unit 4 – Grammar 1 (Past Simple & Past Continuous with when / while)
+if (unit === 4 && sectionKey === "grammar-1") {
+  // Bài 1: Drag-fill (when / while)
+  tasks.push({
+    id: "u4-g1-ex1",
+    title: "Bài 1: Chọn when / while để hoàn thành câu.",
+    description:
+      "Ôn lại cách dùng when và while với thì quá khứ đơn & quá khứ tiếp diễn.",
+    gameType: "drag-fill",
+    datasetId: "en10.u4.g1.ex1",
+  });
+
+  // Bài 2: Listen-choose (Past Simple vs Past Continuous)
+  tasks.push({
+    id: "u4-g1-ex2",
+    title: "Bài 2: Chọn dạng động từ đúng (Past Simple / Past Continuous).",
+    description:
+      "Luyện phân biệt quá khứ đơn và quá khứ tiếp diễn trong các câu với when và while.",
+    gameType: "listen-choose",
+    datasetId: "en10.u4.g1.ex2",
+  });
+}
+
+ 
 // Unit 8 – Vocabulary 1 (flashcard)
 if (unit === 8 && sectionKey === "vocabulary-1") {
   tasks.push({
