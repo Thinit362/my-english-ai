@@ -535,8 +535,27 @@ if (unit === 10 && sectionKey === "pronunciation") {
     datasetId: "en10.u10.p3.ex3",
   });
 }
- // Các unit khác (4–10) tạm thời chưa đăng ký
-  // Khi bạn tạo xong dataset en10.u4.p1.ex1,... ta sẽ thêm điều kiện tương tự.
+// Unit 10 – Grammar 1 (Conditionals type 1 & 2)
+if (unit === 10 && sectionKey === "grammar-1") {
+  // Bài 1: listen-choose (không phát âm thanh vì hideAudio: true)
+  tasks.push({
+    id: "u10-g1-ex1",
+    title: "Bài 1: Conditional sentences type 1",
+    description: "Chọn đáp án đúng để hoàn thành câu điều kiện loại 1.",
+    gameType: "listen-choose",
+    datasetId: "en10.u10.g1.ex1",
+  });
+
+  // Bài 2: Multiple Choice
+  tasks.push({
+    id: "u10-g1-mc1",
+    title: "Bài 2: Conditional sentences type 1 & 2 (Multiple Choice)",
+    description:
+      "Luyện tập phân biệt câu điều kiện loại 1 và loại 2 với 4 lựa chọn A–D.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u10.g1.mc1",
+  });
+}
 
   return tasks;
 }
