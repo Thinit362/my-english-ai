@@ -8,6 +8,7 @@ import { en10u3g2ex2 } from "./en10.u3.g2.ex2";
 import { en10u4g1ex1 } from "./en10.u4.g1.ex1";
 import { en10u5g2ex1 } from "./en10.u5.g2.ex1";
 import { en10u6g1ex2 } from "./en10.u6.g1.ex2";
+import { en10u7g1ex1 } from "./en10.u7.g1.ex1";
 
 export const DRAG_FILL_DATASETS: Record<string, DragFillDataset> = {
   "en10.u1.v2.ex1": en10u1v2ex1,
@@ -19,4 +20,5 @@ export const DRAG_FILL_DATASETS: Record<string, DragFillDataset> = {
   "en10.u4.g1.ex1": en10u4g1ex1,
   "en10.u5.g2.ex1": en10u5g2ex1,
   "en10.u6.g1.ex2": en10u6g1ex2,
+  "en10.u7.g1.ex1": en10u7g1ex1,
 };
