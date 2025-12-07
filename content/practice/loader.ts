@@ -168,7 +168,7 @@ if (unit === 2 && sectionKey === "grammar-1") {
     title: "Bài tập 1: Chọn will / be going to / hiện tại đơn cho đúng nghĩa (dự định, quyết định tức thời, dự đoán có bằng chứng…).",
     description:
       "Chọn đáp án đúng trong các lựa chọn sau:",
-    gameType: "flash-audio-match",
+    gameType: "listen-choose",
     datasetId: "en10.u2.g1.ex1", // 👈 trùng với key DATASETS
   });
 }
@@ -179,7 +179,7 @@ if (unit === 2 && sectionKey === "grammar-1") {
     title: "Bài tập 2: Thực hành các cách dùng khác của will: offer, promise, request, invitation, warning…",
     description:
       "Chọn đáp án đúng trong các lựa chọn sau:",
-    gameType: "flash-audio-match",
+    gameType: "listen-choose",
     datasetId: "en10.u2.g1.ex2", // 👈 trùng với key DATASETS
   });
 } 
