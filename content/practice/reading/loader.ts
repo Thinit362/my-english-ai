@@ -1,3 +1,4 @@
+//content/practice/reading/loader.ts
 import type { ReadingLesson } from "./types";
 import en10_u1_read1 from "./en10.u1.read1";
 
