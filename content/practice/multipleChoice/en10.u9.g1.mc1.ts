@@ -60,8 +60,7 @@ export const en10u9g1mc1: MultipleChoiceDataset = {
       optionD: "if I came from Hanoi",
       correct: "D",
       explanation:
-        "Yes/No question → asked + if/whether + S + V.  
-Hiện tại đơn → lùi thì → quá khứ đơn → came."
+        "Yes/No question → asked + if/whether + S + V.  Hiện tại đơn → lùi thì → quá khứ đơn → came."
     },
     {
       id: "q6",
@@ -72,8 +71,7 @@ Hiện tại đơn → lùi thì → quá khứ đơn → came."
       optionD: "I liked the food at the restaurant",
       correct: "D",
       explanation:
-        "asked whether + S + V.  
-Do you like → lùi thì → liked."
+        "asked whether + S + V.  Do you like → lùi thì → liked."
     },
     {
       id: "q7",
@@ -84,8 +82,7 @@ Do you like → lùi thì → liked."
       optionD: "his wife had put the money the previous night",
       correct: "D",
       explanation:
-        "Wh-question → S + had + V3.  
-last night → **the previous night**."
+        "Wh-question → S + had + V3. last night → **the previous night**."
     },
     {
       id: "q8",
@@ -107,8 +104,7 @@ last night → **the previous night**."
       optionD: "she is not at home now",
       correct: "A",
       explanation:
-        "am not → was not (lùi thì).  
-now → **then**."
+        "am not → was not (lùi thì).  now → **then**."
     },
     {
       id: "q10",
@@ -123,8 +119,7 @@ now → **then**."
         "why hadn't I told him about my accident the previous week",
       correct: "C",
       explanation:
-        "Wh-question → S + had + V3.  
-last week → the previous week."
+        "Wh-question → S + had + V3.  last week → the previous week."
     }
   ]
 };
