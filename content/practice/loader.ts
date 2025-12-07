@@ -226,6 +226,28 @@ if (unit === 3 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u3.v2.ex2", // 👈 trùng với key DATASETS
   });
 }
+// Unit 3 – Grammar 1 (Compound sentences – DragFillGame)
+if (unit === 3 && sectionKey === "grammar-1") {
+  tasks.push({
+    id: "u3-g1-ex1",
+    title:
+      "Bài tập 1: Hoàn thành câu ghép với and / but / or / so.",
+    description:
+      "Kéo thả liên từ thích hợp (and, but, or, so) vào chỗ trống để tạo câu ghép đúng.",
+    gameType: "drag-fill",
+    datasetId: "en10.u3.g1.ex1",
+  });
+
+  tasks.push({
+    id: "u3-g1-ex2",
+    title:
+      "Bài tập 2: Luyện tập câu ghép với các liên từ FANBOYS.",
+    description:
+      "Hoàn thành câu ghép bằng cách kéo thả liên từ for, and, nor, but, or, yet, so vào chỗ trống.",
+    gameType: "drag-fill",
+    datasetId: "en10.u3.g1.ex2",
+  });
+}
  
  // Unit 5 – Vocabulary 1 (flashcard nghe + nối nghĩa & từ loại)
 if (unit === 5 && sectionKey === "vocabulary-1") {
