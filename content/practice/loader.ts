@@ -248,6 +248,24 @@ if (unit === 3 && sectionKey === "grammar-1") {
     datasetId: "en10.u3.g1.ex2",
   });
 }
+if (unit === 3 && sectionKey === "grammar-2") {
+  tasks.push({
+    id: "u3-g2-ex1",
+    title: "Unit 3 – Grammar 2 – Bài 1: Thực hành các cấu trúc với to-infinitives",
+    description:
+     "Hoàn thành các câu sau bằng cách kéo thả cụm ‘enough to’, ‘whether to’, ‘to’ (trong cấu trúc It’s + adj + to V) và ‘about to’ vào chỗ trống.",
+    gameType: "drag-fill",
+    datasetId: "en10.u3.g2.ex1",
+  });
+  tasks.push({
+    id: "u3-g2-ex2",
+    title: "Bài 2: Hoàn thành bằng động từ nguyên thể (to-infinitive hoặc bare infinitive).",
+    description:
+      "Chọn đúng to-infinitive hoặc bare infinitive để hoàn thành câu.",
+    gameType: "drag-fill",
+    datasetId: "en10.u3.g2.ex2",
+  });
+}
  
  // Unit 5 – Vocabulary 1 (flashcard nghe + nối nghĩa & từ loại)
 if (unit === 5 && sectionKey === "vocabulary-1") {
