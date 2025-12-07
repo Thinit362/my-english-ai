@@ -6,7 +6,7 @@ export const en10u10g1ex1: ListenChooseDataset = {
   id: "en10.u10.g1.ex1",
   title:
     "Unit 10 – Grammar 1 – Bài 1: Conditional sentences type 1 (Choose the best answer)",
-  hideAudio: true, // ❗ Ngữ pháp nên ẩn loa
+  
   items: [
     {
       id: "q1",
