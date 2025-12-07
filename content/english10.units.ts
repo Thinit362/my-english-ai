@@ -753,7 +753,7 @@ export const english10Units: UnitMeta[] = [
         },
         exercise: {
           title: "Thực hành ngữ pháp",
-          href: u(9, "practice-grammar"),
+          href: u(9, "practice-grammar-1"),
         },
       },
       {
