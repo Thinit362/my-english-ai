@@ -313,6 +313,19 @@ if (unit === 5 && sectionKey === "vocabulary-2") {
     datasetId: "en10.u5.v2.ex1",
   });
 }
+// Unit 5 – Grammar 1 (Present Perfect – Multiple Choice)
+if (unit === 5 && sectionKey === "grammar-1") {
+  tasks.push({
+    id: "u5-g1-mc1",
+    title:
+      "Bài tập Multiple Choice: Thì hiện tại hoàn thành (Present Perfect)",
+    description:
+      "Chọn đáp án A, B, C hoặc D để hoàn thành câu với thì hiện tại hoàn thành.",
+    gameType: "multiple-choice",
+    datasetId: "en10.u5.g1.mc1",
+  });
+}
+ 
 // Unit 6 – Vocabulary 1 (flashcard)
 if (unit === 6 && sectionKey === "vocabulary-1") {
   tasks.push({
