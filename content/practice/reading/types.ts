@@ -1,20 +1,31 @@
 // Kiểu cho 1 câu hỏi chung
 export type ReadingQuestionBase = {
   id: string;
-  question: string;
+  question?: string; // để drag không bắt buộc phải có, input/mcq vẫn dùng
   viHint?: string;
 };
 
 export type ReadingInputQuestion = ReadingQuestionBase & {
   type: "input";
+  question: string; // bắt buộc với input
 };
 
 export type ReadingMcqQuestion = ReadingQuestionBase & {
   type: "mcq";
+  question: string; // bắt buộc với mcq
   options: string[];
 };
 
-export type ReadingQuestion = ReadingInputQuestion | ReadingMcqQuestion;
+export type ReadingDragQuestion = ReadingQuestionBase & {
+  type: "drag";
+  blankText: string; // câu có chỗ trống
+  options: string[]; // các từ kéo–thả
+};
+
+export type ReadingQuestion =
+  | ReadingInputQuestion
+  | ReadingMcqQuestion
+  | ReadingDragQuestion;
 
 // 1 trang bài tập (page 1, page 2...)
 export type ReadingExercisePage = {
