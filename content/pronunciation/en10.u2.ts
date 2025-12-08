@@ -16,7 +16,7 @@ const u2: UnitPronunciation = {
       viExplain: `Cụm phụ âm /kl/ được tạo thành nhờ sự kết hợp của hai âm /k/ và /l/.
 
 Chúng ta phát âm âm /k/ bằng cách mở miệng, cuống lưỡi co lại, chạm vào phần ngạc mềm (phần trong cùng của vòm miệng) để chặn luồng khí trong miệng. Sau đó bật mạnh luồng khí ra khỏi miệng mà không làm rung dây thanh trong cổ họng.
-image: "/images/pronunciation/u2-kl-2.png", // bạn đổi thành đường dẫn thật nếu có
+
 Khi ghép từ âm /k/ sang âm /l/, chúng ta sẽ được âm /kl/.`,
 
       items: [
