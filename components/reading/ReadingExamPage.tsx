@@ -2,52 +2,11 @@
 
 import { useState } from "react";
 import { getReadingByUnit } from "@/content/practice/reading/loader";
-
-/* ===== Kiểu dữ liệu tối thiểu để type cho component ===== */
-type ReadingQuestionBase = {
-  id: string;
-  viHint?: string;
-};
-
-type ReadingInputQuestion = ReadingQuestionBase & {
-  type: "input";
-  question: string;
-};
-
-type ReadingMcqQuestion = ReadingQuestionBase & {
-  type: "mcq";
-  question: string;
-  options: string[];
-};
-
-type ReadingDragQuestion = ReadingQuestionBase & {
-  type: "drag";
-  blankText: string;      // câu có chỗ trống, ví dụ: "..... ______."
-  options: string[];      // các từ kéo thả
-};
-
-type ReadingQuestion = ReadingInputQuestion | ReadingMcqQuestion | ReadingDragQuestion;
-
-type ReadingExercisePage = {
-  id: string;
-  title: string;
-  instructionEn: string;
-  instructionVi?: string;
-  questions: ReadingQuestion[];
-  answers: Record<string, string>;
-  explanations?: Record<string, string>;
-};
-
-type ReadingLesson = {
-  id: string;
-  unit: number;
-  skill: "reading";
-  topicVi: string;
-  titleEn: string;
-  passage: string[];
-  translation: string[];
-  exercises: ReadingExercisePage[];
-};
+import type {
+  ReadingLesson,
+  ReadingExercisePage,
+  ReadingQuestion,
+} from "@/content/practice/reading/types";
 
 /* ===========================================================
    Component chính: dùng cho tất cả Unit
@@ -74,7 +33,7 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
     );
   }
 
-  const page = lesson.exercises[pageIndex];
+  const page: ReadingExercisePage = lesson.exercises[pageIndex];
 
   const handleChangeAnswer = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -120,7 +79,8 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
         {/* overlay làm mờ + nội dung */}
         <div className="relative bg-white/80 backdrop-blur px-6 py-6">
           <div className="text-sm font-semibold text-gray-600 mb-1">
-            Luyện đọc · Chủ đề: <span className="text-sky-700">{lesson.topicVi}</span>
+            Luyện đọc · Chủ đề:{" "}
+            <span className="text-sky-700">{lesson.topicVi}</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-center mb-4">
             {lesson.titleEn}
@@ -192,7 +152,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             {page.instructionVi && (
               <>
                 <br />
-                <span className="italic text-gray-500">{page.instructionVi}</span>
+                <span className="italic text-gray-500">
+                  {page.instructionVi}
+                </span>
               </>
             )}
           </p>
@@ -200,16 +162,15 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
 
         {/* Danh sách câu hỏi */}
         <div className="space-y-5">
-          {page.questions.map((q, idx) => {
+          {page.questions.map((q: ReadingQuestion, idx) => {
             const userAnswer = answers[q.id] || "";
             const correctAnswer = page.answers[q.id];
             const correct = submitted && showAnswers && isCorrect(q.id);
 
-            // text hiển thị chính (câu hỏi / câu có chỗ trống)
             const mainText =
               q.type === "drag"
                 ? q.blankText
-                : q.question;
+                : q.question ?? "";
 
             return (
               <div
@@ -223,7 +184,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                   <div className="flex-1 space-y-1">
                     <p className="font-medium text-gray-900">{mainText}</p>
                     {q.viHint && (
-                      <p className="text-xs text-gray-500 italic">{q.viHint}</p>
+                      <p className="text-xs text-gray-500 italic">
+                        {q.viHint}
+                      </p>
                     )}
 
                     {/* ====== DRAG & DROP ====== */}
@@ -242,9 +205,15 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                           }}
                           className="min-h-[40px] flex items-center justify-center rounded border-2 border-dashed border-amber-400 bg-white px-3 py-2 text-sm text-gray-700"
                         >
-                          {userAnswer
-                            ? <span className="font-semibold text-amber-700">{userAnswer}</span>
-                            : <span className="text-gray-400">Kéo từ bên dưới vào đây hoặc bấm để chọn</span>}
+                          {userAnswer ? (
+                            <span className="font-semibold text-amber-700">
+                              {userAnswer}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              Kéo từ bên dưới vào đây hoặc bấm để chọn
+                            </span>
+                          )}
                         </div>
 
                         {/* Ngân hàng từ kéo thả */}
@@ -282,7 +251,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                       <input
                         type="text"
                         value={userAnswer}
-                        onChange={(e) => handleChangeAnswer(q.id, e.target.value)}
+                        onChange={(e) =>
+                          handleChangeAnswer(q.id, e.target.value)
+                        }
                         disabled={submitted}
                         className="mt-2 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                       />
@@ -301,7 +272,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                               name={q.id}
                               disabled={submitted}
                               checked={userAnswer === opt}
-                              onChange={() => handleChangeAnswer(q.id, opt)}
+                              onChange={() =>
+                                handleChangeAnswer(q.id, opt)
+                              }
                             />
                             <span>{opt}</span>
                           </label>
@@ -312,9 +285,15 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                     {/* Đáp án & giải thích (sau khi Submit + showAnswers = true) */}
                     {submitted && showAnswers && (
                       <div className="mt-2 text-sm">
-                        <p className={correct ? "text-green-600" : "text-red-600"}>
+                        <p
+                          className={
+                            correct ? "text-green-600" : "text-red-600"
+                          }
+                        >
                           Đáp án đúng:{" "}
-                          <span className="font-semibold">{correctAnswer}</span>
+                          <span className="font-semibold">
+                            {correctAnswer}
+                          </span>
                         </p>
                         {page.explanations?.[q.id] && (
                           <p className="italic text-gray-600">
@@ -344,7 +323,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             <button
               type="button"
               onClick={() =>
-                setPageIndex((i) => Math.min(lesson.exercises.length - 1, i + 1))
+                setPageIndex((i) =>
+                  Math.min(lesson.exercises.length - 1, i + 1)
+                )
               }
               disabled={pageIndex === lesson.exercises.length - 1}
               className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
