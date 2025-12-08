@@ -1,4 +1,3 @@
-//components/reading/ReadingExamPage.tsx Bài luyện đọc
 "use client";
 
 import { useState } from "react";
@@ -7,20 +6,27 @@ import { getReadingByUnit } from "@/content/practice/reading/loader";
 /* ===== Kiểu dữ liệu tối thiểu để type cho component ===== */
 type ReadingQuestionBase = {
   id: string;
-  question: string;
   viHint?: string;
 };
 
 type ReadingInputQuestion = ReadingQuestionBase & {
   type: "input";
+  question: string;
 };
 
 type ReadingMcqQuestion = ReadingQuestionBase & {
   type: "mcq";
+  question: string;
   options: string[];
 };
 
-type ReadingQuestion = ReadingInputQuestion | ReadingMcqQuestion;
+type ReadingDragQuestion = ReadingQuestionBase & {
+  type: "drag";
+  blankText: string;      // câu có chỗ trống, ví dụ: "..... ______."
+  options: string[];      // các từ kéo thả
+};
+
+type ReadingQuestion = ReadingInputQuestion | ReadingMcqQuestion | ReadingDragQuestion;
 
 type ReadingExercisePage = {
   id: string;
@@ -143,23 +149,18 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             {lesson.passage.map((para, idx) => {
               const isActive = enableVn && activePara === idx;
               return (
-                <div
-                  key={idx}
-                  className="relative"
-                >
+                <div key={idx} className="relative">
                   <p
                     className={`cursor-pointer rounded px-2 py-1 hover:bg-yellow-50 ${
-                      enableVn ? "border border-dashed border-transparent hover:border-yellow-400" : ""
+                      enableVn
+                        ? "border border-dashed border-transparent hover:border-yellow-400"
+                        : ""
                     }`}
                     onClick={() => {
                       if (!enableVn) return;
                       setActivePara((cur) => (cur === idx ? null : idx));
                     }}
-                    title={
-                      enableVn
-                        ? "Nhấn để xem/ẩn bản dịch đoạn này"
-                        : undefined
-                    }
+                    title={enableVn ? "Nhấn để xem/ẩn bản dịch đoạn này" : undefined}
                   >
                     {para}
                   </p>
@@ -191,9 +192,7 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             {page.instructionVi && (
               <>
                 <br />
-                <span className="italic text-gray-500">
-                  {page.instructionVi}
-                </span>
+                <span className="italic text-gray-500">{page.instructionVi}</span>
               </>
             )}
           </p>
@@ -206,6 +205,12 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             const correctAnswer = page.answers[q.id];
             const correct = submitted && showAnswers && isCorrect(q.id);
 
+            // text hiển thị chính (câu hỏi / câu có chỗ trống)
+            const mainText =
+              q.type === "drag"
+                ? q.blankText
+                : q.question;
+
             return (
               <div
                 key={q.id}
@@ -216,26 +221,74 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                     {idx + 1}.
                   </span>
                   <div className="flex-1 space-y-1">
-                    <p className="font-medium text-gray-900">{q.question}</p>
+                    <p className="font-medium text-gray-900">{mainText}</p>
                     {q.viHint && (
-                      <p className="text-xs text-gray-500 italic">
-                        {q.viHint}
-                      </p>
+                      <p className="text-xs text-gray-500 italic">{q.viHint}</p>
                     )}
 
-                    {/* INPUT or MCQ */}
+                    {/* ====== DRAG & DROP ====== */}
+                    {q.type === "drag" && (
+                      <div className="mt-2 space-y-3">
+                        {/* Ô điền đáp án (drop zone) */}
+                        <div
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (submitted) return;
+                            const value = e.dataTransfer.getData("text/plain");
+                            if (value) {
+                              handleChangeAnswer(q.id, value);
+                            }
+                          }}
+                          className="min-h-[40px] flex items-center justify-center rounded border-2 border-dashed border-amber-400 bg-white px-3 py-2 text-sm text-gray-700"
+                        >
+                          {userAnswer
+                            ? <span className="font-semibold text-amber-700">{userAnswer}</span>
+                            : <span className="text-gray-400">Kéo từ bên dưới vào đây hoặc bấm để chọn</span>}
+                        </div>
+
+                        {/* Ngân hàng từ kéo thả */}
+                        <div className="flex flex-wrap gap-2">
+                          {q.options.map((opt) => {
+                            const isSelected = userAnswer === opt;
+                            return (
+                              <div
+                                key={opt}
+                                draggable={!submitted}
+                                onDragStart={(e) => {
+                                  if (submitted) return;
+                                  e.dataTransfer.setData("text/plain", opt);
+                                }}
+                                onClick={() => {
+                                  if (submitted) return;
+                                  handleChangeAnswer(q.id, opt);
+                                }}
+                                className={`cursor-pointer select-none rounded-full border px-3 py-1 text-xs md:text-sm ${
+                                  isSelected
+                                    ? "bg-amber-500 text-white border-amber-500"
+                                    : "bg-white text-gray-800 border-gray-300 hover:bg-amber-50"
+                                }`}
+                              >
+                                {opt}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ====== INPUT ====== */}
                     {q.type === "input" && (
                       <input
                         type="text"
                         value={userAnswer}
-                        onChange={(e) =>
-                          handleChangeAnswer(q.id, e.target.value)
-                        }
+                        onChange={(e) => handleChangeAnswer(q.id, e.target.value)}
                         disabled={submitted}
                         className="mt-2 w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                       />
                     )}
 
+                    {/* ====== MCQ ====== */}
                     {q.type === "mcq" && (
                       <div className="mt-2 space-y-1">
                         {q.options.map((opt) => (
@@ -248,9 +301,7 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                               name={q.id}
                               disabled={submitted}
                               checked={userAnswer === opt}
-                              onChange={() =>
-                                handleChangeAnswer(q.id, opt)
-                              }
+                              onChange={() => handleChangeAnswer(q.id, opt)}
                             />
                             <span>{opt}</span>
                           </label>
@@ -261,15 +312,9 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
                     {/* Đáp án & giải thích (sau khi Submit + showAnswers = true) */}
                     {submitted && showAnswers && (
                       <div className="mt-2 text-sm">
-                        <p
-                          className={
-                            correct ? "text-green-600" : "text-red-600"
-                          }
-                        >
+                        <p className={correct ? "text-green-600" : "text-red-600"}>
                           Đáp án đúng:{" "}
-                          <span className="font-semibold">
-                            {correctAnswer}
-                          </span>
+                          <span className="font-semibold">{correctAnswer}</span>
                         </p>
                         {page.explanations?.[q.id] && (
                           <p className="italic text-gray-600">
@@ -290,9 +335,7 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() =>
-                setPageIndex((i) => Math.max(0, i - 1))
-              }
+              onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
               disabled={pageIndex === 0}
               className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
             >
@@ -301,9 +344,7 @@ export default function ReadingExamPage({ unit }: { unit: number }) {
             <button
               type="button"
               onClick={() =>
-                setPageIndex((i) =>
-                  Math.min(lesson.exercises.length - 1, i + 1)
-                )
+                setPageIndex((i) => Math.min(lesson.exercises.length - 1, i + 1))
               }
               disabled={pageIndex === lesson.exercises.length - 1}
               className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
