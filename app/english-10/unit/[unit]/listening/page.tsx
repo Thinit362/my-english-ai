@@ -1,4 +1,4 @@
-// app/english-10/unit/[unit]/listening/page.tsx
+// app/english-10/unit/[unit]/listening/page.tsx luyện nghe
 import ListeningExamPage from "@/components/listening/ListeningExamPage";
 
 interface PageProps {
