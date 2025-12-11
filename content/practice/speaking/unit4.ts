@@ -22,19 +22,19 @@ export const speakingUnit4: SpeakingLesson = {
       items: [
         {
           en: "What do you think about + noun / V-ing?",
-          en: "What do you think about building a new school in this area?",
+          vi: "What do you think about building a new school in this area?",
         },
         {
           en: "What’s your idea / opinion about + noun / V-ing?",
-          en: "What’s your opinion about raising funds for poor children?",
+          vi: "What’s your opinion about raising funds for poor children?",
         },
         {
           en: "How do you feel about + noun / V-ing?",
-          en: "How do you feel about giving food and clothes to homeless people?",
+          vi: "How do you feel about giving food and clothes to homeless people?",
         },
         {
           en: "Do you have any thoughts on + noun / V-ing?",
-          en: "Do you have any thoughts on training young people for jobs?",
+          vi: "Do you have any thoughts on training young people for jobs?",
         },
         {
           en: "Why do you think so?",
