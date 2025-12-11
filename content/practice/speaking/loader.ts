@@ -5,7 +5,7 @@ import { speakingUnit2 } from "./unit2";
 import { speakingUnit3 } from "./unit3";
 import { speakingUnit4 } from "./unit4";
 import { speakingUnit5 } from "./unit5";
-
+import { speakingUnit6 } from "./unit6";
 
 // Sau này bạn chỉ cần import thêm unit2, unit3... rồi thêm vào map dưới
 const speakingContent: SpeakingContent = {
@@ -14,6 +14,7 @@ const speakingContent: SpeakingContent = {
   3: speakingUnit3,
   4: speakingUnit4,
   5: speakingUnit5,
+  6: speakingUnit6,
 };
 
 export function getSpeakingByUnit(unit: number): SpeakingLesson | undefined {
