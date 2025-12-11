@@ -87,7 +87,7 @@ export const speakingUnit5: SpeakingLesson = {
     },
   ],
 
-  /* ===================== B. THỰC HÀNH ===================== */
+    /* ===================== B. THỰC HÀNH ===================== */
   exercises: [
     {
       id: "u5-task3",
@@ -164,59 +164,6 @@ export const speakingUnit5: SpeakingLesson = {
             "A 3-D printer is used for producing solid objects similar to the originals.",
           sampleAnswerVi:
             "Máy in 3D được dùng để tạo các vật thể rắn giống như bản gốc.",
-        },
-      ],
-    },
-
-    /* BONUS – hội thoại điền chỗ trống nếu bạn muốn xử lý sau */
-    {
-      id: "u5-task-dialogue",
-      title: "Task 4 – Complete the conversation (optional)",
-      instructionEn:
-        "Complete the conversation with suitable expressions about inventions.",
-      instructionVi:
-        "Hoàn thành đoạn hội thoại bằng các biểu thức phù hợp về phát minh.",
-      questions: [
-        {
-          id: "u5-d1",
-          promptEn: "Huong: What's that, Minh?",
-          answerKey: "",
-        },
-        {
-          id: "u5-d2",
-          promptEn:
-            "Minh: (1) ? My brother bought it for me as a birthday present last week.",
-          answerKey: "",
-        },
-        {
-          id: "u5-d3",
-          promptEn:
-            "Huong: It looks cool.\nMinh: Yeah. (2) ? but it's lighter and thinner.",
-          answerKey: "",
-        },
-        {
-          id: "u5-d4",
-          promptEn:
-            "Huong: (3) ? I guess it's not only used for communication.",
-          answerKey: "",
-        },
-        {
-          id: "u5-d5",
-          promptEn:
-            "Minh: Sure. It's used to make phone calls and exchange texts. (4) ?",
-          answerKey: "",
-        },
-        {
-          id: "u5-d6",
-          promptEn:
-            "Huong: Great. (5) ?\nMinh: Your birthday's coming. What would you like?",
-          answerKey: "",
-        },
-        {
-          id: "u5-d7",
-          promptEn:
-            "Huong: Perhaps I'd like a digital camera. If I have one, (6) ?",
-          answerKey: "",
         },
       ],
     },
