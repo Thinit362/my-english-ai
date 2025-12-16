@@ -55,6 +55,12 @@ export type SpeakingLesson = {
   theory?: SpeakingTheoryBlock[];
   exercises: SpeakingExercisePage[];
 };
-
+export type SpeakingMCQQuestion = SpeakingQuestionBase & {
+  type: "mcq";
+  options: string[];
+  answer: string; // đáp án đúng = 1 option
+};
+export type SpeakingSpeakQuestion = SpeakingQuestionBase & {
+  type: "speak";
 /** Kiểu map toàn bộ các Unit */
 export type SpeakingContent = Record<number, SpeakingLesson>;
