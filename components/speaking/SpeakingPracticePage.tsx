@@ -175,7 +175,40 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
             )}
           </p>
         </div>
+    {/* ===== MCQ ===== */}
+          {q.type === "mcq" && (
+            <div className="mt-2 space-y-1">
+              {q.options.map((opt) => (
+                <label
+                  key={opt}
+                  className="flex items-center gap-2 text-sm text-gray-800"
+                >
+                  <input
+                    type="radio"
+                    name={q.id}
+                    disabled={submittedCurrent}
+                    checked={user === opt}
+                    onChange={() => handleChangeAnswer(q.id, opt)}
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))}
+            </div>
+          )}
 
+          {/* Show đáp án MCQ sau submit */}
+          {submittedCurrent && q.type === "mcq" && (
+            <div className="mt-2 text-sm">
+              <p className={mcqCorrect ? "text-green-600" : "text-red-600"}>
+                Đáp án đúng: <span className="font-semibold">{q.answer}</span>
+              </p>
+              {(q.explanationVi || q.explanationEn) && (
+                <p className="italic text-gray-600">
+                  {q.explanationVi || q.explanationEn}
+                </p>
+              )}
+            </div>
+          )}
         {/* Danh sách câu hỏi luyện nói */}
         <div className="space-y-5">
           {page.questions.map((q: SpeakingQuestion, idx) => {
