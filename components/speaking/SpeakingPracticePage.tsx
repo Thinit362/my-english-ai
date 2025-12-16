@@ -46,9 +46,11 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
           style={{ backgroundImage: "url('/images/speaking-bg.jpg')" }}
         />
         <div className="relative bg-white/80 backdrop-blur px-6 py-6 space-y-4">
-          <div className="text-sm font-semibold text-gray-600">
-            Luyện nói · <span className="text-emerald-700">{lesson.topicVi}</span>
+          <div className="text-sm font-semibold text-gray-600 mb-1">
+            Luyện nói · Chủ đề:{" "}
+            <span className="text-emerald-700">{lesson.topicVi}</span>
           </div>
+
           <h1 className="text-2xl md:text-3xl font-bold text-center">
             {lesson.titleEn}
           </h1>
@@ -66,136 +68,209 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
               )}
             </p>
           )}
+
+          <p className="text-xs md:text-sm text-center text-gray-600">
+            Gợi ý: Bấm nút loa để nghe mẫu, sau đó bấm micro để ghi âm và xem điểm
+            phần trăm.
+          </p>
         </div>
       </section>
 
       {/* THEORY */}
-      {lesson.theory && (
-        <section className="bg-white rounded-2xl shadow border p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Lý thuyết cần nhớ</h2>
+      {lesson.theory && lesson.theory.length > 0 && (
+        <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">
+              1. Lý thuyết & cấu trúc nói cần nhớ
+            </h2>
+            <span className="text-xs text-gray-500">
+              {lesson.theory.length} khối nội dung
+            </span>
+          </div>
 
-          {lesson.theory.map((block: SpeakingTheoryBlock) => {
-            const open = expandedTheory[block.id] ?? true;
-            return (
-              <div
-                key={block.id}
-                className="border rounded-xl bg-emerald-50/60"
-              >
-                <button
-                  onClick={() => toggleTheory(block.id)}
-                  className="w-full px-4 py-3 flex justify-between font-semibold"
+          <div className="space-y-3">
+            {lesson.theory.map((block: SpeakingTheoryBlock) => {
+              const isOpen = expandedTheory[block.id] ?? true;
+              return (
+                <div
+                  key={block.id}
+                  className="border border-emerald-200 rounded-xl bg-emerald-50/60"
                 >
-                  {block.title}
-                  <span className="text-xs">{open ? "Ẩn" : "Hiện"}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleTheory(block.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left"
+                  >
+                    <span className="font-semibold text-emerald-800">
+                      {block.title}
+                    </span>
+                    <span className="text-xs text-emerald-700">
+                      {isOpen ? "Ẩn" : "Hiện"}
+                    </span>
+                  </button>
 
-                {open && (
-                  <div className="px-4 pb-4 space-y-2 text-sm">
-                    {block.contentEn && <p>{block.contentEn}</p>}
-                    {block.contentVi && (
-                      <p className="italic text-gray-600">
-                        {block.contentVi}
-                      </p>
-                    )}
-                    {block.items && (
-                      <ul className="list-disc pl-5">
-                        {block.items.map((i) => (
-                          <li key={i.en}>
-                            <b>{i.en}</b>
-                            {i.vi && ` – ${i.vi}`}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {isOpen && (
+                    <div className="px-4 pb-4 space-y-2 text-sm text-gray-800">
+                      {block.contentEn && <p>{block.contentEn}</p>}
+                      {block.contentVi && (
+                        <p className="italic text-gray-600">
+                          {block.contentVi}
+                        </p>
+                      )}
+                      {block.items && block.items.length > 0 && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {block.items.map((it) => (
+                            <li key={it.en}>
+                              <span className="font-medium">{it.en}</span>
+                              {it.vi && (
+                                <span className="text-gray-600"> – {it.vi}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 
       {/* PRACTICE */}
-      <section className="bg-white rounded-2xl shadow border p-6 space-y-6">
-        <h2 className="text-lg font-semibold">{page.title}</h2>
-        <p className="text-sm text-gray-700">
-          {page.instructionEn}
-          {page.instructionVi && (
-            <>
-              <br />
-              <i>{page.instructionVi}</i>
-            </>
-          )}
-        </p>
+      <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-6">
+        <div>
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <h2 className="text-lg font-semibold">2. Luyện nói – {page.title}</h2>
+            <span className="text-xs text-gray-500">
+              Trang {pageIndex + 1} / {lesson.exercises.length}
+            </span>
+          </div>
+
+          <p className="text-sm text-gray-800">
+            {page.instructionEn}
+            {page.instructionVi && (
+              <>
+                <br />
+                <span className="italic text-gray-500">{page.instructionVi}</span>
+              </>
+            )}
+          </p>
+        </div>
 
         <div className="space-y-5">
           {page.questions.map((q: SpeakingQuestion, idx) => {
+            const isOpen = !!showSamples[q.id];
             const expected = q.sampleAnswerEn || q.promptEn;
-            const open = showSamples[q.id];
 
             return (
-              <div key={q.id} className="border rounded-lg p-4 bg-gray-50">
-                <p className="font-medium">
-                  {idx + 1}. {q.promptEn}
-                </p>
+              <div
+                key={q.id}
+                className="rounded-lg border border-gray-200 p-3 bg-gray-50"
+              >
+                <div className="flex items-start gap-2">
+                  <span className="mt-[2px] font-semibold text-gray-700">
+                    {idx + 1}.
+                  </span>
 
-                <TTSPlay
-                  text={expected}
-                  expectedText={expected}
-                  enableRecord
-                  compact
-                />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex flex-col gap-1">
+                      <p className="font-medium text-gray-900">{q.promptEn}</p>
 
-                {q.promptVi && (
-                  <p className="text-xs italic text-gray-600">{q.promptVi}</p>
-                )}
+                      {/* Loa + mic + popup chấm % */}
+                      <TTSPlay
+                        text={expected}
+                        expectedText={expected}
+                        voice={q.voice}
+                        enableRecord
+                        languageCode="en-US"
+                        compact
+                        ariaLabel="Nghe mẫu & luyện nói câu này"
+                      />
+                    </div>
 
-                {q.structureHighlight && (
-                  <p className="text-xs mt-1 bg-amber-100 inline-block px-3 py-1 rounded-full">
-                    ✏ {q.structureHighlight}
-                  </p>
-                )}
+                    {q.promptVi && (
+                      <p className="text-xs text-gray-600 italic">{q.promptVi}</p>
+                    )}
 
-                {(q.sampleAnswerEn || q.sampleAnswerVi) && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => toggleSample(q.id)}
-                      className="text-xs underline"
-                    >
-                      {open ? "Ẩn câu mẫu" : "Xem câu mẫu"}
-                    </button>
+                    {q.structureHighlight && (
+                      <p className="inline-block rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs text-amber-800 font-semibold">
+                        ✏ Gợi ý cấu trúc: {q.structureHighlight}
+                      </p>
+                    )}
 
-                    {open && (
-                      <div className="mt-2 text-sm bg-white border rounded p-2">
-                        {q.sampleAnswerEn && <p>{q.sampleAnswerEn}</p>}
-                        {q.sampleAnswerVi && (
-                          <p className="italic text-gray-600">
-                            {q.sampleAnswerVi}
-                          </p>
+                    {(q.tipEn || q.tipVi) && (
+                      <div className="mt-1 text-xs text-gray-700 bg-white rounded border border-dashed border-gray-300 px-3 py-2">
+                        {q.tipEn && <p>{q.tipEn}</p>}
+                        {q.tipVi && (
+                          <p className="italic text-gray-500">{q.tipVi}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {(q.sampleAnswerEn || q.sampleAnswerVi) && (
+                      <div className="mt-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleSample(q.id)}
+                          className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
+                        >
+                          {isOpen ? "Ẩn câu mẫu" : "Xem gợi ý câu mẫu"}
+                        </button>
+
+                        {isOpen && (
+                          <div className="mt-2 text-sm bg-white rounded border border-gray-200 px-3 py-2">
+                            {q.sampleAnswerEn && (
+                              <p className="text-gray-900">
+                                <span className="font-semibold">Sample:</span>{" "}
+                                {q.sampleAnswerEn}
+                              </p>
+                            )}
+                            {q.sampleAnswerVi && (
+                              <p className="text-xs italic text-gray-600 mt-1">
+                                {q.sampleAnswerVi}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
         </div>
 
         {/* PAGINATION */}
-        <div className="flex justify-between pt-3 border-t">
-          <button
-            disabled={pageIndex === 0}
-            onClick={() => setPageIndex((i) => i - 1)}
-          >
-            ⬅ Trang trước
-          </button>
-          <button
-            disabled={pageIndex === lesson.exercises.length - 1}
-            onClick={() => setPageIndex((i) => i + 1)}
-          >
-            Trang sau ➜
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+              disabled={pageIndex === 0}
+              className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+            >
+              ⬅ Trang trước
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setPageIndex((i) =>
+                  Math.min(lesson.exercises.length - 1, i + 1)
+                )
+              }
+              disabled={pageIndex === lesson.exercises.length - 1}
+              className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+            >
+              Trang sau ➜
+            </button>
+          </div>
+
+          <p className="text-[11px] text-gray-500">
+            Hãy luyện nói nhiều lần mỗi câu, rồi mở câu mẫu để so sánh cách diễn đạt.
+          </p>
         </div>
       </section>
     </div>
