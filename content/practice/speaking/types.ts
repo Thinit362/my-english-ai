@@ -16,21 +16,21 @@ export type SpeakingTheoryBlock = {
 export type SpeakingQuestion = {
   id: string;
 
-  /** Câu / đoạn tiếng Anh để luyện nói */
+  /** Câu/đoạn tiếng Anh để luyện nói */
   promptEn: string;
   /** Gợi ý tiếng Việt */
   promptVi?: string;
 
-  /** Câu mẫu chuẩn để nghe & chấm điểm */
+  /** Câu mẫu chuẩn để nghe & chấm điểm (nếu có) */
   sampleAnswerEn?: string;
   sampleAnswerVi?: string;
 
-  /** Gợi ý cấu trúc */
-  structureHighlight?: string;
-
-  /** Mẹo luyện nói */
+  /** Mẹo / hướng dẫn thêm */
   tipEn?: string;
   tipVi?: string;
+
+  /** Gợi ý cấu trúc nổi bật */
+  structureHighlight?: string;
 
   /** Voice riêng (nếu cần) */
   voice?: string;
