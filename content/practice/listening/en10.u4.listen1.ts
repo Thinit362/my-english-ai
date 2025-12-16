@@ -126,3 +126,72 @@ const en10_u4_listen1: ListeningLesson = {
         },
         {
           id: "u4_p2_q2",
+          type: "mcq",
+          question:
+            "Why is Adam interested in volunteer work?",
+          options: [
+            "A. He wants to earn money.",
+            "B. He wants to help others and gain experience.",
+            "C. He wants to improve his grades.",
+          ],
+        },
+        {
+          id: "u4_p2_q3",
+          type: "mcq",
+          question:
+            "Which skill can volunteering help Adam develop?",
+          options: [
+            "A. Communication skills.",
+            "B. Cooking skills.",
+            "C. Driving skills.",
+          ],
+        },
+        {
+          id: "u4_p2_q4",
+          type: "mcq",
+          question:
+            "What does Adam think volunteering will help him with?",
+          options: [
+            "A. His future career.",
+            "B. His daily routine.",
+            "C. His school timetable.",
+          ],
+        },
+        {
+          id: "u4_p2_q5",
+          type: "mcq",
+          question:
+            "What can be inferred from the two talks?",
+          options: [
+            "A. Volunteering is only for adults.",
+            "B. Volunteering brings personal benefits.",
+            "C. Volunteering is mainly about travelling.",
+          ],
+        },
+      ],
+
+      answers: {
+        u4_p2_q1: "A. He wants to do volunteer work.",
+        u4_p2_q2: "B. He wants to help others and gain experience.",
+        u4_p2_q3: "A. Communication skills.",
+        u4_p2_q4: "A. His future career.",
+        u4_p2_q5: "B. Volunteering brings personal benefits.",
+      },
+
+      explanations: {
+        u4_p2_q1:
+          "Adam nói rõ mong muốn tham gia hoạt động tình nguyện.",
+        u4_p2_q2:
+          "Adam cho rằng làm tình nguyện giúp giúp đỡ người khác và tích lũy kinh nghiệm.",
+        u4_p2_q3:
+          "Các hoạt động tình nguyện giúp cải thiện kỹ năng giao tiếp.",
+        u4_p2_q4:
+          "Adam tin rằng tình nguyện sẽ có lợi cho sự nghiệp sau này.",
+        u4_p2_q5:
+          "Cả hai bài nghe đều cho thấy làm tình nguyện mang lại lợi ích cho bản thân.",
+      },
+    },
+  ],
+};
+
+export default en10_u4_listen1;
