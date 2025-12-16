@@ -6,10 +6,14 @@ import type { ListeningLesson } from "./types";
 import en10_u1_listen1 from "./en10.u1.listen1";
 import en10_u2_listen1 from "./en10.u2.listen1";
 
+import en10_u4_listen1 from "./en10.u4.listen1";
+
 // Mảng chứa toàn bộ bài luyện nghe
 const listeningData: ListeningLesson[] = [
   en10_u1_listen1,
   en10_u2_listen1,
+
+  en10_u4_listen1,
   // en10_u3_listen1,
   // ...
 ];
