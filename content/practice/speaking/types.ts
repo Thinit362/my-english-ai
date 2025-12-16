@@ -13,8 +13,21 @@ export type SpeakingTheoryBlock = {
   items?: SpeakingTheoryItem[];
 };
 
-export type SpeakingQuestion = {
+/**
+ * Backward-compatible:
+ * - Unit cũ: không cần "type" => mặc định là speak
+ * - Unit mới (MCQ): set type="mcq" + options + answer
+ */
+export type SpeakingQuestion =
+  | SpeakingSpeakQuestion
+  | SpeakingMCQQuestion;
+
+export type SpeakingSpeakQuestion = {
   id: string;
+
+  /** Không khai báo type vẫn được, component sẽ hiểu là speak */
+  type?: "speak";
+
   /** Câu hỏi tiếng Anh để HS nghe & luyện nói */
   promptEn: string;
   /** Gợi ý tiếng Việt */
@@ -24,7 +37,7 @@ export type SpeakingQuestion = {
   tipEn?: string;
   tipVi?: string;
 
-  /** Câu mẫu gợi ý trả lời */
+  /** Câu mẫu gợi ý trả lời / câu chuẩn để chấm điểm (nếu có) */
   sampleAnswerEn?: string;
   sampleAnswerVi?: string;
 
@@ -33,6 +46,25 @@ export type SpeakingQuestion = {
 
   /** Nếu muốn dùng voice khác mặc định cho câu này */
   voice?: string;
+};
+
+export type SpeakingMCQQuestion = {
+  id: string;
+  type: "mcq";
+
+  /** Nội dung câu hỏi */
+  promptEn: string;
+  promptVi?: string;
+
+  /** Các lựa chọn */
+  options: string[];
+
+  /** Đáp án đúng (phải trùng 1 option) */
+  answer: string;
+
+  /** Giải thích (optional) */
+  explanationEn?: string;
+  explanationVi?: string;
 };
 
 export type SpeakingExercisePage = {
@@ -55,12 +87,6 @@ export type SpeakingLesson = {
   theory?: SpeakingTheoryBlock[];
   exercises: SpeakingExercisePage[];
 };
-export type SpeakingMCQQuestion = SpeakingQuestionBase & {
-  type: "mcq";
-  options: string[];
-  answer: string; // đáp án đúng = 1 option
-};
-export type SpeakingSpeakQuestion = SpeakingQuestionBase & {
-  type: "speak";
+
 /** Kiểu map toàn bộ các Unit */
 export type SpeakingContent = Record<number, SpeakingLesson>;
