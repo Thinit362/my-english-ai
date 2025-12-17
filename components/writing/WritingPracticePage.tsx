@@ -6,15 +6,17 @@ import type {
   WritingLesson,
   WritingExercisePage,
   WritingTheoryBlock,
+  WritingExercise,
   MCQExercise,
   DragBlankExercise,
   WritingPromptExercise,
-  WritingExercise,
 } from "@/content/practice/writing/types";
 
 type Props = { unit: number };
 
-/** ===== Type guards giúp TS hiểu union ===== */
+/* =========================
+ * Type Guards
+ * ========================= */
 function isMCQ(ex: WritingExercise): ex is MCQExercise {
   return ex.type === "mcq";
 }
@@ -87,7 +89,6 @@ export default function WritingPracticePage({ unit }: Props) {
     }
 
     if (isWritingPrompt(ex)) {
-      // xóa localStorage bài viết
       if (typeof window !== "undefined") {
         localStorage.removeItem(buildWritingStorageKey(unit, ex.id));
       }
@@ -128,7 +129,7 @@ export default function WritingPracticePage({ unit }: Props) {
           )}
 
           <p className="text-xs md:text-sm text-center text-gray-600">
-            Gợi ý: Đọc lý thuyết → làm bài tập → bấm “Chấm điểm” để xem đáp án đúng.
+            Gợi ý: Đọc lý thuyết → làm bài tập → bấm “Chấm điểm/Kiểm tra”.
           </p>
         </div>
       </section>
@@ -148,7 +149,6 @@ export default function WritingPracticePage({ unit }: Props) {
           <div className="space-y-3">
             {lesson.theory.map((block: WritingTheoryBlock) => {
               const isOpen = expandedTheory[block.id] ?? true;
-
               return (
                 <div
                   key={block.id}
@@ -234,7 +234,6 @@ export default function WritingPracticePage({ unit }: Props) {
 
       {/* ========== PHẦN THỰC HÀNH VIẾT ========== */}
       <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-6">
-        {/* Tiêu đề & hướng dẫn trang hiện tại */}
         <div>
           <div className="flex items-center justify-between gap-3 mb-2">
             <h2 className="text-lg font-semibold">2. Luyện viết – {page.title}</h2>
@@ -254,7 +253,6 @@ export default function WritingPracticePage({ unit }: Props) {
           </p>
         </div>
 
-        {/* Danh sách bài tập trong trang */}
         <div className="space-y-5">
           {page.exercises.map((ex, idx) => {
             const isSubmitted = submitted[ex.id] ?? false;
@@ -285,7 +283,6 @@ export default function WritingPracticePage({ unit }: Props) {
                       Làm lại
                     </button>
 
-                    {/* writing_prompt không cần "chấm điểm" theo kiểu đúng/sai, nhưng vẫn cho nút để bật phần checklist */}
                     <button
                       type="button"
                       onClick={() => setSubmittedFor(ex.id, true)}
@@ -313,18 +310,13 @@ export default function WritingPracticePage({ unit }: Props) {
                     submitted={isSubmitted}
                   />
                 ) : (
-                  <WritingPromptBlock
-                    unit={unit}
-                    exercise={ex}
-                    checked={isSubmitted}
-                  />
+                  <WritingPromptBlock unit={unit} exercise={ex} checked={isSubmitted} />
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Điều khiển chuyển trang */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
           <div className="flex gap-2">
             <button
@@ -348,7 +340,7 @@ export default function WritingPracticePage({ unit }: Props) {
           </div>
 
           <p className="text-[11px] text-gray-500">
-            Làm xong hãy bấm “Chấm điểm/Kiểm tra” để xem kết quả hoặc checklist.
+            MCQ/Điền từ: bấm “Chấm điểm”. Bài viết: bấm “Kiểm tra” để xem checklist.
           </p>
         </div>
       </section>
@@ -396,10 +388,7 @@ function MCQBlock({
           const isWrong = submitted && chosen && chosen !== q.correctOptionId;
 
           return (
-            <div
-              key={q.id}
-              className="rounded-lg border border-gray-200 bg-white p-3"
-            >
+            <div key={q.id} className="rounded-lg border border-gray-200 bg-white p-3">
               <div className="flex items-start gap-2">
                 <span className="mt-[2px] font-semibold text-gray-700">
                   {qIdx + 1}.
@@ -613,7 +602,7 @@ function DragBlankBlock({
 }
 
 /* =========================
- * WRITING PROMPT (textarea + cues + count)
+ * WRITING PROMPT BLOCK
  * ========================= */
 function WritingPromptBlock({
   unit,
@@ -635,7 +624,6 @@ function WritingPromptBlock({
 
   const min = exercise.minSentences;
   const max = exercise.maxSentences;
-
   const inRange =
     (min ? sentenceCount >= min : true) && (max ? sentenceCount <= max : true);
 
@@ -654,6 +642,7 @@ function WritingPromptBlock({
             {min ? ` / tối thiểu ${min}` : ""}
             {max ? ` (tối đa ${max})` : ""}
           </span>
+
           {checked && (
             <span
               className={[
@@ -705,7 +694,7 @@ function WritingPromptBlock({
             <div className="font-semibold mb-1">Checklist nhanh:</div>
             <ul className="list-disc pl-5 space-y-1">
               <li>Có câu chủ đề (topic sentence) mở đoạn.</li>
-              <li>Các câu bổ trợ làm rõ ý (supporting sentences).</li>
+              <li>Có câu bổ trợ làm rõ ý (supporting sentences).</li>
               <li>Có câu kết (concluding sentence) khái quát lại.</li>
             </ul>
           </div>
@@ -715,16 +704,18 @@ function WritingPromptBlock({
   );
 }
 
-/** ===== helpers ===== */
+/* =========================
+ * Helpers
+ * ========================= */
 function buildWritingStorageKey(unit: number, exerciseId: string) {
   return `writing_u${unit}_${exerciseId}`;
 }
 
-// Đếm câu tương đối theo dấu . ! ? (đủ tốt cho bài 8-10 câu)
 function countSentences(text: string) {
   const cleaned = text.trim();
   if (!cleaned) return 0;
 
+  // đếm câu tương đối theo dấu . ! ?
   const parts = cleaned
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
