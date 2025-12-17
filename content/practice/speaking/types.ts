@@ -50,6 +50,7 @@ export type SpeakingLesson = {
   titleEn: string;
   descriptionEn?: string;
   descriptionVi?: string;
+  youtubeId?: string;
 
   theory?: SpeakingTheoryBlock[];
   exercises: SpeakingExercisePage[];
