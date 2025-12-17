@@ -36,32 +36,24 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
   const toggleTheory = (id: string) => {
     setExpandedTheory((prev) => ({ ...prev, [id]: !prev[id] }));
   };
-{/* ========== VIDEO (NHÚNG) ========== */}
-{lesson.youtubeId && (
-  <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
-    <h2 className="text-lg font-semibold">
-      Video luyện nghe/nói (Unit {lesson.unit})
-    </h2>
 
-    <div className="aspect-video w-full rounded-xl overflow-hidden shadow border border-gray-200 bg-black">
-      <iframe
-        src={buildYoutubeEmbed(lesson.youtubeId)}
-        title="YouTube video"
-        className="w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-      />
-    </div>
-  </section>
-)}
+  // Cho phép truyền vào youtubeId hoặc full URL
+  const buildYoutubeEmbed = (youtube: string) => {
+    const match =
+      youtube.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{6,})/) || [];
+    const id = match[1] || youtube;
+    return `https://www.youtube.com/embed/${id}`;
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
-      {/* HEADER */}
+      {/* ========== HEADER / THÔNG TIN BÀI NÓI ========== */}
       <section className="relative rounded-2xl overflow-hidden shadow-lg border border-emerald-300">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/speaking-bg.jpg')" }}
+          style={{
+            backgroundImage: "url('/images/speaking-bg.jpg')",
+          }}
         />
         <div className="relative bg-white/80 backdrop-blur px-6 py-6 space-y-4">
           <div className="text-sm font-semibold text-gray-600 mb-1">
@@ -94,7 +86,7 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
         </div>
       </section>
 
-      {/* THEORY */}
+      {/* ========== PHẦN LÝ THUYẾT NÓI ========== */}
       {lesson.theory && lesson.theory.length > 0 && (
         <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -135,6 +127,7 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
                           {block.contentVi}
                         </p>
                       )}
+
                       {block.items && block.items.length > 0 && (
                         <ul className="list-disc pl-5 space-y-1">
                           {block.items.map((it) => (
@@ -156,11 +149,31 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
         </section>
       )}
 
-      {/* PRACTICE */}
+      {/* ========== VIDEO YOUTUBE (NHÚNG TRƯỚC B. THỰC HÀNH) ========== */}
+      {lesson.youtubeId && (
+        <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Video tình huống</h2>
+
+          <div className="aspect-video w-full rounded-xl overflow-hidden shadow border border-gray-200 bg-black">
+            <iframe
+              src={buildYoutubeEmbed(lesson.youtubeId)}
+              title="YouTube video"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ========== PHẦN THỰC HÀNH NÓI ========== */}
       <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-6">
+        {/* Tiêu đề & hướng dẫn trang hiện tại */}
         <div>
           <div className="flex items-center justify-between gap-3 mb-2">
-            <h2 className="text-lg font-semibold">2. Luyện nói – {page.title}</h2>
+            <h2 className="text-lg font-semibold">
+              2. Luyện nói – {page.title}
+            </h2>
             <span className="text-xs text-gray-500">
               Trang {pageIndex + 1} / {lesson.exercises.length}
             </span>
@@ -171,12 +184,15 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
             {page.instructionVi && (
               <>
                 <br />
-                <span className="italic text-gray-500">{page.instructionVi}</span>
+                <span className="italic text-gray-500">
+                  {page.instructionVi}
+                </span>
               </>
             )}
           </p>
         </div>
 
+        {/* Danh sách câu hỏi luyện nói */}
         <div className="space-y-5">
           {page.questions.map((q: SpeakingQuestion, idx) => {
             const isOpen = !!showSamples[q.id];
@@ -196,7 +212,6 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
                     <div className="flex flex-col gap-1">
                       <p className="font-medium text-gray-900">{q.promptEn}</p>
 
-                      {/* Loa + mic + popup chấm % */}
                       <TTSPlay
                         text={expected}
                         expectedText={expected}
@@ -209,7 +224,9 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
                     </div>
 
                     {q.promptVi && (
-                      <p className="text-xs text-gray-600 italic">{q.promptVi}</p>
+                      <p className="text-xs text-gray-600 italic">
+                        {q.promptVi}
+                      </p>
                     )}
 
                     {q.structureHighlight && (
@@ -261,7 +278,7 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
           })}
         </div>
 
-        {/* PAGINATION */}
+        {/* Điều khiển chuyển trang */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
           <div className="flex gap-2">
             <button
