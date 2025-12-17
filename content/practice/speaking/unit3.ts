@@ -9,6 +9,12 @@ export const speakingUnit3: SpeakingLesson = {
   descriptionVi:
     "Học cách xây dựng một bài thuyết trình cá nhân về chương trình truyền hình với phần mở đầu, nội dung và kết thúc rõ ràng.",
 
+  /**
+   * Video YouTube nhúng hiển thị TRƯỚC phần B. Thực hành
+   * (không hiển thị link – chỉ iframe)
+   */
+  youtubeId: "1PMe4MPglYg",
+
   /* ===================== A. LÝ THUYẾT ===================== */
   theory: [
     {
@@ -67,10 +73,8 @@ export const speakingUnit3: SpeakingLesson = {
     {
       id: "ending",
       title: "Ending – Kết thúc bài thuyết trình",
-      contentEn:
-        "Finish your presentation politely and thank the audience.",
-      contentVi:
-        "Kết thúc bài thuyết trình một cách lịch sự và cảm ơn người nghe.",
+      contentEn: "Finish your presentation politely and thank the audience.",
+      contentVi: "Kết thúc bài thuyết trình một cách lịch sự và cảm ơn người nghe.",
       items: [
         {
           en: "That’s all for my presentation. Thank you for listening.",
@@ -116,11 +120,9 @@ export const speakingUnit3: SpeakingLesson = {
         {
           id: "u3-q3",
           promptEn: "It is from 8:00 to 9:00 on Friday evenings.",
-          promptVi:
-            "Chương trình phát sóng từ 8 giờ đến 9 giờ tối thứ Sáu.",
+          promptVi: "Chương trình phát sóng từ 8 giờ đến 9 giờ tối thứ Sáu.",
           sampleAnswerEn: "It is from 8:00 to 9:00 on Friday evenings.",
-          sampleAnswerVi:
-            "Chương trình phát sóng từ 8 giờ đến 9 giờ tối thứ Sáu.",
+          sampleAnswerVi: "Chương trình phát sóng từ 8 giờ đến 9 giờ tối thứ Sáu.",
         },
         {
           id: "u3-q4",
@@ -180,7 +182,7 @@ export const speakingUnit3: SpeakingLesson = {
       ],
     },
 
-    /* ---------- TASK 3: gợi ý HS tự thuyết trình ---------- */
+    /* ---------- TASK 3: HS tự thuyết trình theo dàn ý ---------- */
     {
       id: "u3-task3",
       title: "Task 3 – Prepare your own presentation about a TV show",
@@ -199,15 +201,12 @@ export const speakingUnit3: SpeakingLesson = {
         },
         {
           id: "u3-q10",
-          promptEn:
-            "Describe the type of show and when it is broadcast.",
-          promptVi:
-            "Mô tả thể loại chương trình và thời gian phát sóng.",
+          promptEn: "Describe the type of show and when it is broadcast.",
+          promptVi: "Mô tả thể loại chương trình và thời gian phát sóng.",
         },
         {
           id: "u3-q11",
-          promptEn:
-            "Explain the main rules or what happens in the show.",
+          promptEn: "Explain the main rules or what happens in the show.",
           promptVi: "Giải thích luật chơi hoặc nội dung chính của chương trình.",
         },
         {
@@ -219,8 +218,7 @@ export const speakingUnit3: SpeakingLesson = {
           id: "u3-q13",
           promptEn: "End your presentation politely and thank the audience.",
           promptVi: "Kết thúc bài thuyết trình và cảm ơn người nghe.",
-          tipEn:
-            "Use: That’s all for my presentation. Thank you for listening.",
+          tipEn: "Use: That’s all for my presentation. Thank you for listening.",
         },
       ],
     },
