@@ -1,17 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { getWritingByUnit } from "@/content/practice/writing/loader";
 import type {
   WritingLesson,
   WritingExercisePage,
   WritingTheoryBlock,
-  WritingExercise,
   MCQExercise,
   DragBlankExercise,
+  WritingPromptExercise,
+  WritingExercise,
 } from "@/content/practice/writing/types";
 
 type Props = { unit: number };
+
+/** ===== Type guards giúp TS hiểu union ===== */
+function isMCQ(ex: WritingExercise): ex is MCQExercise {
+  return ex.type === "mcq";
+}
+function isDragBlank(ex: WritingExercise): ex is DragBlankExercise {
+  return ex.type === "drag_blank";
+}
+function isWritingPrompt(ex: WritingExercise): ex is WritingPromptExercise {
+  return ex.type === "writing_prompt";
+}
 
 export default function WritingPracticePage({ unit }: Props) {
   const lesson = getWritingByUnit(unit) as WritingLesson | undefined;
@@ -21,12 +33,16 @@ export default function WritingPracticePage({ unit }: Props) {
     {}
   );
 
-  // state cho Practice
+  // MCQ: answers[questionId] = "A" | "B" | "C"
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
+
+  // Drag blank: dragAnswers[exerciseId][blankId] = word
   const [dragAnswers, setDragAnswers] = useState<
     Record<string, Record<string, string>>
   >({});
-  const [submitted, setSubmitted] = useState<Record<string, boolean>>({}); // exerciseId -> submitted?
+
+  // submitted[exerciseId] = true/false
+  const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
 
   if (!lesson) {
     return (
@@ -42,27 +58,40 @@ export default function WritingPracticePage({ unit }: Props) {
     setExpandedTheory((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   };
 
+  const setSubmittedFor = (exerciseId: string, value: boolean) => {
+    setSubmitted((prev) => ({ ...prev, [exerciseId]: value }));
+  };
+
   const resetExercise = (exerciseId: string) => {
-    setSubmitted((prev) => ({ ...prev, [exerciseId]: false }));
-    // reset theo type
+    setSubmittedFor(exerciseId, false);
+
     const ex = page.exercises.find((e) => e.id === exerciseId);
     if (!ex) return;
 
-    if (ex.type === "mcq") {
-      // xóa đáp án các câu thuộc exercise này
+    if (isMCQ(ex)) {
       setMcqAnswers((prev) => {
         const copy = { ...prev };
         ex.questions.forEach((q) => delete copy[q.id]);
         return copy;
       });
+      return;
     }
 
-    if (ex.type === "drag_blank") {
+    if (isDragBlank(ex)) {
       setDragAnswers((prev) => {
         const copy = { ...prev };
         delete copy[exerciseId];
         return copy;
       });
+      return;
+    }
+
+    if (isWritingPrompt(ex)) {
+      // xóa localStorage bài viết
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(buildWritingStorageKey(unit, ex.id));
+      }
+      return;
     }
   };
 
@@ -119,6 +148,7 @@ export default function WritingPracticePage({ unit }: Props) {
           <div className="space-y-3">
             {lesson.theory.map((block: WritingTheoryBlock) => {
               const isOpen = expandedTheory[block.id] ?? true;
+
               return (
                 <div
                   key={block.id}
@@ -254,26 +284,26 @@ export default function WritingPracticePage({ unit }: Props) {
                     >
                       Làm lại
                     </button>
+
+                    {/* writing_prompt không cần "chấm điểm" theo kiểu đúng/sai, nhưng vẫn cho nút để bật phần checklist */}
                     <button
                       type="button"
-                      onClick={() =>
-                        setSubmitted((prev) => ({ ...prev, [ex.id]: true }))
-                      }
+                      onClick={() => setSubmittedFor(ex.id, true)}
                       className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
                     >
-                      Chấm điểm
+                      {isWritingPrompt(ex) ? "Kiểm tra" : "Chấm điểm"}
                     </button>
                   </div>
                 </div>
 
-                {ex.type === "mcq" ? (
+                {isMCQ(ex) ? (
                   <MCQBlock
                     exercise={ex}
                     answers={mcqAnswers}
                     setAnswers={setMcqAnswers}
                     submitted={isSubmitted}
                   />
-                ) : (
+                ) : isDragBlank(ex) ? (
                   <DragBlankBlock
                     exercise={ex}
                     answers={dragAnswers[ex.id] ?? {}}
@@ -281,6 +311,12 @@ export default function WritingPracticePage({ unit }: Props) {
                       setDragAnswers((prev) => ({ ...prev, [ex.id]: next }))
                     }
                     submitted={isSubmitted}
+                  />
+                ) : (
+                  <WritingPromptBlock
+                    unit={unit}
+                    exercise={ex}
+                    checked={isSubmitted}
                   />
                 )}
               </div>
@@ -312,7 +348,7 @@ export default function WritingPracticePage({ unit }: Props) {
           </div>
 
           <p className="text-[11px] text-gray-500">
-            Làm xong hãy bấm “Chấm điểm” để xem đáp án và giải thích.
+            Làm xong hãy bấm “Chấm điểm/Kiểm tra” để xem kết quả hoặc checklist.
           </p>
         </div>
       </section>
@@ -360,11 +396,15 @@ function MCQBlock({
           const isWrong = submitted && chosen && chosen !== q.correctOptionId;
 
           return (
-            <div key={q.id} className="rounded-lg border border-gray-200 bg-white p-3">
+            <div
+              key={q.id}
+              className="rounded-lg border border-gray-200 bg-white p-3"
+            >
               <div className="flex items-start gap-2">
                 <span className="mt-[2px] font-semibold text-gray-700">
                   {qIdx + 1}.
                 </span>
+
                 <div className="flex-1 space-y-2">
                   <p className="font-medium text-gray-900">{q.prompt}</p>
 
@@ -375,10 +415,8 @@ function MCQBlock({
                       const showWrongPick =
                         submitted && checked && op.id !== q.correctOptionId;
 
-                      const base =
-                        "flex items-start gap-2 rounded border px-3 py-2 text-sm cursor-pointer";
                       const cls = [
-                        base,
+                        "flex items-start gap-2 rounded border px-3 py-2 text-sm cursor-pointer",
                         "bg-white hover:bg-gray-50 border-gray-200",
                         checked ? "ring-1 ring-gray-300" : "",
                         showCorrect ? "border-emerald-300 bg-emerald-50/60" : "",
@@ -446,7 +484,7 @@ function DragBlankBlock({
   submitted,
 }: {
   exercise: DragBlankExercise;
-  answers: Record<string, string>; // blankId -> word
+  answers: Record<string, string>;
   setAnswers: (next: Record<string, string>) => void;
   submitted: boolean;
 }) {
@@ -483,7 +521,6 @@ function DragBlankBlock({
         </div>
       )}
 
-      {/* Sentence with blanks */}
       <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm leading-relaxed">
         {exercise.sentenceParts.map((part, idx) => {
           if (typeof part === "string") return <span key={idx}>{part}</span>;
@@ -497,7 +534,9 @@ function DragBlankBlock({
 
           const cls = [
             "inline-flex items-center justify-center mx-1 px-3 py-1 rounded-full border text-xs select-none",
-            filled ? "bg-gray-50 border-gray-300 cursor-pointer" : "bg-white border-dashed border-gray-400",
+            filled
+              ? "bg-gray-50 border-gray-300 cursor-pointer"
+              : "bg-white border-dashed border-gray-400",
             showCorrect ? "bg-emerald-50 border-emerald-300" : "",
             showWrong ? "bg-rose-50 border-rose-300" : "",
           ].join(" ");
@@ -521,7 +560,6 @@ function DragBlankBlock({
         })}
       </div>
 
-      {/* Word bank */}
       <div className="flex flex-wrap gap-2">
         {exercise.wordBank.map((w) => {
           const disabled = usedWords.has(w);
@@ -532,7 +570,9 @@ function DragBlankBlock({
               onDragStart={(e) => e.dataTransfer.setData("text/plain", w)}
               className={[
                 "px-3 py-1 rounded-full border text-xs bg-white",
-                disabled ? "opacity-40 cursor-not-allowed" : "cursor-grab hover:bg-gray-50",
+                disabled
+                  ? "opacity-40 cursor-not-allowed"
+                  : "cursor-grab hover:bg-gray-50",
               ].join(" ")}
               title={disabled ? "Đã dùng" : "Kéo thả"}
             >
@@ -570,4 +610,125 @@ function DragBlankBlock({
       )}
     </div>
   );
+}
+
+/* =========================
+ * WRITING PROMPT (textarea + cues + count)
+ * ========================= */
+function WritingPromptBlock({
+  unit,
+  exercise,
+  checked,
+}: {
+  unit: number;
+  exercise: WritingPromptExercise;
+  checked: boolean;
+}) {
+  const storageKey = buildWritingStorageKey(unit, exercise.id);
+
+  const [text, setText] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(storageKey) ?? "";
+  });
+
+  const sentenceCount = useMemo(() => countSentences(text), [text]);
+
+  const min = exercise.minSentences;
+  const max = exercise.maxSentences;
+
+  const inRange =
+    (min ? sentenceCount >= min : true) && (max ? sentenceCount <= max : true);
+
+  const save = () => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(storageKey, text);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-xs text-gray-700">
+          Số câu:{" "}
+          <span className="font-semibold">
+            {sentenceCount}
+            {min ? ` / tối thiểu ${min}` : ""}
+            {max ? ` (tối đa ${max})` : ""}
+          </span>
+          {checked && (
+            <span
+              className={[
+                "ml-2 font-semibold",
+                inRange ? "text-emerald-700" : "text-rose-700",
+              ].join(" ")}
+            >
+              {inRange ? "(Đạt yêu cầu)" : "(Chưa đạt yêu cầu)"}
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={save}
+          className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
+        >
+          Lưu bài
+        </button>
+      </div>
+
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        placeholder="Write your paragraph here..."
+        className="w-full min-h-[180px] rounded-xl border border-gray-200 bg-white p-3 text-sm outline-none focus:ring-1 focus:ring-sky-300"
+      />
+
+      <div className="rounded-xl border border-gray-200 bg-white p-3">
+        <div className="text-sm font-semibold text-gray-800 mb-2">
+          Câu hỏi gợi ý (Cues)
+        </div>
+
+        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
+          {exercise.cues.map((c, i) => (
+            <li key={i}>{c}</li>
+          ))}
+        </ul>
+
+        {exercise.noteVi && (
+          <div className="mt-3 text-xs text-gray-600 italic">
+            {exercise.noteVi}
+          </div>
+        )}
+
+        {checked && (
+          <div className="mt-3 text-xs text-gray-700">
+            <div className="font-semibold mb-1">Checklist nhanh:</div>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Có câu chủ đề (topic sentence) mở đoạn.</li>
+              <li>Các câu bổ trợ làm rõ ý (supporting sentences).</li>
+              <li>Có câu kết (concluding sentence) khái quát lại.</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** ===== helpers ===== */
+function buildWritingStorageKey(unit: number, exerciseId: string) {
+  return `writing_u${unit}_${exerciseId}`;
+}
+
+// Đếm câu tương đối theo dấu . ! ? (đủ tốt cho bài 8-10 câu)
+function countSentences(text: string) {
+  const cleaned = text.trim();
+  if (!cleaned) return 0;
+
+  const parts = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return parts.length;
 }
