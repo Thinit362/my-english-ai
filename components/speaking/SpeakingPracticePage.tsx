@@ -36,6 +36,24 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
   const toggleTheory = (id: string) => {
     setExpandedTheory((prev) => ({ ...prev, [id]: !prev[id] }));
   };
+{/* ========== VIDEO (NHÚNG) ========== */}
+{lesson.youtubeId && (
+  <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
+    <h2 className="text-lg font-semibold">
+      Video luyện nghe/nói (Unit {lesson.unit})
+    </h2>
+
+    <div className="aspect-video w-full rounded-xl overflow-hidden shadow border border-gray-200 bg-black">
+      <iframe
+        src={buildYoutubeEmbed(lesson.youtubeId)}
+        title="YouTube video"
+        className="w-full h-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    </div>
+  </section>
+)}
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
