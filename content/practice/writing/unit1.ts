@@ -1,4 +1,4 @@
-// content/practice/writing/unit1.ts
+// content/practice/writing/unit1.ts Bài 1
 import type { WritingLesson } from "./types";
 
 export const writingUnit1: WritingLesson = {
