@@ -35,7 +35,7 @@ export type WritingExercisePage = {
   exercises: WritingExercise[];
 };
 
-export type WritingExercise = MCQExercise | DragBlankExercise;
+export type WritingExercise = MCQExercise | DragBlankExercise | WritingPromptExercise;
 
 export type MCQExercise = {
   type: "mcq";
@@ -61,4 +61,16 @@ export type DragBlankExercise = {
   wordBank: string[];
   correctAnswers: Record<string, string>; // blankId -> word
   explanation?: string;
+};
+export type WritingPromptExercise = {
+  type: "writing_prompt";
+  id: string;
+  title: string;
+  description?: string;
+
+  minSentences?: number;
+  maxSentences?: number;
+
+  cues: string[];
+  noteVi?: string;
 };
