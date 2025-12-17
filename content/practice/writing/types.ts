@@ -1,3 +1,4 @@
+//content/practice/writing/types.ts
 export type WritingLesson = {
   unit: number;
   topicVi: string;
