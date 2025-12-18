@@ -6,23 +6,19 @@ import type {
   WritingLesson,
   WritingExercisePage,
   WritingTheoryBlock,
-  WritingExercise,
-  MCQExercise,
-  DragBlankExercise,
   WritingPromptExercise,
+  WritingExercise,
 } from "@/content/practice/writing/types";
 
 type Props = { unit: number };
 
-/* =========================
- * Type Guards
- * ========================= */
-function isMCQ(ex: WritingExercise): ex is MCQExercise {
-  return ex.type === "mcq";
-}
-function isDragBlank(ex: WritingExercise): ex is DragBlankExercise {
-  return ex.type === "drag_blank";
-}
+type Rubric = {
+  taskFulfillment: number; // 0-10
+  organization: number; // 0-10
+  grammarVocabulary: number; // 0-10
+  coherence: number; // 0-10
+};
+
 function isWritingPrompt(ex: WritingExercise): ex is WritingPromptExercise {
   return ex.type === "writing_prompt";
 }
@@ -30,21 +26,15 @@ function isWritingPrompt(ex: WritingExercise): ex is WritingPromptExercise {
 export default function WritingPracticePage({ unit }: Props) {
   const lesson = getWritingByUnit(unit) as WritingLesson | undefined;
 
-  const [pageIndex, setPageIndex] = useState(0);
   const [expandedTheory, setExpandedTheory] = useState<Record<string, boolean>>(
     {}
   );
 
-  // MCQ: answers[questionId] = "A" | "B" | "C"
-  const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
-
-  // Drag blank: dragAnswers[exerciseId][blankId] = word
-  const [dragAnswers, setDragAnswers] = useState<
-    Record<string, Record<string, string>>
-  >({});
-
-  // submitted[exerciseId] = true/false
-  const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
+  // Ở trang “Luyện viết” kiểu này: ưu tiên lấy bài writing_prompt đầu tiên trong unit
+  const firstPrompt = useMemo(() => {
+    const all = lesson?.exercises?.flatMap((p) => p.exercises) ?? [];
+    return all.find(isWritingPrompt);
+  }, [lesson]);
 
   if (!lesson) {
     return (
@@ -54,51 +44,13 @@ export default function WritingPracticePage({ unit }: Props) {
     );
   }
 
-  const page: WritingExercisePage = lesson.exercises[pageIndex];
-
   const toggleTheory = (id: string) => {
     setExpandedTheory((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   };
 
-  const setSubmittedFor = (exerciseId: string, value: boolean) => {
-    setSubmitted((prev) => ({ ...prev, [exerciseId]: value }));
-  };
-
-  const resetExercise = (exerciseId: string) => {
-    setSubmittedFor(exerciseId, false);
-
-    const ex = page.exercises.find((e) => e.id === exerciseId);
-    if (!ex) return;
-
-    if (isMCQ(ex)) {
-      setMcqAnswers((prev) => {
-        const copy = { ...prev };
-        ex.questions.forEach((q) => delete copy[q.id]);
-        return copy;
-      });
-      return;
-    }
-
-    if (isDragBlank(ex)) {
-      setDragAnswers((prev) => {
-        const copy = { ...prev };
-        delete copy[exerciseId];
-        return copy;
-      });
-      return;
-    }
-
-    if (isWritingPrompt(ex)) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(buildWritingStorageKey(unit, ex.id));
-      }
-      return;
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
-      {/* ========== HEADER / THÔNG TIN BÀI VIẾT ========== */}
+      {/* ========== HEADER ========== */}
       <section className="relative rounded-2xl overflow-hidden shadow-lg border border-sky-300">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -129,17 +81,18 @@ export default function WritingPracticePage({ unit }: Props) {
           )}
 
           <p className="text-xs md:text-sm text-center text-gray-600">
-            Gợi ý: Đọc lý thuyết → làm bài tập → bấm “Chấm điểm/Kiểm tra”.
+            Quy trình: Đọc lý thuyết → Viết bài → Dùng “Giáo viên AI” để nhận góp ý
+            (không viết hộ) → chỉnh sửa và viết lại.
           </p>
         </div>
       </section>
 
-      {/* ========== PHẦN LÝ THUYẾT VIẾT ========== */}
+      {/* ========== 1. LÝ THUYẾT ========== */}
       {lesson.theory && lesson.theory.length > 0 && (
         <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">
-              1. Lý thuyết & cấu trúc viết cần nhớ
+              1. Lý thuyết & cấu trúc viết theo chủ đề
             </h2>
             <span className="text-xs text-gray-500">
               {lesson.theory.length} khối nội dung
@@ -232,446 +185,202 @@ export default function WritingPracticePage({ unit }: Props) {
         </section>
       )}
 
-      {/* ========== PHẦN THỰC HÀNH VIẾT ========== */}
+      {/* ========== 2. LUYỆN VIẾT + GEMINI ========== */}
       <section className="bg-white rounded-2xl shadow border border-gray-200 p-6 space-y-6">
-        <div>
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <h2 className="text-lg font-semibold">2. Luyện viết – {page.title}</h2>
-            <span className="text-xs text-gray-500">
-              Trang {pageIndex + 1} / {lesson.exercises.length}
-            </span>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">2. Luyện viết</h2>
+            <p className="text-sm text-gray-700 mt-1">
+              Viết theo đúng chủ đề Unit. Sau đó dùng “Giáo viên AI Gemini” để nhận
+              nhận xét theo cấu trúc đoạn văn (Topic/Supporting/Concluding).
+            </p>
           </div>
-
-          <p className="text-sm text-gray-800">
-            {page.instructionEn}
-            {page.instructionVi && (
-              <>
-                <br />
-                <span className="italic text-gray-500">{page.instructionVi}</span>
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className="space-y-5">
-          {page.exercises.map((ex, idx) => {
-            const isSubmitted = submitted[ex.id] ?? false;
-
-            return (
-              <div
-                key={ex.id}
-                className="rounded-lg border border-gray-200 p-4 bg-gray-50 space-y-3"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-700">
-                      {idx + 1}. {ex.title}
-                    </div>
-                    {ex.description && (
-                      <div className="text-xs text-gray-600 mt-1 italic">
-                        {ex.description}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => resetExercise(ex.id)}
-                      className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
-                    >
-                      Làm lại
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSubmittedFor(ex.id, true)}
-                      className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
-                    >
-                      {isWritingPrompt(ex) ? "Kiểm tra" : "Chấm điểm"}
-                    </button>
-                  </div>
-                </div>
-
-                {isMCQ(ex) ? (
-                  <MCQBlock
-                    exercise={ex}
-                    answers={mcqAnswers}
-                    setAnswers={setMcqAnswers}
-                    submitted={isSubmitted}
-                  />
-                ) : isDragBlank(ex) ? (
-                  <DragBlankBlock
-                    exercise={ex}
-                    answers={dragAnswers[ex.id] ?? {}}
-                    setAnswers={(next) =>
-                      setDragAnswers((prev) => ({ ...prev, [ex.id]: next }))
-                    }
-                    submitted={isSubmitted}
-                  />
-                ) : (
-                  <WritingPromptBlock unit={unit} exercise={ex} checked={isSubmitted} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
-              disabled={pageIndex === 0}
-              className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
-            >
-              ⬅ Trang trước
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setPageIndex((i) => Math.min(lesson.exercises.length - 1, i + 1))
-              }
-              disabled={pageIndex === lesson.exercises.length - 1}
-              className="px-4 py-2 rounded border text-sm bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
-            >
-              Trang sau ➜
-            </button>
+          <div className="text-[11px] text-gray-500 text-right">
+            AI chỉ gợi ý & sửa tối thiểu<br />
+            (không viết hộ)
           </div>
-
-          <p className="text-[11px] text-gray-500">
-            MCQ/Điền từ: bấm “Chấm điểm”. Bài viết: bấm “Kiểm tra” để xem checklist.
-          </p>
         </div>
+
+        {!firstPrompt ? (
+          <div className="text-sm text-gray-700">
+            Unit này chưa có bài luyện viết dạng Writing Prompt.
+          </div>
+        ) : (
+          <WritingPromptWithGemini
+            unit={unit}
+            lessonTitleEn={lesson.titleEn}
+            lessonTopicVi={lesson.topicVi}
+            exercise={firstPrompt}
+          />
+        )}
       </section>
     </div>
   );
 }
 
 /* =========================
- * MCQ BLOCK
+ * Writing Prompt + Gemini Coach + Rubric
  * ========================= */
-function MCQBlock({
-  exercise,
-  answers,
-  setAnswers,
-  submitted,
-}: {
-  exercise: MCQExercise;
-  answers: Record<string, string>;
-  setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  submitted: boolean;
-}) {
-  const score = useMemo(() => {
-    let correct = 0;
-    for (const q of exercise.questions) {
-      if (answers[q.id] && answers[q.id] === q.correctOptionId) correct++;
-    }
-    return { correct, total: exercise.questions.length };
-  }, [answers, exercise.questions]);
-
-  return (
-    <div className="space-y-4">
-      {submitted && (
-        <div className="text-xs text-gray-700">
-          Kết quả:{" "}
-          <span className="font-semibold">
-            {score.correct}/{score.total}
-          </span>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {exercise.questions.map((q, qIdx) => {
-          const chosen = answers[q.id];
-          const isCorrect = submitted && chosen === q.correctOptionId;
-          const isWrong = submitted && chosen && chosen !== q.correctOptionId;
-
-          return (
-            <div key={q.id} className="rounded-lg border border-gray-200 bg-white p-3">
-              <div className="flex items-start gap-2">
-                <span className="mt-[2px] font-semibold text-gray-700">
-                  {qIdx + 1}.
-                </span>
-
-                <div className="flex-1 space-y-2">
-                  <p className="font-medium text-gray-900">{q.prompt}</p>
-
-                  <div className="space-y-2">
-                    {q.options.map((op) => {
-                      const checked = chosen === op.id;
-                      const showCorrect = submitted && op.id === q.correctOptionId;
-                      const showWrongPick =
-                        submitted && checked && op.id !== q.correctOptionId;
-
-                      const cls = [
-                        "flex items-start gap-2 rounded border px-3 py-2 text-sm cursor-pointer",
-                        "bg-white hover:bg-gray-50 border-gray-200",
-                        checked ? "ring-1 ring-gray-300" : "",
-                        showCorrect ? "border-emerald-300 bg-emerald-50/60" : "",
-                        showWrongPick ? "border-rose-300 bg-rose-50/60" : "",
-                      ].join(" ");
-
-                      return (
-                        <label key={op.id} className={cls}>
-                          <input
-                            type="radio"
-                            name={q.id}
-                            checked={checked}
-                            onChange={() =>
-                              setAnswers((prev) => ({ ...prev, [q.id]: op.id }))
-                            }
-                            className="mt-1"
-                          />
-                          <span className="text-gray-900">
-                            <span className="font-semibold">{op.id}.</span>{" "}
-                            {op.text}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-
-                  {submitted && (
-                    <div className="text-xs">
-                      {isCorrect ? (
-                        <div className="text-emerald-700 font-semibold">✅ Đúng</div>
-                      ) : isWrong ? (
-                        <div className="text-rose-700 font-semibold">
-                          ❌ Sai — Đáp án đúng: {q.correctOptionId}
-                        </div>
-                      ) : (
-                        <div className="text-amber-700 font-semibold">
-                          ⚠️ Bạn chưa chọn đáp án
-                        </div>
-                      )}
-
-                      {q.explanation && (
-                        <div className="mt-1 text-gray-600 italic">
-                          {q.explanation}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* =========================
- * DRAG & DROP FILL BLANK BLOCK
- * ========================= */
-function DragBlankBlock({
-  exercise,
-  answers,
-  setAnswers,
-  submitted,
-}: {
-  exercise: DragBlankExercise;
-  answers: Record<string, string>;
-  setAnswers: (next: Record<string, string>) => void;
-  submitted: boolean;
-}) {
-  const usedWords = useMemo(() => new Set(Object.values(answers)), [answers]);
-
-  const totalBlanks = Object.keys(exercise.correctAnswers).length;
-  const correctCount = useMemo(() => {
-    let ok = 0;
-    for (const blankId of Object.keys(exercise.correctAnswers)) {
-      if (answers[blankId] && answers[blankId] === exercise.correctAnswers[blankId])
-        ok++;
-    }
-    return ok;
-  }, [answers, exercise.correctAnswers]);
-
-  const onDropWord = (blankId: string, word: string) => {
-    setAnswers({ ...answers, [blankId]: word });
-  };
-
-  const removeWord = (blankId: string) => {
-    const copy = { ...answers };
-    delete copy[blankId];
-    setAnswers(copy);
-  };
-
-  return (
-    <div className="space-y-3">
-      {submitted && (
-        <div className="text-xs text-gray-700">
-          Kết quả:{" "}
-          <span className="font-semibold">
-            {correctCount}/{totalBlanks}
-          </span>
-        </div>
-      )}
-
-      <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm leading-relaxed">
-        {exercise.sentenceParts.map((part, idx) => {
-          if (typeof part === "string") return <span key={idx}>{part}</span>;
-
-          const blankId = part.blankId;
-          const filled = answers[blankId];
-          const correct = exercise.correctAnswers[blankId];
-
-          const showCorrect = submitted && filled && filled === correct;
-          const showWrong = submitted && filled && filled !== correct;
-
-          const cls = [
-            "inline-flex items-center justify-center mx-1 px-3 py-1 rounded-full border text-xs select-none",
-            filled
-              ? "bg-gray-50 border-gray-300 cursor-pointer"
-              : "bg-white border-dashed border-gray-400",
-            showCorrect ? "bg-emerald-50 border-emerald-300" : "",
-            showWrong ? "bg-rose-50 border-rose-300" : "",
-          ].join(" ");
-
-          return (
-            <span
-              key={idx}
-              className={cls}
-              title={filled ? "Bấm để xóa" : "Kéo từ vào đây"}
-              onClick={() => (filled ? removeWord(blankId) : undefined)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const word = e.dataTransfer.getData("text/plain");
-                if (word) onDropWord(blankId, word);
-              }}
-            >
-              {filled ?? "______"}
-            </span>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {exercise.wordBank.map((w) => {
-          const disabled = usedWords.has(w);
-          return (
-            <span
-              key={w}
-              draggable={!disabled}
-              onDragStart={(e) => e.dataTransfer.setData("text/plain", w)}
-              className={[
-                "px-3 py-1 rounded-full border text-xs bg-white",
-                disabled
-                  ? "opacity-40 cursor-not-allowed"
-                  : "cursor-grab hover:bg-gray-50",
-              ].join(" ")}
-              title={disabled ? "Đã dùng" : "Kéo thả"}
-            >
-              {w}
-            </span>
-          );
-        })}
-      </div>
-
-      {submitted && (
-        <div className="text-xs space-y-1">
-          {Object.keys(exercise.correctAnswers).map((blankId) => {
-            const filled = answers[blankId];
-            const correct = exercise.correctAnswers[blankId];
-            const ok = filled === correct;
-
-            return (
-              <div
-                key={blankId}
-                className={ok ? "text-emerald-700" : "text-rose-700"}
-              >
-                {ok ? "✅" : "❌"} Ô {blankId}:{" "}
-                <span className="font-semibold">
-                  {filled ? filled : "(chưa điền)"}
-                </span>{" "}
-                → Đúng: <span className="font-semibold">{correct}</span>
-              </div>
-            );
-          })}
-
-          {exercise.explanation && (
-            <div className="text-gray-600 italic mt-1">{exercise.explanation}</div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* =========================
- * WRITING PROMPT BLOCK
- * ========================= */
-function WritingPromptBlock({
+function WritingPromptWithGemini({
   unit,
+  lessonTitleEn,
+  lessonTopicVi,
   exercise,
-  checked,
 }: {
   unit: number;
+  lessonTitleEn: string;
+  lessonTopicVi: string;
   exercise: WritingPromptExercise;
-  checked: boolean;
 }) {
-  const storageKey = buildWritingStorageKey(unit, exercise.id);
+  const writingKey = buildWritingStorageKey(unit, exercise.id);
+  const feedbackKey = buildGeminiFeedbackKey(unit, exercise.id);
+  const rubricKey = buildGeminiRubricKey(unit, exercise.id);
 
   const [text, setText] = useState<string>(() => {
     if (typeof window === "undefined") return "";
-    return localStorage.getItem(storageKey) ?? "";
+    return localStorage.getItem(writingKey) ?? "";
+  });
+
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(feedbackKey) ?? "";
+  });
+
+  const [aiRubric, setAiRubric] = useState<Rubric | null>(() => {
+    if (typeof window === "undefined") return null;
+    const saved = localStorage.getItem(rubricKey);
+    return saved ? (JSON.parse(saved) as Rubric) : null;
   });
 
   const sentenceCount = useMemo(() => countSentences(text), [text]);
-
   const min = exercise.minSentences;
   const max = exercise.maxSentences;
+
   const inRange =
     (min ? sentenceCount >= min : true) && (max ? sentenceCount <= max : true);
 
-  const save = () => {
+  const saveWriting = () => {
     if (typeof window === "undefined") return;
-    localStorage.setItem(storageKey, text);
+    localStorage.setItem(writingKey, text);
   };
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-gray-700">
-          Số câu:{" "}
-          <span className="font-semibold">
-            {sentenceCount}
-            {min ? ` / tối thiểu ${min}` : ""}
-            {max ? ` (tối đa ${max})` : ""}
-          </span>
+  const clearAll = () => {
+    setText("");
+    setAiFeedback("");
+    setAiRubric(null);
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(writingKey);
+    localStorage.removeItem(feedbackKey);
+    localStorage.removeItem(rubricKey);
+  };
 
-          {checked && (
-            <span
-              className={[
-                "ml-2 font-semibold",
-                inRange ? "text-emerald-700" : "text-rose-700",
-              ].join(" ")}
-            >
-              {inRange ? "(Đạt yêu cầu)" : "(Chưa đạt yêu cầu)"}
-            </span>
+  const saveFeedback = (val: string) => {
+    setAiFeedback(val);
+    if (typeof window === "undefined") return;
+    if (!val) localStorage.removeItem(feedbackKey);
+    else localStorage.setItem(feedbackKey, val);
+  };
+
+  const saveRubric = (r: Rubric | null) => {
+    setAiRubric(r);
+    if (typeof window === "undefined") return;
+    if (!r) localStorage.removeItem(rubricKey);
+    else localStorage.setItem(rubricKey, JSON.stringify(r));
+  };
+
+  async function getGeminiTeacherFeedback() {
+    setAiLoading(true);
+    saveFeedback("");
+    saveRubric(null);
+
+    try {
+      const res = await fetch("/api/gemini/writing-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          unit,
+          topic: `${lessonTitleEn} • ${lessonTopicVi}`,
+          pageTitle: "Writing Practice",
+          exerciseTitle: exercise.title,
+          cues: exercise.cues,
+          studentText: text,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Gemini error");
+
+      saveRubric(data.rubric ?? null);
+      saveFeedback(data.feedbackText || "");
+    } catch (err: any) {
+      saveFeedback(`❌ Lỗi: ${err?.message ?? String(err)}`);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Title + controls */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-gray-800">
+            {exercise.title}
+          </div>
+          {exercise.description && (
+            <div className="text-xs text-gray-600 mt-1 italic">
+              {exercise.description}
+            </div>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={save}
-          className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
-        >
-          Lưu bài
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={clearAll}
+            className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
+          >
+            Làm lại
+          </button>
+          <button
+            type="button"
+            onClick={saveWriting}
+            className="px-3 py-1 rounded border text-xs bg-white hover:bg-gray-50"
+          >
+            Lưu bài
+          </button>
+        </div>
       </div>
 
+      {/* Sentence counter */}
+      <div className="text-xs text-gray-700">
+        Số câu:{" "}
+        <span className="font-semibold">
+          {sentenceCount}
+          {min ? ` / tối thiểu ${min}` : ""}
+          {max ? ` (tối đa ${max})` : ""}
+        </span>
+        <span
+          className={[
+            "ml-2 font-semibold",
+            inRange ? "text-emerald-700" : "text-rose-700",
+          ].join(" ")}
+        >
+          {inRange ? "(Đạt yêu cầu)" : "(Chưa đạt yêu cầu)"}
+        </span>
+      </div>
+
+      {/* Textarea */}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onBlur={save}
+        onBlur={saveWriting}
         placeholder="Write your paragraph here..."
-        className="w-full min-h-[180px] rounded-xl border border-gray-200 bg-white p-3 text-sm outline-none focus:ring-1 focus:ring-sky-300"
+        className="w-full min-h-[200px] rounded-xl border border-gray-200 bg-white p-3 text-sm outline-none focus:ring-1 focus:ring-sky-300"
       />
 
+      {/* Cues */}
       <div className="rounded-xl border border-gray-200 bg-white p-3">
         <div className="text-sm font-semibold text-gray-800 mb-2">
           Câu hỏi gợi ý (Cues)
@@ -684,21 +393,123 @@ function WritingPromptBlock({
         </ul>
 
         {exercise.noteVi && (
-          <div className="mt-3 text-xs text-gray-600 italic">
-            {exercise.noteVi}
-          </div>
+          <div className="mt-3 text-xs text-gray-600 italic">{exercise.noteVi}</div>
         )}
 
-        {checked && (
-          <div className="mt-3 text-xs text-gray-700">
-            <div className="font-semibold mb-1">Checklist nhanh:</div>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Có câu chủ đề (topic sentence) mở đoạn.</li>
-              <li>Có câu bổ trợ làm rõ ý (supporting sentences).</li>
-              <li>Có câu kết (concluding sentence) khái quát lại.</li>
-            </ul>
+        <div className="mt-3 text-xs text-gray-700">
+          <div className="font-semibold mb-1">Checklist đoạn văn:</div>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><b>Topic sentence</b>: mở đoạn, giới thiệu chủ đề & ý chính.</li>
+            <li><b>Supporting sentences</b>: ví dụ/chi tiết làm rõ ý.</li>
+            <li><b>Concluding sentence</b>: khái quát lại / diễn đạt lại ý.</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Gemini Teacher */}
+      <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-sky-900">
+            👩‍🏫 Giáo viên AI Gemini – kiểm tra & góp ý
+          </div>
+          <div className="text-[11px] text-gray-600 text-right">
+            Không viết hộ · Gợi ý tối đa 1–2 câu
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={getGeminiTeacherFeedback}
+            disabled={aiLoading || text.trim().length === 0}
+            className="px-3 py-2 rounded-lg border text-xs bg-white hover:bg-gray-50 disabled:opacity-50"
+            title={text.trim().length === 0 ? "Bạn hãy viết vài câu trước" : ""}
+          >
+            {aiLoading ? "Đang chấm & góp ý..." : "GV AI kiểm tra & gợi ý"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              saveFeedback("");
+              saveRubric(null);
+            }}
+            className="px-3 py-2 rounded-lg border text-xs bg-white hover:bg-gray-50"
+          >
+            Xóa góp ý
+          </button>
+        </div>
+
+        {aiRubric && <RubricMini rubric={aiRubric} />}
+
+        {aiFeedback ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm whitespace-pre-wrap leading-relaxed">
+            {aiFeedback}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-600">
+            Viết xong bài → bấm “GV AI kiểm tra & gợi ý”.
+            Gemini sẽ chấm rubric (4 tiêu chí) + chỉ lỗi + giải thích + gợi ý 1–2 câu
+            chuẩn hơn + hướng dẫn theo Topic/Supporting/Concluding.
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+ * Rubric Mini UI
+ * ========================= */
+function RubricMini({ rubric }: { rubric: Rubric }) {
+  const rows = [
+    { key: "taskFulfillment", label: "Task fulfillment" },
+    { key: "organization", label: "Organization" },
+    { key: "grammarVocabulary", label: "Grammar & Vocabulary" },
+    { key: "coherence", label: "Coherence" },
+  ] as const;
+
+  const total =
+    rubric.taskFulfillment +
+    rubric.organization +
+    rubric.grammarVocabulary +
+    rubric.coherence;
+
+  const avg = Math.round((total / 4) * 10) / 10; // x.y /10
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-semibold text-gray-800">Rubric mini</div>
+        <div className="text-xs text-gray-600">
+          Trung bình: <span className="font-semibold">{avg}/10</span>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((r) => {
+          const score = rubric[r.key];
+          const pct = Math.max(0, Math.min(100, score * 10));
+
+          return (
+            <div key={r.key} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-700 font-medium">{r.label}</span>
+                <span className="text-gray-700">
+                  <span className="font-semibold">{score}</span>/10
+                </span>
+              </div>
+
+              <div className="w-full h-2 rounded-full bg-gray-100 border border-gray-200 overflow-hidden">
+                <div className="h-full bg-sky-400" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="text-[11px] text-gray-500">
+        * Rubric giúp tự đánh giá. AI không viết hộ, chỉ gợi ý & sửa tối thiểu.
       </div>
     </div>
   );
@@ -709,6 +520,12 @@ function WritingPromptBlock({
  * ========================= */
 function buildWritingStorageKey(unit: number, exerciseId: string) {
   return `writing_u${unit}_${exerciseId}`;
+}
+function buildGeminiFeedbackKey(unit: number, exerciseId: string) {
+  return `writing_u${unit}_${exerciseId}_gemini_feedback`;
+}
+function buildGeminiRubricKey(unit: number, exerciseId: string) {
+  return `writing_u${unit}_${exerciseId}_gemini_rubric`;
 }
 
 function countSentences(text: string) {
