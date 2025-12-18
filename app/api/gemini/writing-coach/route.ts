@@ -17,7 +17,6 @@ type Rubric = {
 };
 
 export async function POST(req: Request) {
-  // ✅ Đọc key giống hệt /api/gemini/chat để khỏi lệch env
   const apiKey =
     process.env.GOOGLE_GEMINI_API_KEY ||
     process.env.GEMINI_API_KEY ||
@@ -49,7 +48,6 @@ export async function POST(req: Request) {
       ? body.cues.filter((x: any) => typeof x === "string")
       : [];
 
-    // Guard: vẫn cho phép empty text (GV hướng dẫn outline), nhưng phải có context
     if (!topic && !exerciseTitle && cues.length === 0) {
       return NextResponse.json(
         { error: "Invalid request: missing topic/exerciseTitle/cues context." },
@@ -57,20 +55,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Prompt “không viết hộ” + bắt output JSON rubric
     const guardrails = `
 You are an English writing teacher for Vietnamese grade-10 students.
 
-IMPORTANT RULES (DO NOT BREAK THESE):
+IMPORTANT RULES (DO NOT BREAK):
 - Do NOT write a full paragraph for the student.
 - Do NOT rewrite the whole text.
 - Point out mistakes and explain briefly.
 - Provide at most 1-2 improved example sentences (NOT a full paragraph).
 - Give improvement tips based on Topic sentence / Supporting sentences / Concluding sentence.
 
-OUTPUT FORMAT:
-You MUST output ONLY valid JSON (no markdown, no extra text) in this format:
-
+Return ONLY valid JSON (no markdown, no extra text) with this exact shape:
 {
   "rubric": {
     "taskFulfillment": 0-10,
@@ -78,16 +73,12 @@ You MUST output ONLY valid JSON (no markdown, no extra text) in this format:
     "grammarVocabulary": 0-10,
     "coherence": 0-10
   },
-  "feedbackText": "Teacher-like feedback in plain text. Must include:
-  1) Overall feedback (2-4 lines)
-  2) Key issues (bullets, max 6) with short explanations
-  3) Suggested improved sentences (max 2)
-  4) Next-step tips (bullets, max 4) focusing on Topic/Supporting/Concluding"
+  "feedbackText": "..."
 }
 
 If studentText is empty:
-- Set all rubric scores to 0
-- feedbackText should guide outline and vocabulary suggestions, but still follow the same sections.
+- All rubric scores = 0
+- feedbackText guides outline + vocabulary, still with Topic/Supporting/Concluding tips.
 `.trim();
 
     const payload = `
@@ -107,7 +98,7 @@ ${studentText}
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // ✅ ÉP Gemini trả JSON để tránh “Invalid JSON”
+    // ✅ cố ép JSON (nếu SDK/version hỗ trợ)
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
@@ -117,30 +108,43 @@ ${studentText}
       },
     });
 
-    const result = await model.generateContent(prompt);
-    const raw =
-      (typeof result?.response?.text === "function"
-        ? result.response.text()
-        : "") || "";
+    const raw1 = await callText(model, prompt);
 
-    const parsed = safeJsonParse(raw);
+    // 1) parse lần 1
+    let parsed = safeJsonParse(raw1);
+
+    // 2) nếu fail → reprompt 1 lần để “format lại JSON”
+    let raw2 = "";
     if (!parsed) {
-      // Debug-friendly: trả raw cho bạn xem Gemini trả gì
-      return NextResponse.json(
-        { error: "Invalid JSON from Gemini", raw },
-        { status: 500 }
-      );
+      raw2 = await repromptToJson(model, raw1);
+      parsed = safeJsonParse(raw2);
+    }
+
+    // 3) nếu vẫn fail → trả fallback (để UI không chết)
+    if (!parsed) {
+      const fallback = buildFallback(studentText);
+      return NextResponse.json({
+        rubric: fallback.rubric,
+        feedbackText: fallback.feedbackText,
+        model: "gemini-2.5-flash",
+        debug: {
+          note: "Gemini did not return valid JSON; fallback generated.",
+          raw1,
+          raw2,
+        },
+      });
     }
 
     const rubric = normalizeRubric(parsed.rubric);
     const feedbackText = String(parsed.feedbackText ?? "").trim();
 
-    // Guard cuối: nếu thiếu feedbackText thì vẫn trả về format ổn
     return NextResponse.json({
       rubric,
       feedbackText:
         feedbackText || "Gemini returned empty feedback. Please try again.",
       model: "gemini-2.5-flash",
+      // bật debug nếu bạn muốn xem raw khi cần:
+      // debug: { raw1, raw2 }
     });
   } catch (err: any) {
     console.error("[/api/gemini/writing-coach] error:", err);
@@ -151,35 +155,71 @@ ${studentText}
   }
 }
 
-/**
- * Parse JSON robustly:
- * - remove ```json fences
- * - try direct JSON.parse
- * - fallback: extract the first {...} block
- */
+/* =========================
+ * Helpers
+ * ========================= */
+
+async function callText(model: any, prompt: string) {
+  const result = await model.generateContent(prompt);
+  return (
+    (typeof result?.response?.text === "function" ? result.response.text() : "") ||
+    ""
+  );
+}
+
+async function repromptToJson(model: any, raw: string) {
+  const reprompt = `
+Convert the content below into ONLY valid JSON with this exact format:
+{
+  "rubric": {
+    "taskFulfillment": 0-10,
+    "organization": 0-10,
+    "grammarVocabulary": 0-10,
+    "coherence": 0-10
+  },
+  "feedbackText": "..."
+}
+
+Rules:
+- Output ONLY JSON (no markdown).
+- Keep teacher tone.
+- Do NOT write a full paragraph.
+- Suggest at most 1-2 improved sentences.
+
+CONTENT:
+${raw}
+`.trim();
+
+  return await callText(model, reprompt);
+}
+
 function safeJsonParse(text: string) {
   const s = String(text || "").trim();
   if (!s) return null;
 
-  // Remove code fences if any
+  // remove code fences
   const noFence = s.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
 
-  // Try parse directly
+  // try direct parse
   try {
-    return JSON.parse(noFence);
+    return JSON.parse(removeTrailingCommas(noFence));
   } catch {}
 
-  // Fallback: extract JSON object from the first '{' to last '}'
+  // extract first { ... } block
   const start = noFence.indexOf("{");
   const end = noFence.lastIndexOf("}");
   if (start >= 0 && end > start) {
     const candidate = noFence.slice(start, end + 1);
     try {
-      return JSON.parse(candidate);
+      return JSON.parse(removeTrailingCommas(candidate));
     } catch {}
   }
 
   return null;
+}
+
+function removeTrailingCommas(jsonLike: string) {
+  return jsonLike.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
 }
 
 function clamp0to10(n: any) {
@@ -194,5 +234,50 @@ function normalizeRubric(r: any): Rubric {
     organization: clamp0to10(r?.organization),
     grammarVocabulary: clamp0to10(r?.grammarVocabulary),
     coherence: clamp0to10(r?.coherence),
+  };
+}
+
+function buildFallback(studentText: string) {
+  const hasText = studentText.trim().length > 0;
+
+  return {
+    rubric: {
+      taskFulfillment: hasText ? 4 : 0,
+      organization: hasText ? 4 : 0,
+      grammarVocabulary: hasText ? 4 : 0,
+      coherence: hasText ? 4 : 0,
+    },
+    feedbackText: hasText
+      ? [
+          "Overall feedback:",
+          "- I can see your effort. Your paragraph has ideas, but needs clearer structure and some grammar fixes.",
+          "",
+          "Key issues (examples):",
+          "- Check subject–verb agreement (e.g., 'My parents works' → 'My parents work').",
+          "- Watch verb forms after like/enjoy/hate + V-ing.",
+          "- Use linking words (first, then, besides, therefore) to make sentences connect.",
+          "",
+          "Suggested improved sentences (max 2):",
+          "- In my family, household chores are shared among all members.",
+          "- I usually wash the dishes after dinner because it helps my parents rest.",
+          "",
+          "Next-step tips (Topic/Supporting/Concluding):",
+          "- Topic: Write 1 clear opening sentence that states how chores are divided.",
+          "- Supporting: Add 4–6 sentences with specific chores for each person + reasons.",
+          "- Concluding: End with 1 sentence about fairness or family teamwork.",
+        ].join("\n")
+      : [
+          "Overall feedback:",
+          "- You haven’t written anything yet. Let’s start with a simple plan.",
+          "",
+          "Next-step tips (Topic/Supporting/Concluding):",
+          "- Topic: Write 1 sentence to introduce your family and the idea of sharing chores.",
+          "- Supporting: Write 5–7 sentences describing who does which chores (parents/siblings/you).",
+          "- Concluding: Write 1 sentence to say if the division is fair and how you feel about it.",
+          "",
+          "Suggested starters (choose 1–2, not a full paragraph):",
+          "- In my family, there are ___ people, and we share household chores.",
+          "- I think housework is (fairly / not fairly) divided because ____.",
+        ].join("\n"),
   };
 }
