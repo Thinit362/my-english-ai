@@ -5,7 +5,7 @@ import type { ListeningLesson } from "./types";
 // Hiện tại bạn mới có Unit 1
 import en10_u1_listen1 from "./en10.u1.listen1";
 import en10_u2_listen1 from "./en10.u2.listen1";
-
+import en10_u3_listen1 from "./en10.u3.listen1";
 import en10_u4_listen1 from "./en10.u4.listen1";
 
 import en10_u6_listen1 from "./en10.u6.listen1";
@@ -14,7 +14,7 @@ import en10_u6_listen1 from "./en10.u6.listen1";
 const listeningData: ListeningLesson[] = [
   en10_u1_listen1,
   en10_u2_listen1,
-
+  en10_u3_listen1,
   en10_u4_listen1,
 
   en10_u6_listen1,
