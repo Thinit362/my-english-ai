@@ -1024,15 +1024,7 @@
             }
           ]
         },
-        {
-          "id": "eng10_u10lC",
-          "index": "C",
-          "title": "",
-          "objectives": [],
-          "skills": [],
-          "sections": [
-            {
-              "type": "l        {
+                {
           "id": "eng10_u10lC",
           "index": "C",
           "title": "",
@@ -1063,5 +1055,5 @@
         }
       ]
     }
-  } 
-    }
+  ]
+}
