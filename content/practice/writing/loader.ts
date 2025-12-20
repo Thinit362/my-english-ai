@@ -1,7 +1,7 @@
 //content/practice/writing/loader.ts
 import { writingUnit1 } from "./unit1";
 import { writingUnit2 } from "./unit2";
-import { writingUnit2 } from "./unit2";
+import { writingUnit3 } from "./unit3";
 import type { WritingLesson } from "./types";
 
 const lessons: WritingLesson[] = [writingUnit1, writingUnit2, writingUnit3];
