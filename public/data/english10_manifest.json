@@ -1032,6 +1032,14 @@
           "skills": [],
           "sections": [
             {
+              "type": "l        {
+          "id": "eng10_u10lC",
+          "index": "C",
+          "title": "",
+          "objectives": [],
+          "skills": [],
+          "sections": [
+            {
               "type": "learn",
               "blocks": []
             },
@@ -1043,10 +1051,7 @@
               "type": "gemini-assist",
               "config": {
                 "namespace": "eng10/unit10",
-                "modes": [
-                  "teacher",
-                  "student"
-                ],
+                "modes": ["teacher", "student"],
                 "rules": [
                   "Ưu tiên nội dung SGK Global Success 10 trong namespace tương ứng.",
                   "Luôn kèm trích dẫn Unit/Trang nếu dùng nội dung từ SGK.",
@@ -1056,7 +1061,7 @@
             }
           ]
         }
+      ]
     }
   ]
 }
-
