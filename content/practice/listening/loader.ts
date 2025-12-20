@@ -10,6 +10,7 @@ import en10_u4_listen1 from "./en10.u4.listen1";
 import en10_u5_listen1 from "./en10.u5.listen1";
 import en10_u6_listen1 from "./en10.u6.listen1";
 import en10_u7_listen1 from "./en10.u7.listen1";
+import en10_u8_listen1 from "./en10.u8.listen1";
 import en10_u9_listen1 from "./en10.u9.listen1";
 import en10_u10_listen1 from "./en10.u10.listen1";
 // Mảng chứa toàn bộ bài luyện nghe
@@ -21,6 +22,7 @@ const listeningData: ListeningLesson[] = [
   en10_u5_listen1,
   en10_u6_listen1,
   en10_u7_listen1,
+  en10_u8_listen1,
   en10_u9_listen1,
   en10_u10_listen1,
  
