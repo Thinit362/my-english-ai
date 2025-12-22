@@ -206,6 +206,9 @@ export default function VocabLesson({
   const [percent, setPercent] = useState<number | null>(0);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
 
+  // ✅ FIX: giữ transcript mới nhất, tránh stale state -> 0%
+  const saidRef = useRef<string>("");
+
   // SpeechRecognition instance
   const srRef = useRef<any>(null);
 
@@ -295,6 +298,7 @@ export default function VocabLesson({
     setModalFor({ id, text, label, voice });
     setRecUrl(null);
     setSaid("");
+    saidRef.current = ""; // ✅ reset transcript ref
     setPercent(0);
     setModalOpen(true);
     try {
@@ -320,9 +324,12 @@ export default function VocabLesson({
 
   async function startRecord() {
     if (!modalFor) return;
+
     setSaid("");
+    saidRef.current = "";
     setPercent(0);
 
+    // --- Speech Recognition (transcript) ---
     const r = setupSR("en-US");
     if (!r) {
       alert(
@@ -330,39 +337,58 @@ export default function VocabLesson({
       );
     } else {
       srRef.current = r;
+
+      // ✅ FIX: chấm điểm NGAY khi có transcript -> không bị stale state
       r.onresult = (e: any) => {
-        const saidText = e.results[0][0].transcript || "";
+        const saidText = e.results?.[0]?.[0]?.transcript || "";
+        saidRef.current = saidText;
         setSaid(saidText);
+
+        const raw = Math.round(score(modalFor.text, saidText) * 100);
+        setPercent(Math.max(0, Math.min(100, raw)));
       };
-      r.onerror = () => {};
-      r.onend = () => {
-        if (modalFor && said !== undefined) {
-          const raw = Math.round(score(modalFor.text, said) * 100);
-          setPercent(Math.max(0, Math.min(100, raw)));
-        }
+
+      r.onerror = (err: any) => {
+        console.warn("[SpeechRecognition] error:", err);
       };
+
+      // Không chấm điểm ở onend nữa để tránh dùng state cũ
+      r.onend = () => {};
+
       try {
         r.start();
-      } catch {}
+      } catch (e) {
+        console.warn("[SpeechRecognition] start fail:", e);
+      }
     }
 
+    // --- Media Recorder (audio playback) ---
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const m = new MediaRecorder(stream);
     mediaRef.current = m;
     chunksRef.current = [];
+
     m.ondataavailable = (e) => e.data && chunksRef.current.push(e.data);
+
     m.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       setRecUrl(URL.createObjectURL(blob));
       stream.getTracks().forEach((t) => t.stop());
+
+      // ✅ Fallback: nếu SR có transcript thì chấm (KHÔNG dùng state `said`)
       if (modalFor) {
-        const raw = Math.round(score(modalFor.text, said) * 100);
-        setPercent(Math.max(0, Math.min(100, raw)));
+        const finalSaid = (saidRef.current || "").trim();
+        if (finalSaid) {
+          const raw = Math.round(score(modalFor.text, finalSaid) * 100);
+          setPercent(Math.max(0, Math.min(100, raw)));
+        }
       }
+
       try {
         srRef.current?.stop?.();
       } catch {}
     };
+
     m.start();
     setRecoding(true);
   }
@@ -469,15 +495,17 @@ export default function VocabLesson({
                     >
                       {it.pos}
                       {posNote && posOpenFor === it.id && (
-                      <div
-                      className="ta-popover absolute z-20 mt-2 left-0 w-72 md:w-80 p-3 text-sm leading-relaxed"
-                      style={{ ['--ta-arrow-left' as any]: '1.25rem' }}  // tuỳ chỉnh vị trí mũi tên
-                      role="tooltip"
-                  >
-                      <div className="font-semibold mb-1">Ghi chú loại từ</div>
-                      <div className="text-gray-700">{posNote}</div>
-                      </div>
-                    )}
+                        <div
+                          className="ta-popover absolute z-20 mt-2 left-0 w-72 md:w-80 p-3 text-sm leading-relaxed"
+                          style={{ ["--ta-arrow-left" as any]: "1.25rem" }}
+                          role="tooltip"
+                        >
+                          <div className="font-semibold mb-1">
+                            Ghi chú loại từ
+                          </div>
+                          <div className="text-gray-700">{posNote}</div>
+                        </div>
+                      )}
                     </span>
                   )}
                 </div>
@@ -578,6 +606,9 @@ export default function VocabLesson({
                   <div className="flex-1 p-3 text-sm">{modalFor.text}</div>
                 </div>
               </div>
+
+              {/* (Optional) show transcript nhỏ để debug/giúp HS biết SR nghe gì */}
+              {/* <div className="mt-2 text-xs text-gray-500">Bạn nói: {said || "..."}</div> */}
             </div>
 
             {/* Khối dưới (xanh) + nút */}
@@ -590,10 +621,7 @@ export default function VocabLesson({
                 <button
                   onClick={async () => {
                     if (!modelUrl) {
-                      const u = await getAudioUrl(
-                        modalFor.text,
-                        modalFor.voice
-                      );
+                      const u = await getAudioUrl(modalFor.text, modalFor.voice);
                       setModelUrl(u);
                     }
                     const a = new Audio(modelUrl || "");
@@ -602,8 +630,7 @@ export default function VocabLesson({
                         (window as any).AudioContext ||
                         (window as any).webkitAudioContext;
                       if (AC) {
-                        const ctx =
-                          ((window as any).__vocabCtx2 ||= new AC());
+                        const ctx = ((window as any).__vocabCtx2 ||= new AC());
                         if (ctx.state === "suspended") await ctx.resume();
                       }
                     } catch {}
