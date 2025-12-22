@@ -6,9 +6,10 @@ import { writingUnit4 } from "./unit4";
 import { writingUnit5 } from "./unit5";
 import { writingUnit6 } from "./unit6";
 import { writingUnit7 } from "./unit7";
+import { writingUnit8 } from "./unit8";
 import type { WritingLesson } from "./types";
 
-const lessons: WritingLesson[] = [writingUnit1, writingUnit2, writingUnit3, writingUnit4, writingUnit5, writingUnit6, writingUnit7];
+const lessons: WritingLesson[] = [writingUnit1, writingUnit2, writingUnit3, writingUnit4, writingUnit5, writingUnit6, writingUnit7, writingUnit8];
 
 export function getWritingByUnit(unit: number): WritingLesson | undefined {
   return lessons.find((l) => l.unit === unit);
