@@ -7,14 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  Play,
-  Pause,
-  Loader2,
-  Download,
-  Mic,
-  Volume2,
-} from "lucide-react";
+import { Play, Pause, Loader2, Download, Mic, Volume2 } from "lucide-react";
 import { createStore, get, set, del, keys } from "idb-keyval";
 
 type Provider = "custom" | "gemini" | "gcloud" | "azure" | "eleven";
@@ -33,7 +26,7 @@ export type TTSPlayProps = {
   showDownload?: boolean;
   onPlayed?: () => void;
 
-  /** Bật luyện nói + chấm điểm giống phần từ vựng */
+  /** Bật luyện nói + chấm điểm */
   enableRecord?: boolean;
   /** Câu/từ mục tiêu để so sánh (mặc định = text) */
   expectedText?: string;
@@ -71,9 +64,8 @@ function cacheKey({
   )}::${text}`;
 }
 
-/** 
- * 🔥 FIX QUAN TRỌNG:
- * Hash key luôn GẮN VỚI ĐƯỜNG DẪN TRANG, để tránh dùng nhầm audio giữa các trang /tr/, /kr/, /br/...
+/**
+ * Hash key luôn GẮN VỚI ĐƯỜNG DẪN TRANG, để tránh dùng nhầm audio giữa các trang
  */
 async function hash(input: string) {
   const path =
@@ -106,7 +98,7 @@ async function requestTTS({
   return await res.blob();
 }
 
-/* ========= Helper cho chấm điểm (copy logic từ VocabLesson) ========= */
+/* ========= Helper chấm điểm ========= */
 
 function normalize(s: string) {
   return s
@@ -220,25 +212,19 @@ export default function TTSPlay(props: TTSPlayProps) {
 
   const keyPromise = useMemo(() => hash(rawKey), [rawKey]);
 
-  // 🔄 Reset khi text/voice/... thay đổi (ví dụ chuyển /tr/ → /kr/ → /br/)
+  // 🔄 Reset khi text/voice/... thay đổi
   useEffect(() => {
-    // Dừng audio cũ nếu đang phát
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-
-    // Hủy URL blob cũ
     setBlobUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
-
-    // Reset trạng thái phát & tiến độ
     setPlaying(false);
     setProgress({ cur: 0, dur: 0 });
   }, [text, voice, rate, pitch, provider, format]);
-
 
   const ensureBlobUrl = useCallback(async () => {
     setError(null);
@@ -328,7 +314,7 @@ export default function TTSPlay(props: TTSPlayProps) {
       ? Math.min(100, Math.round((progress.cur / progress.dur) * 100))
       : 0;
 
-  /* ======= Luyện nói + chấm điểm (giống VocabLesson) ======= */
+  /* ======= Luyện nói + chấm điểm (FIX chấm ngay lần 1) ======= */
 
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [recordError, setRecordError] = useState<string | null>(null);
@@ -341,101 +327,168 @@ export default function TTSPlay(props: TTSPlayProps) {
   const chunksRef = useRef<Blob[]>([]);
   const srRef = useRef<any>(null);
 
+  // ✅ Ref giữ transcript mới nhất (không phụ thuộc state)
+  const saidRef = useRef<string>("");
+  // ✅ Ref giữ recUrl để revoke an toàn (tránh closure stale)
+  const recUrlRef = useRef<string | null>(null);
+
+  const targetText = expectedText || text;
+
   const openPractice = () => {
     setPracticeOpen(true);
     setRecordError(null);
     setRecording(false);
+
+    // clear recording data
+    if (recUrlRef.current) {
+      URL.revokeObjectURL(recUrlRef.current);
+      recUrlRef.current = null;
+    }
     setRecUrl(null);
+
+    // clear transcript
+    saidRef.current = "";
     setSaid("");
+
+    // clear score
     setPercent(null);
   };
 
   const closePractice = () => {
     setPracticeOpen(false);
+
     try {
       srRef.current?.stop?.();
     } catch {}
+
     if (recording) {
-      mediaRef.current?.stop();
+      try {
+        mediaRef.current?.stop();
+      } catch {}
       setRecording(false);
     }
   };
 
+  const scoreNow = useCallback(
+    (transcript: string) => {
+      const raw = Math.round(calcScore(targetText, transcript) * 100);
+      const bounded = Math.max(0, Math.min(100, raw));
+      setPercent(bounded);
+      return bounded;
+    },
+    [targetText]
+  );
+
   async function startPracticeRecord() {
-  setRecordError(null);
-  setSaid("");
-  setPercent(null);
+    setRecordError(null);
 
-  let localTranscript = "";
+    // reset transcript + score
+    saidRef.current = "";
+    setSaid("");
+    setPercent(null);
 
-  // --- SpeechRecognition: đảm bảo transcript luôn có trước khi chấm ---
-  const sr = setupSR(languageCode);
-  if (sr) {
-    srRef.current = sr;
+    // --- SpeechRecognition ---
+    const sr = setupSR(languageCode);
+    if (!sr) {
+      setRecordError(
+        "Trình duyệt chưa hỗ trợ SpeechRecognition. Hãy dùng Chrome/Edge trên máy tính để chấm điểm."
+      );
+    } else {
+      srRef.current = sr;
 
-    sr.onresult = (e: any) => {
-      localTranscript = e.results[0][0].transcript || "";
-      setSaid(localTranscript);
-    };
+      sr.onresult = (e: any) => {
+        const transcript = e?.results?.[0]?.[0]?.transcript || "";
+        // ✅ cập nhật ngay lập tức bằng ref
+        saidRef.current = transcript;
+        setSaid(transcript);
 
-    sr.onerror = () => {};
-    sr.onend = () => {
-      // KHÔNG chấm điểm ở đây nữa
-      // Chỉ lưu transcript
-    };
+        // ✅ CHẤM ĐIỂM NGAY TẠI ĐÂY -> đảm bảo lần 1 có %
+        scoreNow(transcript);
+      };
 
+      sr.onerror = () => {
+        // vẫn cho MediaRecorder chạy, chỉ báo nhẹ nếu muốn
+      };
+
+      try {
+        sr.start();
+      } catch {}
+    }
+
+    // --- MediaRecorder ---
     try {
-      sr.start();
-    } catch {}
-  }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const m = new MediaRecorder(stream);
+      mediaRef.current = m;
+      chunksRef.current = [];
+      setRecording(true);
 
-  // --- MediaRecorder: chấm điểm khi audio kết thúc ---
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const m = new MediaRecorder(stream);
-    mediaRef.current = m;
-    chunksRef.current = [];
-    setRecording(true);
+      m.ondataavailable = (e) => {
+        if (e.data) chunksRef.current.push(e.data);
+      };
 
-    m.ondataavailable = (e) => {
-      if (e.data) chunksRef.current.push(e.data);
-    };
+      m.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach((t) => t.stop());
 
-    m.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      stream.getTracks().forEach((t) => t.stop());
+        // set rec url safely
+        const nextUrl = URL.createObjectURL(blob);
+        if (recUrlRef.current) URL.revokeObjectURL(recUrlRef.current);
+        recUrlRef.current = nextUrl;
+        setRecUrl(nextUrl);
 
-      if (recUrl) URL.revokeObjectURL(recUrl);
-      setRecUrl(URL.createObjectURL(blob));
+        // ✅ đảm bảo có điểm:
+        // - nếu SR đã onresult thì percent đã có
+        // - nếu SR chưa kịp ra kết quả, đợi 1 nhịp ngắn rồi chấm bằng ref
+        setTimeout(() => {
+          const transcript = saidRef.current || "";
+          if (transcript) scoreNow(transcript);
+          else setPercent(0); // thật sự không nhận được transcript
+        }, 120);
 
-      // --- CHẤM ĐIỂM TẠI ĐÂY ---
-      const target = expectedText || text;
-      const raw = Math.round(calcScore(target, localTranscript) * 100);
-      setPercent(Math.max(0, Math.min(100, raw)));
+        // stop SR sau khi đã dừng ghi
+        try {
+          srRef.current?.stop?.();
+        } catch {}
 
+        setRecording(false);
+      };
+
+      m.start();
+    } catch (err) {
+      console.error(err);
+      setRecording(false);
+      setRecordError("Không thể truy cập micro. Vui lòng kiểm tra quyền truy cập.");
       try {
         srRef.current?.stop?.();
       } catch {}
-
-      setRecording(false);
-    };
-
-    m.start();
-  } catch (err) {
-    console.error(err);
-    setRecording(false);
-    setRecordError("Không thể truy cập micro. Vui lòng kiểm tra quyền truy cập.");
+    }
   }
-}
 
   function stopPracticeRecord() {
-    mediaRef.current?.stop();
+    try {
+      mediaRef.current?.stop();
+    } catch {}
     setRecording(false);
   }
 
-  const wrapperClass = `inline-flex items-center gap-2 ${
-    className || ""
-  }`;
+  useEffect(() => {
+    // cleanup when unmount
+    return () => {
+      try {
+        srRef.current?.stop?.();
+      } catch {}
+      try {
+        mediaRef.current?.stop?.();
+      } catch {}
+      if (recUrlRef.current) {
+        URL.revokeObjectURL(recUrlRef.current);
+        recUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  const wrapperClass = `inline-flex items-center gap-2 ${className || ""}`;
 
   const playButton = (
     <button
@@ -481,10 +534,7 @@ export default function TTSPlay(props: TTSPlayProps) {
 
         {!compact && (
           <>
-            <div
-              className="h-1 w-20 bg-gray-200 rounded overflow-hidden"
-              aria-hidden
-            >
+            <div className="h-1 w-20 bg-gray-200 rounded overflow-hidden" aria-hidden>
               <div
                 className="h-full bg-gray-500"
                 style={{
@@ -516,7 +566,7 @@ export default function TTSPlay(props: TTSPlayProps) {
         )}
       </span>
 
-      {/* ===== Popup luyện nói giống VocabLesson ===== */}
+      {/* ===== Popup luyện nói ===== */}
       {enableRecord && practiceOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
           <div className="w-full max-w-2xl rounded-xl bg-white shadow-lg border overflow-hidden">
@@ -524,7 +574,7 @@ export default function TTSPlay(props: TTSPlayProps) {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
                 Luyện nói – Phát âm:{" "}
-                <span className="text-slate-900">{expectedText || text}</span>
+                <span className="text-slate-900">{targetText}</span>
               </div>
               <button
                 className="rounded-full border w-8 h-8 grid place-items-center bg-gray-50 hover:bg-gray-100"
@@ -549,9 +599,7 @@ export default function TTSPlay(props: TTSPlayProps) {
                       {(percent ?? 0).toFixed(0)}%
                     </div>
                   </div>
-                  <div className="flex-1 p-3 text-sm">
-                    {expectedText || text}
-                  </div>
+                  <div className="flex-1 p-3 text-sm">{targetText}</div>
                 </div>
               </div>
             </div>
@@ -569,7 +617,6 @@ export default function TTSPlay(props: TTSPlayProps) {
               )}
 
               <div className="mt-3 flex flex-wrap gap-2 justify-center">
-                {/* Nghe mẫu: dùng luôn TTS ở trên */}
                 <button
                   onClick={togglePlay}
                   className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
@@ -602,6 +649,11 @@ export default function TTSPlay(props: TTSPlayProps) {
                   ▶ Nghe lại bài ghi âm
                 </button>
               </div>
+
+              {/* (tuỳ chọn) hiển thị transcript để debug/giám khảo thấy AI nhận diện */}
+              {/* <div className="mt-3 text-center text-xs text-white/90">
+                Bạn nói: <span className="font-semibold">{said || "..."}</span>
+              </div> */}
             </div>
           </div>
         </div>
@@ -612,9 +664,7 @@ export default function TTSPlay(props: TTSPlayProps) {
 
 /* ========= Tiện ích xoá cache ========= */
 
-export async function clearTTSCache(
-  providerPrefix: Provider | "all" = "all"
-) {
+export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
   const all = await keys(CACHE_DB);
   const willDelete: IDBValidKey[] = [];
   for (const k of all) {
@@ -631,10 +681,7 @@ export async function clearTTSCache(
 
 export async function prefetchTTSBatch(
   items: Array<
-    Pick<
-      TTSPlayProps,
-      "text" | "voice" | "rate" | "pitch" | "provider" | "format"
-    >
+    Pick<TTSPlayProps, "text" | "voice" | "rate" | "pitch" | "provider" | "format">
   >
 ) {
   for (const it of items) {
