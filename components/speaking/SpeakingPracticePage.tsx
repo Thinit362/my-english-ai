@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getSpeakingByUnit } from "@/content/practice/speaking/loader";
 import type {
   SpeakingLesson,
@@ -18,6 +18,13 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
   const [expandedTheory, setExpandedTheory] = useState<Record<string, boolean>>(
     {}
   );
+
+  // ✅ Khi đổi trang: reset trạng thái UI để tránh “kẹt” state bên trong TTSPlay / sample
+  useEffect(() => {
+    setShowSamples({});
+    // expandedTheory giữ nguyên cũng được; nếu muốn reset luôn thì mở comment dòng dưới
+    // setExpandedTheory({});
+  }, [pageIndex]);
 
   if (!lesson) {
     return (
@@ -212,7 +219,12 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
                     <div className="flex flex-col gap-1">
                       <p className="font-medium text-gray-900">{q.promptEn}</p>
 
+                      {/* ✅ QUAN TRỌNG:
+                          - key có pageIndex + q.id + expected để TTSPlay bị remount khi đổi trang/đổi câu
+                          - tránh tình trạng SpeechRecognition/MediaRecorder bên trong bị “kẹt phiên trước”
+                       */}
                       <TTSPlay
+                        key={`${unit}-${pageIndex}-${q.id}-${expected}`}
                         text={expected}
                         expectedText={expected}
                         voice={q.voice}
@@ -304,7 +316,8 @@ export default function SpeakingPracticePage({ unit }: { unit: number }) {
           </div>
 
           <p className="text-[11px] text-gray-500">
-            Hãy luyện nói nhiều lần mỗi câu, rồi mở câu mẫu để so sánh cách diễn đạt.
+            Hãy luyện nói nhiều lần mỗi câu, rồi mở câu mẫu để so sánh cách diễn
+            đạt.
           </p>
         </div>
       </section>
