@@ -7,8 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Play, Pause, Loader2, Download, Mic, Volume2 } from "lucide-react";
-import { createStore, get, set, del, keys } from "idb-keyval";
+import { Play, Pause, Mic, Volume2 } from "lucide-react";
 
 type Provider = "custom" | "gemini" | "gcloud" | "azure" | "eleven";
 type AudioFormat = "mp3" | "wav" | "ogg";
@@ -16,86 +15,105 @@ type AudioFormat = "mp3" | "wav" | "ogg";
 export type TTSPlayProps = {
   text: string;
   voice?: string;
-  rate?: number;
-  pitch?: number;
-  provider?: Provider;
-  format?: AudioFormat;
+  rate?: number;        // sẽ map sang Web Speech (default 1)
+  pitch?: number;       // GG pitch [-20..20], mình map sang 0..2
+  provider?: Provider;  // giữ lại để không vỡ type, nhưng không dùng nữa
+  format?: AudioFormat; // giữ lại để không vỡ type, nhưng không dùng nữa
   className?: string;
   ariaLabel?: string;
-  prefetch?: boolean;
-  showDownload?: boolean;
+  prefetch?: boolean;   // không còn tác dụng với Web TTS
+  showDownload?: boolean; // Web TTS không có file, sẽ bỏ qua
   onPlayed?: () => void;
 
   /** Bật luyện nói + chấm điểm */
   enableRecord?: boolean;
   /** Câu/từ mục tiêu để so sánh (mặc định = text) */
   expectedText?: string;
-  /** Mã ngôn ngữ cho SpeechRecognition */
+  /** Mã ngôn ngữ cho SpeechRecognition & TTS */
   languageCode?: string;
 
   /** Hiển thị dạng nhỏ gọn: chỉ 2 icon tròn [loa] [mic] */
   compact?: boolean;
 };
 
-/* ========= IndexedDB store ========= */
-const CACHE_DB = createStore("my-english-ai-tts-db", "v1");
+/* ========= Web TTS helpers (speechSynthesis) ========= */
 
-/** Tạo cacheKey cơ bản từ text + voice + tham số TTS */
-function cacheKey({
-  text,
-  voice,
-  rate,
-  pitch,
-  provider,
-  format,
-}: {
-  text: string;
-  voice?: string;
-  rate: number;
-  pitch: number;
-  provider?: Provider;
-  format?: AudioFormat;
-}) {
-  const p = provider ?? "custom";
-  const f = format ?? "mp3";
-  const v = voice ?? "default";
-  return `${p}::${f}::${v}::r${rate.toFixed(2)}::p${pitch.toFixed(
-    2
-  )}::${text}`;
-}
+type WebTTSOptions = {
+  lang?: string;
+  rate?: number;
+  pitch?: number;
+  voiceHint?: string;
+  onStart?: () => void;
+  onEnd?: () => void;
+};
 
-/**
- * Hash key luôn GẮN VỚI ĐƯỜNG DẪN TRANG, để tránh dùng nhầm audio giữa các trang
- */
-async function hash(input: string) {
-  const path =
-    typeof window !== "undefined" ? window.location.pathname : "";
-  const full = `${path}::${input}`;
+function pickBestVoice(
+  voices: SpeechSynthesisVoice[],
+  lang = "en-US",
+  voiceHint?: string
+): SpeechSynthesisVoice | null {
+  let candidates = voices.filter(
+    (v) =>
+      v.lang === lang ||
+      v.lang.toLowerCase().startsWith(lang.split("-")[0].toLowerCase() + "-")
+  );
 
-  if (globalThis.crypto?.subtle) {
-    const enc = new TextEncoder().encode(full);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    const arr = Array.from(new Uint8Array(buf));
-    return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (!candidates.length) {
+    candidates = voices.filter((v) =>
+      v.lang.toLowerCase().startsWith("en-")
+    );
   }
-  return full;
+  if (!candidates.length) return null;
+
+  if (voiceHint) {
+    const byName = candidates.find(
+      (v) => v.name === voiceHint || v.name.includes(voiceHint)
+    );
+    if (byName) return byName;
+  }
+
+  const priority = candidates.find((v) =>
+    /natural|neural|premium/i.test(v.name)
+  );
+  return priority ?? candidates[0];
 }
 
-/** Gọi API /api/tts */
-async function requestTTS({
-  text,
-  voice,
-  rate,
-  pitch,
-  format = "mp3",
-}: Partial<TTSPlayProps> & { text: string }): Promise<Blob> {
-  const res = await fetch("/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, voice, rate, pitch, format }),
-  });
-  if (!res.ok) throw new Error(`TTS ${res.status}`);
-  return await res.blob();
+function speakWithWebTTS(text: string, opts: WebTTSOptions = {}) {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  const { lang = "en-US", rate = 1, pitch = 1, voiceHint, onStart, onEnd } =
+    opts;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = rate;
+  utter.pitch = pitch;
+
+  const assignVoice = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+    const best = pickBestVoice(voices, lang, voiceHint);
+    if (best) utter.voice = best;
+  };
+
+  assignVoice();
+
+  utter.onstart = () => onStart?.();
+  utter.onend = () => onEnd?.();
+  utter.onerror = () => onEnd?.();
+
+  if (!utter.voice && typeof synth.onvoiceschanged !== "undefined") {
+    const handler = () => {
+      assignVoice();
+      synth.speak(utter);
+      synth.onvoiceschanged = null;
+    };
+    synth.onvoiceschanged = handler;
+  } else {
+    synth.speak(utter);
+  }
 }
 
 /* ========= Helper chấm điểm ========= */
@@ -174,12 +192,12 @@ export default function TTSPlay(props: TTSPlayProps) {
     voice,
     rate = 1,
     pitch = 0,
-    provider = "custom",
-    format = "mp3",
+    provider = "custom", // không dùng nữa, chỉ giữ cho compat
+    format = "mp3",      // không dùng nữa
     className,
     ariaLabel = "Nghe phát âm",
-    prefetch = false,
-    showDownload = false,
+    prefetch = false,    // không dùng nữa
+    showDownload = false, // Web TTS không có file để tải
     onPlayed,
 
     enableRecord = false,
@@ -188,134 +206,11 @@ export default function TTSPlay(props: TTSPlayProps) {
     compact = false,
   } = props;
 
-  // ======= playback state =======
-  const [loading, setLoading] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState({ cur: 0, dur: 0 });
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const rawKey = useMemo(
-    () =>
-      cacheKey({
-        text,
-        voice,
-        rate,
-        pitch,
-        provider,
-        format,
-      }),
-    [text, voice, rate, pitch, provider, format]
-  );
-
-  const keyPromise = useMemo(() => hash(rawKey), [rawKey]);
-
-  // 🔄 Reset khi text/voice/... thay đổi
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setBlobUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-    setPlaying(false);
-    setProgress({ cur: 0, dur: 0 });
-  }, [text, voice, rate, pitch, provider, format]);
-
-  const ensureBlobUrl = useCallback(async () => {
-    setError(null);
-    const hashed = await keyPromise;
-
-    let blob = await get<Blob>(hashed, CACHE_DB);
-    if (!blob) {
-      setLoading(true);
-      try {
-        blob = await requestTTS({ text, voice, rate, pitch, format });
-        await set(hashed, blob, CACHE_DB);
-      } catch (e: any) {
-        setError(e?.message ?? "Lỗi TTS");
-        setLoading(false);
-        throw e;
-      }
-      setLoading(false);
-    }
-
-    const url = URL.createObjectURL(blob);
-    setBlobUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return url;
-    });
-    return url;
-  }, [keyPromise, text, voice, rate, pitch, format]);
-
-  useEffect(() => {
-    if (!prefetch) return;
-    ensureBlobUrl().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefetch, rawKey]);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    const a = audioRef.current;
-
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => {
-      setPlaying(false);
-      setProgress((p) => ({ ...p, cur: p.dur }));
-    };
-    const onTime = () =>
-      setProgress({ cur: a.currentTime || 0, dur: a.duration || 0 });
-
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
-    a.addEventListener("ended", onEnded);
-    a.addEventListener("timeupdate", onTime);
-
-    return () => {
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
-      a.removeEventListener("ended", onEnded);
-      a.removeEventListener("timeupdate", onTime);
-    };
-  }, []);
-
-  const togglePlay = useCallback(async () => {
-    if (!audioRef.current) return;
-
-    if (playing) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      return;
-    }
-
-    try {
-      const url = blobUrl ?? (await ensureBlobUrl());
-      audioRef.current.src = url;
-      await audioRef.current.play();
-      onPlayed?.();
-    } catch {
-      // error đã set ở ensureBlobUrl
-    }
-  }, [playing, blobUrl, ensureBlobUrl, onPlayed]);
-
-  useEffect(() => {
-    return () => {
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
-    };
-  }, [blobUrl]);
-
-  const pct =
-    progress.dur > 0
-      ? Math.min(100, Math.round((progress.cur / progress.dur) * 100))
-      : 0;
-
-  /* ======= Luyện nói + chấm điểm (FIX chấm ngay lần 1) ======= */
-
+  // ===== luyện nói =====
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [recordError, setRecordError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
@@ -326,31 +221,71 @@ export default function TTSPlay(props: TTSPlayProps) {
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const srRef = useRef<any>(null);
-
-  // ✅ Ref giữ transcript mới nhất (không phụ thuộc state)
   const saidRef = useRef<string>("");
-  // ✅ Ref giữ recUrl để revoke an toàn (tránh closure stale)
   const recUrlRef = useRef<string | null>(null);
 
   const targetText = expectedText || text;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsClient(true);
+      setTtsSupported(!!window.speechSynthesis);
+    }
+  }, []);
+
+  // Khi text/voice/... đổi -> dừng TTS
+  useEffect(() => {
+    if (!isClient || !ttsSupported) return;
+    window.speechSynthesis?.cancel();
+    setPlaying(false);
+  }, [text, voice, rate, pitch, isClient, ttsSupported]);
+
+  const togglePlay = useCallback(() => {
+    if (!isClient || !ttsSupported || !text) return;
+
+    if (playing) {
+      window.speechSynthesis?.cancel();
+      setPlaying(false);
+      return;
+    }
+
+    // map GG pitch [-20..20] sang Web pitch [0..2]
+    const pitchNormalized = (() => {
+      const p = pitch ?? 0;
+      const x = 1 + p / 20; // p=0 ->1; p=20->2; p=-20->0
+      return Math.max(0, Math.min(2, x));
+    })();
+
+    speakWithWebTTS(text, {
+      lang: languageCode || "en-US",
+      rate: rate || 1,
+      pitch: pitchNormalized,
+      voiceHint: voice,
+      onStart: () => {
+        setPlaying(true);
+        onPlayed?.();
+      },
+      onEnd: () => {
+        setPlaying(false);
+      },
+    });
+  }, [isClient, ttsSupported, text, rate, pitch, voice, languageCode, playing, onPlayed]);
+
+  /* ======= Luyện nói + chấm điểm ======= */
 
   const openPractice = () => {
     setPracticeOpen(true);
     setRecordError(null);
     setRecording(false);
 
-    // clear recording data
     if (recUrlRef.current) {
       URL.revokeObjectURL(recUrlRef.current);
       recUrlRef.current = null;
     }
     setRecUrl(null);
 
-    // clear transcript
     saidRef.current = "";
     setSaid("");
-
-    // clear score
     setPercent(null);
   };
 
@@ -382,12 +317,11 @@ export default function TTSPlay(props: TTSPlayProps) {
   async function startPracticeRecord() {
     setRecordError(null);
 
-    // reset transcript + score
     saidRef.current = "";
     setSaid("");
     setPercent(null);
 
-    // --- SpeechRecognition ---
+    // SpeechRecognition
     const sr = setupSR(languageCode);
     if (!sr) {
       setRecordError(
@@ -398,24 +332,19 @@ export default function TTSPlay(props: TTSPlayProps) {
 
       sr.onresult = (e: any) => {
         const transcript = e?.results?.[0]?.[0]?.transcript || "";
-        // ✅ cập nhật ngay lập tức bằng ref
         saidRef.current = transcript;
         setSaid(transcript);
-
-        // ✅ CHẤM ĐIỂM NGAY TẠI ĐÂY -> đảm bảo lần 1 có %
         scoreNow(transcript);
       };
 
-      sr.onerror = () => {
-        // vẫn cho MediaRecorder chạy, chỉ báo nhẹ nếu muốn
-      };
+      sr.onerror = () => {};
 
       try {
         sr.start();
       } catch {}
     }
 
-    // --- MediaRecorder ---
+    // MediaRecorder
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const m = new MediaRecorder(stream);
@@ -431,22 +360,17 @@ export default function TTSPlay(props: TTSPlayProps) {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         stream.getTracks().forEach((t) => t.stop());
 
-        // set rec url safely
         const nextUrl = URL.createObjectURL(blob);
         if (recUrlRef.current) URL.revokeObjectURL(recUrlRef.current);
         recUrlRef.current = nextUrl;
         setRecUrl(nextUrl);
 
-        // ✅ đảm bảo có điểm:
-        // - nếu SR đã onresult thì percent đã có
-        // - nếu SR chưa kịp ra kết quả, đợi 1 nhịp ngắn rồi chấm bằng ref
         setTimeout(() => {
           const transcript = saidRef.current || "";
           if (transcript) scoreNow(transcript);
-          else setPercent(0); // thật sự không nhận được transcript
+          else setPercent(0);
         }, 120);
 
-        // stop SR sau khi đã dừng ghi
         try {
           srRef.current?.stop?.();
         } catch {}
@@ -473,7 +397,6 @@ export default function TTSPlay(props: TTSPlayProps) {
   }
 
   useEffect(() => {
-    // cleanup when unmount
     return () => {
       try {
         srRef.current?.stop?.();
@@ -485,6 +408,9 @@ export default function TTSPlay(props: TTSPlayProps) {
         URL.revokeObjectURL(recUrlRef.current);
         recUrlRef.current = null;
       }
+      if (typeof window !== "undefined") {
+        window.speechSynthesis?.cancel();
+      }
     };
   }, []);
 
@@ -495,15 +421,19 @@ export default function TTSPlay(props: TTSPlayProps) {
       type="button"
       aria-label={ariaLabel}
       onClick={togglePlay}
-      disabled={loading || !text}
+      disabled={!text || !ttsSupported}
       className={`flex items-center justify-center rounded-full border shadow-sm w-7 h-7 text-[11px] hover:scale-105 transition disabled:opacity-60 ${
         compact ? "border-gray-300 bg-white" : "px-2 py-1"
       }`}
-      title={loading ? "Đang tải âm..." : playing ? "Tạm dừng" : "Nghe phát âm"}
+      title={
+        !ttsSupported
+          ? "Trình duyệt không hỗ trợ Web Speech TTS"
+          : playing
+          ? "Dừng phát"
+          : "Nghe phát âm"
+      }
     >
-      {loading ? (
-        <Loader2 className="animate-spin" size={14} />
-      ) : playing ? (
+      {playing ? (
         compact ? <Pause size={14} /> : <Pause size={16} />
       ) : compact ? (
         <Volume2 size={14} />
@@ -531,39 +461,7 @@ export default function TTSPlay(props: TTSPlayProps) {
       <span className={wrapperClass}>
         {playButton}
         {micButton}
-
-        {!compact && (
-          <>
-            <div className="h-1 w-20 bg-gray-200 rounded overflow-hidden" aria-hidden>
-              <div
-                className="h-full bg-gray-500"
-                style={{
-                  width: `${pct}%`,
-                  transition: "width .2s linear",
-                }}
-              />
-            </div>
-
-            {showDownload && blobUrl && (
-              <a
-                href={blobUrl}
-                download={`tts-${provider}.${format}`}
-                className="inline-flex items-center gap-1 text-xs border px-2 py-1 rounded hover:bg-gray-50"
-                title="Tải file âm thanh"
-              >
-                <Download size={14} /> Tải
-              </a>
-            )}
-          </>
-        )}
-
-        <audio ref={audioRef} preload="none" />
-
-        {error && (
-          <span className="text-xs text-red-600" role="alert">
-            {error}
-          </span>
-        )}
+        {/* Không còn progress bar & download vì Web TTS không có file mp3 */}
       </span>
 
       {/* ===== Popup luyện nói ===== */}
@@ -650,7 +548,6 @@ export default function TTSPlay(props: TTSPlayProps) {
                 </button>
               </div>
 
-              {/* (tuỳ chọn) hiển thị transcript để debug/giám khảo thấy AI nhận diện */}
               {/* <div className="mt-3 text-center text-xs text-white/90">
                 Bạn nói: <span className="font-semibold">{said || "..."}</span>
               </div> */}
@@ -662,49 +559,20 @@ export default function TTSPlay(props: TTSPlayProps) {
   );
 }
 
-/* ========= Tiện ích xoá cache ========= */
+/* ========= clearTTSCache & prefetchTTSBatch (no-op cho Web TTS) ========= */
 
-export async function clearTTSCache(providerPrefix: Provider | "all" = "all") {
-  const all = await keys(CACHE_DB);
-  const willDelete: IDBValidKey[] = [];
-  for (const k of all) {
-    const s = String(k);
-    if (providerPrefix === "all" || s.startsWith(providerPrefix)) {
-      willDelete.push(k);
-    }
-  }
-  await Promise.all(willDelete.map((k) => del(k, CACHE_DB)));
-  return willDelete.length;
+export async function clearTTSCache(
+  _providerPrefix: Provider | "all" = "all"
+) {
+  // Không còn cache audio khi dùng Web Speech API
+  return 0;
 }
 
-/* ========= Prefetch nhiều câu một lúc ========= */
-
 export async function prefetchTTSBatch(
-  items: Array<
+  _items: Array<
     Pick<TTSPlayProps, "text" | "voice" | "rate" | "pitch" | "provider" | "format">
   >
 ) {
-  for (const it of items) {
-    const key = await hash(
-      cacheKey({
-        text: it.text,
-        voice: it.voice,
-        rate: it.rate ?? 1,
-        pitch: it.pitch ?? 0,
-        provider: it.provider,
-        format: it.format,
-      })
-    );
-    const exist = await get(key, CACHE_DB);
-    if (!exist) {
-      const blob = await requestTTS({
-        text: it.text,
-        voice: it.voice,
-        rate: it.rate,
-        pitch: it.pitch,
-        format: it.format,
-      });
-      await set(key, blob, CACHE_DB);
-    }
-  }
+  // Web TTS không cần prefetch. Hàm này giữ lại để không lỗi import.
+  return;
 }
