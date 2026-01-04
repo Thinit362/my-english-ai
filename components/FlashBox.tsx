@@ -18,14 +18,111 @@ type FlashBoxProps = {
   tts?: {
     enabled?: boolean;
     allowStop?: boolean;
+
+    // hint cũ
     forceVietnameseVoice?: boolean;
     viVoiceHint?: string;
     enVoiceHint?: string;
-    voice?: string;
-    rate?: number;
-    pitch?: number;
+
+    // hint chung cho Web TTS
+    engine?: 'web-speech';
+    useClientSpeech?: boolean;
+    lang?: string;   // 'en-US', 'vi-VN'...
+    voice?: string;  // tên voice nếu muốn
+    rate?: number;   // Web Speech rate (0.1–10, mặc định 1)
+    pitch?: number;  // Web Speech pitch (0–2 là chuẩn). Nếu bạn truyền [-20..20] thì mình map lại.
   };
 };
+
+/* ================= Web TTS helpers (speechSynthesis) ================= */
+
+type WebTTSConfig = {
+  lang?: string;
+  rate?: number;
+  pitch?: number;
+  voiceHint?: string;
+};
+
+function pickBestVoice(
+  voices: SpeechSynthesisVoice[],
+  lang = 'en-US',
+  voiceHint?: string,
+) {
+  let candidates = voices.filter(
+    v =>
+      v.lang === lang ||
+      v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase() + '-'),
+  );
+
+  if (!candidates.length) {
+    candidates = voices.filter(v => v.lang.toLowerCase().startsWith('en-'));
+  }
+  if (!candidates.length) return null;
+
+  if (voiceHint) {
+    const byName = candidates.find(
+      v => v.name === voiceHint || v.name.includes(voiceHint),
+    );
+    if (byName) return byName;
+  }
+
+  const priority = candidates.find(v =>
+    /natural|neural|premium/i.test(v.name),
+  );
+  return priority ?? candidates[0];
+}
+
+function speakWithWebTTS(
+  text: string,
+  cfg: WebTTSConfig,
+  onStart?: () => void,
+  onEnd?: () => void,
+) {
+  if (typeof window === 'undefined') return;
+  if (!('speechSynthesis' in window)) {
+    console.warn('speechSynthesis not supported');
+    return;
+  }
+
+  const synth = window.speechSynthesis;
+  const { lang = 'en-US', rate = 1, pitch = 1, voiceHint } = cfg;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = rate;
+  utter.pitch = pitch;
+
+  const assignVoice = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+    const best = pickBestVoice(voices, lang, voiceHint);
+    if (best) utter.voice = best;
+  };
+
+  assignVoice();
+
+  utter.onstart = () => onStart?.();
+  utter.onend = () => onEnd?.();
+  utter.onerror = () => onEnd?.();
+
+  if (!utter.voice && typeof synth.onvoiceschanged !== 'undefined') {
+    const handler = () => {
+      assignVoice();
+      synth.speak(utter);
+      synth.onvoiceschanged = null;
+    };
+    synth.onvoiceschanged = handler;
+  } else {
+    synth.speak(utter);
+  }
+}
+
+function stopWebTTS() {
+  if (typeof window === 'undefined') return;
+  window.speechSynthesis?.cancel();
+}
+
+/* ================= Component ================= */
 
 export default function FlashBox({
   grade,
@@ -40,12 +137,7 @@ export default function FlashBox({
   const [response, setResponse] = useState('');
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
-
-  // ====== STATE cho GCP TTS (EN only) ======
-  const queueRef = useRef<string[]>([]);
-  const playingRef = useRef(false);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const stopTokenRef = useRef(0);
+  const [speaking, setSpeaking] = useState(false);
 
   const langName = lang === 'vi' ? 'tiếng Việt' : 'English';
 
@@ -62,7 +154,9 @@ export default function FlashBox({
         `Tập trung vào học Tiếng Anh THPT hiệu quả (từ vựng/ngữ pháp/nghe-nói/đọc-viết).`,
         wantPron ? `Thêm 1–2 mẹo phát âm: ghi IPA /.../ và đánh dấu trọng âm.` : ``,
         `Không dùng tiêu đề lớn hay đoạn văn dài.`,
-      ].filter(Boolean).join('\n');
+      ]
+        .filter(Boolean)
+        .join('\n');
       return `${viGuard}\n\nCâu hỏi của người dùng: ${userText}`;
     }
 
@@ -103,26 +197,37 @@ export default function FlashBox({
       const text = await callGemini(prompt);
       setResponse(text || (lang === 'vi' ? 'Chưa có phản hồi.' : 'No response.'));
 
-      // ✅ Quan trọng: với English panel, tự đọc to bằng Cloud TTS
+      // ✅ Với English panel, tự đọc bằng Web TTS
       if (lang === 'en' && tts?.enabled && text) {
         speak(text);
       }
     } catch (err: any) {
-      setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
+      setResponse(
+        (lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'),
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  /* ---------------- Voice input (Web Speech) ---------------- */
+  /* ---------------- Voice input (Web Speech STT) ---------------- */
   async function handleVoice() {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR: any =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
     if (!SR) {
-      alert(lang === 'vi' ? 'Trình duyệt không hỗ trợ micro.' : 'Micro is not supported.');
+      alert(
+        lang === 'vi'
+          ? 'Trình duyệt không hỗ trợ micro.'
+          : 'Micro is not supported.',
+      );
       return;
     }
     const r = new SR();
-    r.lang = lang === 'vi' ? (tts?.viVoiceHint || 'vi-VN') : (tts?.enVoiceHint || 'en-US');
+    r.lang =
+      lang === 'vi'
+        ? tts?.viVoiceHint || 'vi-VN'
+        : tts?.enVoiceHint || 'en-US';
     r.interimResults = false;
     r.maxAlternatives = 1;
 
@@ -139,9 +244,11 @@ export default function FlashBox({
         const built = buildPrompt(`${sys}\n\n${transcript}`);
         const text = await callGemini(built);
         setResponse(text);
-        if (lang === 'en' && tts?.enabled) speak(text); // vẫn đọc như trước
+        if (lang === 'en' && tts?.enabled) speak(text); // đọc bằng Web TTS
       } catch (err: any) {
-        setResponse((lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'));
+        setResponse(
+          (lang === 'vi' ? 'Lỗi: ' : 'Error: ') + (err?.message || 'Unknown'),
+        );
       } finally {
         setBusy(false);
       }
@@ -159,7 +266,8 @@ export default function FlashBox({
     }
   }
 
-  /* ---------------- GCP TTS helpers (EN only) ---------------- */
+  /* ---------------- Helpers cho TTS Web ---------------- */
+
   function sanitizeForSpeech(text: string) {
     let s = text;
     s = s.replace(/[*_~`>#-]{1,}/g, ' ').replace(/\s{2,}/g, ' ').trim();
@@ -169,78 +277,54 @@ export default function FlashBox({
     return s;
   }
 
-  function splitSentences(text: string): string[] {
-    return text.split(/(?<=[\.\!\?\…])\s+/).map(t => t.trim()).filter(Boolean);
-  }
+  function speak(text: string) {
+    if (!tts?.enabled || !text) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.warn('Web Speech TTS not supported');
+      return;
+    }
 
-  function defaultVoice(): string {
-    if (tts?.voice) return tts.voice;
-    return 'en-US-Wavenet-F';
-  }
+    const cleaned = sanitizeForSpeech(text);
 
-  async function synthOnce(sentence: string) {
-    const res = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: sentence }), // ✅ route của bạn chỉ cần "text"
-    });
-    if (!res.ok) throw new Error(`TTS ${res.status}`);
+    // Ngôn ngữ ưu tiên:
+    const speechLang =
+      tts.lang ||
+      (lang === 'vi'
+        ? tts.viVoiceHint || 'vi-VN'
+        : tts.enVoiceHint || 'en-US');
 
-    const buf = await res.arrayBuffer();
-    const blob = new Blob([buf], { type: 'audio/mpeg' });
-    const url = URL.createObjectURL(blob);
+    const rate = typeof tts.rate === 'number' ? tts.rate : 1;
 
-    await new Promise<void>(async (resolve, reject) => {
-      try {
-        // cố gắng resume AudioContext để tránh autoplay policy
-        const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
-        if (AC) {
-          const ctx = ((window as any).__ttsCtx ||= new AC());
-          if (ctx.state === 'suspended') await ctx.resume();
-        }
-      } catch {}
+    // pitch: nếu trong [0,2] thì dùng trực tiếp; nếu ngoài phạm vi, coi như [-20..20] và map lại
+    let pitch = typeof tts.pitch === 'number' ? tts.pitch : 1;
+    if (pitch < 0 || pitch > 2) {
+      const p = tts.pitch ?? 0;
+      const mapped = 1 + p / 20; // -20 ->0, 0->1, 20->2
+      pitch = Math.max(0, Math.min(2, mapped));
+    }
 
-      const audio = new Audio(url);
-      currentAudioRef.current = audio;
-      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-      audio.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Audio error')); };
-      audio.play().catch(reject);
-    });
+    const voiceHint = tts.voice || (lang === 'vi' ? tts.viVoiceHint : tts.enVoiceHint);
+
+    speakWithWebTTS(
+      cleaned,
+      {
+        lang: speechLang,
+        rate,
+        pitch,
+        voiceHint,
+      },
+      () => setSpeaking(true),
+      () => setSpeaking(false),
+    );
   }
 
   function stopSpeak() {
-    stopTokenRef.current++;
-    queueRef.current = [];
-    playingRef.current = false;
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.src = '';
-      currentAudioRef.current = null;
-    }
-  }
-
-  async function speak(text: string) {
-    if (lang !== 'en' || !tts?.enabled || !text) return;
-    stopSpeak();
-
-    const cleaned = sanitizeForSpeech(text);
-    queueRef.current = splitSentences(cleaned);
-    if (queueRef.current.length === 0) queueRef.current = [cleaned];
-
-    const token = stopTokenRef.current;
-    playingRef.current = true;
-
-    while (playingRef.current && queueRef.current.length) {
-      if (token !== stopTokenRef.current) break;
-      const sentence = queueRef.current.shift()!;
-      try { await synthOnce(sentence); }
-      catch (e) { console.error('TTS play error:', e); }
-    }
-    playingRef.current = false;
+    stopWebTTS();
+    setSpeaking(false);
   }
 
   function replay() {
-    if (lang === 'en' && response && tts?.enabled) speak(response);
+    if (response && tts?.enabled) speak(response);
   }
 
   /* ---------------- UI ---------------- */
@@ -249,6 +333,7 @@ export default function FlashBox({
       <div className="box-header">
         <h3 className="font-semibold">{title}</h3>
         <div className="box-actions flex gap-2">
+          {/* Cho English (hoặc bạn có thể bỏ điều kiện lang === 'en' nếu muốn cả tiếng Việt đọc) */}
           {lang === 'en' && response && tts?.enabled && (
             <>
               <button
@@ -256,7 +341,7 @@ export default function FlashBox({
                 className="text-xs px-3 py-1.5 rounded-md border bg-white hover:bg-gray-50"
                 title="Replay"
               >
-                🔁 Replay
+                {speaking ? '🔁 Replay' : '🔁 Replay'}
               </button>
               {tts?.allowStop && (
                 <button
@@ -283,7 +368,9 @@ export default function FlashBox({
           </div>
         ) : (
           <p className="text-sm opacity-60">
-            {lang === 'vi' ? `Hỏi trợ lý bằng ${langName}…` : `Ask in ${langName}…`}
+            {lang === 'vi'
+              ? `Hỏi trợ lý bằng ${langName}…`
+              : `Ask in ${langName}…`}
           </p>
         )}
       </div>
@@ -292,7 +379,7 @@ export default function FlashBox({
         <div className="flex gap-2">
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             placeholder={lang === 'vi' ? 'Nhập câu hỏi…' : 'Type your question…'}
             className="flex-1 rounded-xl border px-4 py-3 text-sm"
             disabled={busy}
@@ -302,7 +389,11 @@ export default function FlashBox({
             <button
               type="button"
               onClick={handleVoice}
-              className={`rounded-xl px-3 py-3 border text-sm ${listening ? 'bg-red-50 border-red-200' : 'bg-gray-50 hover:bg-gray-100'}`}
+              className={`rounded-xl px-3 py-3 border text-sm ${
+                listening
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-gray-50 hover:bg-gray-100'
+              }`}
               title="Tap to speak"
               disabled={busy}
             >
