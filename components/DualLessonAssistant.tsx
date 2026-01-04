@@ -12,22 +12,23 @@ interface DualLessonAssistantProps {
   subnote?: string;
 }
 
-// Padding 2px cho chữ trong hộp trò chuyện & phản hồi Gemini
+// Padding 2px cho chữ trong hộp trò chuyện & phản hồi
 const CHAT_TEXT_PADDING_PX = 2;
 
-// Thiết lập tối ưu cho Cloud TTS (GCP)
-const baseTtsCloud = {
+/**
+ * Thiết lập TTS cho trình duyệt (Web Speech API).
+ * Không còn dùng Google Cloud TTS nữa.
+ *
+ * Gợi ý cho FlashBox:
+ * - engine: 'web-speech'  → dùng window.speechSynthesis
+ * - useClientSpeech: true → TTS chạy hoàn toàn trên client
+ */
+const baseTtsWeb = {
   enabled: true,
   allowStop: true,
-  // Cloud TTS
-  ssml: true,
-  sampleRateHertz: 24000,
-  audioEncoding: 'MP3',
-  effectsProfileId: ['headphone-class-device', 'handset-class-device'],
-  // Tránh nuốt âm đầu/cuối
-  leadingSilenceMs: 60,
-  trailingSilenceMs: 120,
-  // Gợi ý xử lý text trước TTS (tuỳ FlashBox có dùng không)
+  engine: 'web-speech',      // <-- đánh dấu dùng Web Speech API
+  useClientSpeech: true,     // <-- TTS chạy trên client
+  // Các gợi ý xử lý text trước khi đọc:
   normalize: {
     stripEmoji: true,
     collapseWhitespace: true,
@@ -48,7 +49,7 @@ export default function DualLessonAssistant(props: DualLessonAssistantProps) {
     endpoint = '/api/chat',
     model = 'gemini-2.5-flash',
     heading = 'Trợ lý học tập',
-    subnote = '* Nhập văn bản để nhận phản hồi bằng chữ. Nhấn 🎤 để nói và trợ lý sẽ trả lời bằng giọng nói + hiển thị chữ.',
+    subnote = '* Nhấn 🎤 để nói (STT dùng Web Speech API). Trợ lý sẽ trả lời bằng giọng nói (TTS trên trình duyệt) + hiển thị chữ.',
   } = props;
 
   return (
@@ -56,7 +57,7 @@ export default function DualLessonAssistant(props: DualLessonAssistantProps) {
       <h2 className="text-2xl md:text-3xl font-semibold mb-6">{heading}</h2>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Panel Tiếng Việt — ép giọng GCP vi-VN */}
+        {/* Panel Tiếng Việt — dùng Web Speech API với lang vi-VN (nếu trình duyệt hỗ trợ) */}
         <div className="flashbox rounded-xl border border-gray-200 p-2">
           <FlashBox
             grade={grade}
@@ -66,20 +67,26 @@ export default function DualLessonAssistant(props: DualLessonAssistantProps) {
             model={model}
             aiStyle={aiStyleTTS}
             tts={{
-              ...baseTtsCloud,
-              // === GCP TTS options ===
-              voice: 'vi-VN-Wavenet-D', // có thể đổi A/B/C/D
-              rate: 0.92,               // speakingRate
-              pitch: 1.05,              // pitch
-              // -----------------------
-              // Hints cũ (fallback nếu FlashBox đang check):
+              ...baseTtsWeb,
+              /**
+               * Các field dưới đây là "hint" cho Web TTS:
+               * - lang: mã ngôn ngữ mong muốn
+               * - voice: tên/nhóm voice (tuỳ FlashBox map sang speechSynthesis)
+               * - rate, pitch: tương ứng rate/pitch của SpeechSynthesisUtterance
+               */
+              lang: 'vi-VN',
+              voice: 'vi-VN',   // gợi ý chung cho tiếng Việt
+              rate: 1.0,
+              pitch: 1.0,
+
+              // Hints cũ nếu FlashBox vẫn check:
               forceVietnameseVoice: true,
               viVoiceHint: 'vi-VN',
             } as any}
           />
         </div>
 
-        {/* Panel English — ép giọng GCP en-US */}
+        {/* Panel English — Web TTS với tiếng Anh tự nhiên nhất có thể (en-US) */}
         <div className="flashbox rounded-xl border border-gray-200 p-2">
           <FlashBox
             grade={grade}
@@ -89,14 +96,20 @@ export default function DualLessonAssistant(props: DualLessonAssistantProps) {
             model={model}
             aiStyle={aiStyleTTS}
             tts={{
-              ...baseTtsCloud,
-              // === GCP TTS options ===
-              voice: 'en-US-Wavenet-D', // hoặc 'en-US-Wavenet-F' (giọng nữ)
+              ...baseTtsWeb,
+              /**
+               * Mặc định dùng en-US để bắt tiếng Anh "tự nhiên" phổ biến.
+               * Ở phía FlashBox, bạn có thể chọn voice có tên chứa "Natural/Neural"
+               * từ speechSynthesis.getVoices() nếu có.
+               */
+              lang: 'en-US',
+              voice: 'en-US',         // hint chung cho tiếng Anh Mỹ
               rate: 1.0,
               pitch: 1.0,
-              // -----------------------
-              // Hint cũ (fallback nếu FlashBox đang check):
+
+              // Hints cũ (fallback) nếu FlashBox đang check:
               enVoiceHint: 'en-US',
+              preferNativeEnglishVoice: true,
             } as any}
           />
         </div>
@@ -106,7 +119,6 @@ export default function DualLessonAssistant(props: DualLessonAssistantProps) {
 
       {/* 
         Scoped style: thêm padding 2px cho text trong chat UIs.
-        Bạn có thể xoá khối này khi FlashBox áp dụng padding nội bộ.
       */}
       <style jsx>{`
         :global(.flashbox) .message,
