@@ -1,12 +1,15 @@
 // app/api/tts/route.ts
+// TTS đã được chuyển hoàn toàn sang Web Speech API (client-side).
+// Route này KHÔNG còn gọi Google Cloud TTS nữa, chỉ trả JSON thông tin/config.
+
 export const runtime = "nodejs";
 
 type TtsBody = {
   text?: string;
-  voice?: string;          // "en-US-Wavenet-D" ...
-  languageCode?: string;   // "en-US", "vi-VN" ...
-  rate?: number;           // 0.25..4.0
-  pitch?: number;          // -20..20
+  lang?: string;       // "en-US", "en-GB", "vi-VN" ...
+  rate?: number;       // 0.1..10 (Web Speech: default = 1)
+  pitch?: number;      // 0..2   (Web Speech: default = 1)
+  voiceName?: string;  // tên voice cụ thể nếu bạn muốn chọn
 };
 
 function j(status: number, payload: any) {
@@ -16,77 +19,27 @@ function j(status: number, payload: any) {
   });
 }
 
-async function makeClient() {
-  const project_id = process.env.GCP_PROJECT_ID;
-  const client_email = process.env.GCP_CLIENT_EMAIL;
-  const raw_key = process.env.GCP_PRIVATE_KEY;
-
-  if (!project_id || !client_email || !raw_key) {
-    throw Object.assign(new Error("Missing GCP credentials"), {
-      meta: {
-        GCP_PROJECT_ID: !!project_id,
-        GCP_CLIENT_EMAIL: !!client_email,
-        GCP_PRIVATE_KEY: !!raw_key,
-      },
-    });
-  }
-  const { TextToSpeechClient } = await import("@google-cloud/text-to-speech");
-  return new TextToSpeechClient({
-    credentials: {
-      project_id,
-      client_email,
-      private_key: raw_key.replace(/\\n/g, "\n"),
+// GET /api/tts
+// Dùng để kiểm tra nhanh trạng thái, không synth audio.
+export async function GET(_req: Request) {
+  return j(200, {
+    ok: true,
+    mode: "web-tts",
+    note:
+      "TTS hiện chạy bằng Web Speech API (speechSynthesis) trên trình duyệt, không dùng Google Cloud nữa.",
+    hint: {
+      usage:
+        "Gọi window.speechSynthesis trên client để phát text. Endpoint này chỉ còn dùng cho debug/log nếu bạn cần.",
+      clientExample:
+        "await speak('Hello!', { lang: 'en-US', rate: 1, pitch: 1 });",
     },
   });
 }
 
-// GET /api/tts or /api/tts?selftest=1
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const selftest = url.searchParams.get("selftest");
-
-  if (!selftest) {
-    return j(200, {
-      ok: true,
-      env: {
-        GCP_PROJECT_ID: !!process.env.GCP_PROJECT_ID,
-        GCP_CLIENT_EMAIL: !!process.env.GCP_CLIENT_EMAIL,
-        GCP_PRIVATE_KEY: !!process.env.GCP_PRIVATE_KEY,
-      },
-      hint:
-        "Add ?selftest=1 to run a real synthesize check and see detailed errors if any.",
-    });
-  }
-
-  try {
-    const client = await makeClient();
-    const [resp] = await client.synthesizeSpeech({
-      input: { text: "ping" },
-      voice: { languageCode: "en-US", name: "en-US-Wavenet-D" },
-      audioConfig: { audioEncoding: "MP3", speakingRate: 1.0, pitch: 0 },
-    });
-    const ok = !!resp.audioContent;
-    return j(ok ? 200 : 500, {
-      selftest: true,
-      ok,
-      note: ok
-        ? "TTS synthesize succeeded. POST /api/tts should work."
-        : "TTS synthesize returned empty audioContent.",
-    });
-  } catch (err: any) {
-    console.error("TTS Selftest Error:", err);
-    return j(500, {
-      selftest: true,
-      error: err?.message || "Selftest failed",
-      code: err?.code,
-      statusDetails: err?.statusDetails,
-      details: err?.details,
-      hint:
-        "If code=PERMISSION_DENIED -> enable API / fix IAM. If INVALID_ARGUMENT -> wrong voice/language. If UNAUTHENTICATED/invalid_grant -> bad key format. If RESOURCE_EXHAUSTED -> quota/billing.",
-    });
-  }
-}
-
+// POST /api/tts
+// Trước đây trả về audio/mp3 từ Google TTS.
+// Giờ chỉ echo lại config để bạn log hoặc xử lý thêm server-side nếu muốn.
+// TTS thực sự phải được thực hiện ở client.
 export async function POST(req: Request) {
   let body: TtsBody;
   try {
@@ -94,40 +47,25 @@ export async function POST(req: Request) {
   } catch {
     return j(400, { error: "Invalid JSON body" });
   }
+
   const text = (body.text || "").trim();
   if (!text) return j(400, { error: 'Missing "text"' });
 
-  try {
-    const client = await makeClient();
+  const lang = body.lang || "en-US";
+  const rate = typeof body.rate === "number" ? body.rate : 1.0;
+  const pitch = typeof body.pitch === "number" ? body.pitch : 1.0;
+  const voiceName = body.voiceName || null;
 
-    const languageCode = body.languageCode || "en-US";
-    const name = body.voice || "en-US-Wavenet-D";
-    const speakingRate = typeof body.rate === "number" ? body.rate : 1.0;
-    const pitch = typeof body.pitch === "number" ? body.pitch : 0;
-
-    const [resp] = await client.synthesizeSpeech({
-      input: { text },
-      voice: { languageCode, name },
-      audioConfig: { audioEncoding: "MP3", speakingRate, pitch },
-    });
-
-    const raw = resp.audioContent as Uint8Array | string;
-    const u8 =
-      typeof raw === "string"
-        ? Uint8Array.from(Buffer.from(raw, "base64"))
-        : raw;
-    const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
-
-    return new Response(ab, { headers: { "Content-Type": "audio/mpeg" } });
-  } catch (err: any) {
-    console.error("TTS Error:", err);
-    return j(500, {
-      error: err?.message || "TTS failed",
-      code: err?.code,
-      statusDetails: err?.statusDetails,
-      details: err?.details,
-      hint:
-        "Common causes: Text-to-Speech API not enabled, service account lacks permission, PRIVATE_KEY newline format, wrong project, or quota/billing.",
-    });
-  }
+  // Đây chỉ là payload mô tả, không synth âm thanh.
+  return j(200, {
+    ok: true,
+    mode: "web-tts",
+    text,
+    lang,
+    rate,
+    pitch,
+    voiceName,
+    hint:
+      "Âm thanh không được tạo ở server nữa. Hãy dùng window.speechSynthesis trên client để phát giọng nói.",
+  });
 }
