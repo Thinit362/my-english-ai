@@ -1,80 +1,112 @@
+// app/api/stt/route.ts
+// STT đã được chuyển sang Web Speech API (client-side).
+// Route này KHÔNG còn gọi Google Cloud Speech nữa.
+// Client dùng window.SpeechRecognition / webkitSpeechRecognition để nhận diện giọng nói
+// (chọn lang 'en-US' hoặc accent tiếng Anh phù hợp để có chất lượng tự nhiên nhất)
+// và gửi transcript (text) lên đây nếu cần server xử lý / chấm điểm.
+
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
-  const { SpeechClient } = await import('@google-cloud/speech');
-  const client = new SpeechClient({
-    credentials: {
-      project_id: process.env.GCP_PROJECT_ID,
-      client_email: process.env.GCP_CLIENT_EMAIL,
-      private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
-  });
+type WordInfo = {
+  word: string;
+  start?: number;      // giây (optional, nếu client có tracking thời gian)
+  end?: number;        // giây
+  confidence?: number; // optional
+};
 
-  try {
-    const form = await req.formData();
-    const file = form.get('audio') as File | null;
-    const lang = (form.get('lang') as string) || 'en-US';
-    const expected = (form.get('expected') as string) || '';
-    const hints = ((form.get('hints') as string) || '')
-      .split('|')
-      .map(s => s.trim())
-      .filter(Boolean); // ví dụ: "Trung|heroes|hospital"
+type Alternative = {
+  transcript: string;
+  confidence?: number;
+};
 
-    if (!file) {
-      return new Response(JSON.stringify({ error: 'Missing audio' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    }
+type STTBody = {
+  transcript?: string;          // kết quả STT cuối cùng từ client
+  lang?: string;                // 'en-US', 'en-GB'..., để log/ghi nhận
+  alternatives?: Alternative[]; // nếu client có nhiều phương án
+  words?: WordInfo[];           // nếu client có tách theo từ
+  expected?: string;            // câu/đoạn mong đợi để chấm điểm
+};
 
-    const buf = Buffer.from(await file.arrayBuffer());
+/** Chuẩn hoá string để so sánh "expected" với "transcript" */
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '') // bỏ dấu nếu có
+    .replace(/[^a-z0-9\s']/g, ' ')   // bỏ ký tự lạ, giữ chữ số/chữ/cách
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-    const [resp] = await client.recognize({
-      audio: { content: buf.toString('base64') },
-      config: {
-        // Khớp MediaRecorder
-        encoding: 'WEBM_OPUS',
-        sampleRateHertz: 48000,
+/**
+ * Tính điểm tương đồng rất đơn giản giữa expected & actual:
+ * - dựa trên số lượng từ expected xuất hiện trong actual
+ * - trả về số trong khoảng 0..1
+ */
+function simpleWordOverlapScore(expected: string, actual: string): number {
+  const e = normalizeText(expected);
+  const a = normalizeText(actual);
+  if (!e || !a) return 0;
 
-        // Ngôn ngữ chính + các accent dự phòng
-        languageCode: lang,
-        alternativeLanguageCodes: ['en-GB', 'en-AU', 'en-US'],
+  const eTokens = e.split(' ');
+  const aTokens = a.split(' ');
+  const aSet = new Set(aTokens);
 
-        // Bật dấu câu & confidence theo từ
-        enableAutomaticPunctuation: true,
-        enableWordTimeOffsets: true,
-        enableWordConfidence: true,
-
-        // Cho phép trả nhiều phương án để bạn tự chấm
-        maxAlternatives: 3,
-
-        // Model gợi ý (tốt cho tiếng nói tự nhiên)
-        useEnhanced: true,          // dùng model enhanced nếu có
-        model: 'video',             // 'video' ổn cho mic/đàm thoại; có thể thử 'default' hoặc 'phone_call'
-
-        // Gợi ý từ khoá (tên riêng/thuật ngữ) → kéo xác suất đúng lên
-        speechContexts: hints.length ? [{ phrases: hints, boost: 15 }] : undefined,
-      },
-    });
-
-    const result = resp.results?.[0];
-    const alt0 = result?.alternatives?.[0];
-
-    const payload = {
-      transcript: alt0?.transcript ?? '',
-      confidence: alt0?.confidence ?? 0,
-      alternatives: result?.alternatives?.map(a => ({ transcript: a?.transcript ?? '', confidence: a?.confidence ?? 0 })) ?? [],
-      words: alt0?.words?.map(w => ({
-        word: w.word ?? '',
-        start: Number(w.startTime?.seconds ?? 0) + (w.startTime?.nanos ?? 0) / 1e9,
-        end:   Number(w.endTime?.seconds ?? 0)   + (w.endTime?.nanos ?? 0) / 1e9,
-        confidence: w.confidence ?? undefined,
-      })) ?? []
-    };
-
-    return new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' } });
-  } catch (e: any) {
-    console.error('STT Error:', e);
-    return new Response(JSON.stringify({ error: e?.message || 'STT failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  let match = 0;
+  for (const t of eTokens) {
+    if (aSet.has(t)) match++;
   }
+
+  return eTokens.length ? match / eTokens.length : 0;
+}
+
+function j(status: number, payload: any) {
+  return new Response(JSON.stringify(payload, null, 2), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// (Tuỳ chọn) Có thể bổ sung GET nếu muốn test nhanh, nhưng ở đây giữ giống file gốc: chỉ export POST.
+
+export async function POST(req: Request) {
+  let body: STTBody;
+  try {
+    body = (await req.json()) as STTBody;
+  } catch {
+    return j(400, { error: 'Invalid JSON body. Expecting STT result from client.' });
+  }
+
+  const transcript = (body.transcript || '').trim();
+  if (!transcript) {
+    return j(400, { error: 'Missing "transcript" from client STT.' });
+  }
+
+  const lang = body.lang || 'en-US'; // gợi ý: dùng en-US trên client để bắt tiếng Anh tự nhiên nhất
+  const alternatives = body.alternatives && body.alternatives.length
+    ? body.alternatives
+    : [{ transcript, confidence: 1 }];
+
+  const words = body.words || [];
+  const expected = (body.expected || '').trim();
+
+  // Nếu có expected thì chấm điểm sơ bộ
+  let score: number | undefined;
+  if (expected) {
+    score = simpleWordOverlapScore(expected, transcript);
+  }
+
+  const payload = {
+    transcript,
+    lang,
+    confidence: alternatives[0]?.confidence ?? 1,
+    alternatives,
+    words,
+    expected: expected || undefined,
+    score, // 0..1 nếu có expected
+    hint:
+      'STT được thực hiện ở client bằng Web Speech API. Hãy chắc chắn client đang dùng SpeechRecognition với lang="en-US" hoặc accent tiếng Anh phù hợp.',
+  };
+
+  return j(200, payload);
 }
