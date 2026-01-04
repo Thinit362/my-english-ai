@@ -66,78 +66,98 @@ function normalizePOS(pos?: string) {
   return "";
 }
 
-/** ===== IndexedDB cache (TTS) ===== */
-const DB_NAME = "vocab-tts-db";
-const DB_STORE = "audios";
-const DB_VER = 1;
+/** ===== Web TTS helpers (speechSynthesis) ===== */
 
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((res, rej) => {
-    const rq = indexedDB.open(DB_NAME, DB_VER);
-    rq.onupgradeneeded = () => {
-      const db = rq.result;
-      if (!db.objectStoreNames.contains(DB_STORE)) {
-        db.createObjectStore(DB_STORE, { keyPath: "id" });
-      }
-    };
-    rq.onsuccess = () => res(rq.result);
-    rq.onerror = () => rej(rq.error);
-  });
-}
-async function idbGet(id: string): Promise<Blob | undefined> {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(DB_STORE, "readonly");
-    const st = tx.objectStore(DB_STORE);
-    const rq = st.get(id);
-    rq.onsuccess = () =>
-      res((rq.result as { id: string; blob: Blob } | undefined)?.blob);
-    rq.onerror = () => rej(rq.error);
-  });
-}
-async function idbPut(id: string, blob: Blob) {
-  const db = await openDB();
-  return new Promise<void>((res, rej) => {
-    const tx = db.transaction(DB_STORE, "readwrite");
-    const st = tx.objectStore(DB_STORE);
-    const rq = st.put({ id, blob });
-    rq.onsuccess = () => res();
-    rq.onerror = () => rej(rq.error);
-  });
-}
-async function sha(text: string) {
-  try {
-    const buf = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(text)
+type WebTTSOptions = {
+  lang?: string;
+  rate?: number;
+  pitch?: number;
+  voiceHint?: string; // ví dụ: "Neural2-D"...
+  onStart?: () => void;
+  onEnd?: () => void;
+};
+
+function pickBestVoice(
+  voices: SpeechSynthesisVoice[],
+  lang = "en-US",
+  voiceHint?: string
+): SpeechSynthesisVoice | null {
+  let candidates = voices;
+
+  // Ưu tiên đúng lang (vd: en-US), nếu không có thì lấy mọi voice en-*
+  candidates = voices.filter(
+    (v) =>
+      v.lang === lang ||
+      v.lang.toLowerCase().startsWith(lang.split("-")[0].toLowerCase() + "-")
+  );
+  if (!candidates.length) {
+    candidates = voices.filter((v) =>
+      v.lang.toLowerCase().startsWith("en-")
     );
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  } catch {
-    let h = 5381;
-    for (let i = 0; i < text.length; i++) h = (h * 33) ^ text.charCodeAt(i);
-    return (h >>> 0).toString(16);
+  }
+  if (!candidates.length) return null;
+
+  // Nếu có hint theo tên voice thì ưu tiên
+  if (voiceHint) {
+    const byNameExact = candidates.find(
+      (v) => v.name === voiceHint || v.name.includes(voiceHint)
+    );
+    if (byNameExact) return byNameExact;
+  }
+
+  // Ưu tiên các voice có tên “Natural/Neural/Premium” (thường nghe tự nhiên hơn)
+  const priority = candidates.find((v) =>
+    /natural|neural|premium/i.test(v.name)
+  );
+  return priority ?? candidates[0];
+}
+
+function speakWithWebTTS(text: string, opts: WebTTSOptions = {}) {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  const { lang = "en-US", rate = 1, pitch = 1, voiceHint, onStart, onEnd } =
+    opts;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = rate;
+  utter.pitch = pitch;
+
+  const assignVoice = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+    const best = pickBestVoice(voices, lang, voiceHint);
+    if (best) utter.voice = best;
+  };
+
+  assignVoice();
+
+  utter.onstart = () => {
+    onStart?.();
+  };
+  utter.onend = () => {
+    onEnd?.();
+  };
+  utter.onerror = () => {
+    onEnd?.();
+  };
+
+  // Nếu chưa có voices (Firefox / lần đầu load), chờ voiceschanged rồi speak
+  if (!utter.voice && typeof synth.onvoiceschanged !== "undefined") {
+    const handler = () => {
+      assignVoice();
+      synth.speak(utter);
+      synth.onvoiceschanged = null;
+    };
+    synth.onvoiceschanged = handler;
+  } else {
+    synth.speak(utter);
   }
 }
 
-/** ===== helpers ===== */
-async function fetchTTS(text: string, voice: string): Promise<Blob> {
-  const r = await fetch("/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text,
-      languageCode: "en-US",
-      voice,
-      rate: 1.0,
-      pitch: 0,
-    }),
-  });
-  if (!r.ok) throw new Error(await r.text());
-  const buf = await r.arrayBuffer();
-  return new Blob([buf], { type: "audio/mpeg" });
-}
+/** ===== helpers cho chấm điểm phát âm ===== */
 function normalize(s: string) {
   return s
     .toLowerCase()
@@ -178,10 +198,9 @@ export default function VocabLesson({
   items,
   baseImagePath = "",
 }: Props) {
-  // Audio
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlMem = useRef<Map<string, string>>(new Map());
   const [isClient, setIsClient] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
+
   const [busyId, setBusyId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
@@ -194,7 +213,7 @@ export default function VocabLesson({
     id: string;
     text: string;
     label: string;
-    voice: string;
+    voice: string; // chỉ còn là hint cho Web TTS
   } | null>(null);
 
   const [recUrl, setRecUrl] = useState<string | null>(null);
@@ -204,22 +223,22 @@ export default function VocabLesson({
 
   const [said, setSaid] = useState<string>("");
   const [percent, setPercent] = useState<number | null>(0);
-  const [modelUrl, setModelUrl] = useState<string | null>(null);
 
-  // ✅ FIX: giữ transcript mới nhất, tránh stale state -> 0%
+  // ✅ giữ transcript mới nhất
   const saidRef = useRef<string>("");
 
   // SpeechRecognition instance
   const srRef = useRef<any>(null);
 
-  // voices
-  const VOICE_WORD = "en-US-Neural2-D";
-  const VOICE_EXAMPLE = "en-US-Neural2-F";
+  // voice hint cho Web TTS (giữ tên cũ làm gợi ý)
+  const VOICE_WORD = "Neural2-D"; // en-US male-ish
+  const VOICE_EXAMPLE = "Neural2-F"; // en-US female-ish
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      audioRef.current = new Audio();
       setIsClient(true);
+      setTtsSupported(!!window.speechSynthesis);
+
       // đóng popover khi click ra ngoài
       const handler = (e: MouseEvent) => {
         const el = e.target as HTMLElement;
@@ -231,62 +250,38 @@ export default function VocabLesson({
     return () => {};
   }, []);
 
-  async function getAudioUrl(text: string, voice: string) {
-    const key = await sha(voice + "|" + text);
-    const mem = urlMem.current.get(key);
-    if (mem) return mem;
-    const cached = await idbGet(key);
-    if (cached) {
-      const url = URL.createObjectURL(cached);
-      urlMem.current.set(key, url);
-      return url;
-    }
-    const blob = await fetchTTS(text, voice);
-    await idbPut(key, blob);
-    const url = URL.createObjectURL(blob);
-    urlMem.current.set(key, url);
-    return url;
-  }
+  /** ===== TTS: nói 1 câu bằng Web Speech API ===== */
+  function play(text: string, id: string, voiceHint: string) {
+    if (!isClient || !ttsSupported || !text) return;
 
-  async function play(text: string, id: string, voice: string) {
-    if (!isClient || !text) return;
-    const a = audioRef.current ?? new Audio();
-
-    if (playingId === id && !a.paused) {
-      a.pause();
-      a.currentTime = 0;
+    // Nếu đang phát chính câu đó → dừng
+    if (playingId === id && typeof window !== "undefined") {
+      window.speechSynthesis?.cancel();
       setPlayingId(null);
+      setBusyId(null);
       return;
     }
 
-    try {
-      setBusyId(id);
-      if (!a.paused) {
-        a.pause();
-        a.currentTime = 0;
-      }
-      const url = await getAudioUrl(text, voice);
-      a.src = url;
-      audioRef.current = a;
-      setPlayingId(id);
+    setBusyId(id);
 
-      try {
-        const AC: any =
-          (window as any).AudioContext || (window as any).webkitAudioContext;
-        if (AC) {
-          const ctx = ((window as any).__vocabCtx ||= new AC());
-          if (ctx.state === "suspended") await ctx.resume();
-        }
-      } catch {}
-
-      await a.play();
-      a.onended = () => setPlayingId(null);
-    } catch (e) {
-      console.error("[vocab] play error", e);
-      setPlayingId(null);
-    } finally {
-      setBusyId(null);
+    // Hủy mọi lời đọc đang chạy
+    if (typeof window !== "undefined") {
+      window.speechSynthesis?.cancel();
     }
+
+    speakWithWebTTS(text, {
+      lang: "en-US",
+      rate: 1,
+      pitch: 1,
+      voiceHint,
+      onStart: () => {
+        setPlayingId(id);
+      },
+      onEnd: () => {
+        setPlayingId((current) => (current === id ? null : current));
+        setBusyId((current) => (current === id ? null : current));
+      },
+    });
   }
 
   async function openPractice(
@@ -298,22 +293,18 @@ export default function VocabLesson({
     setModalFor({ id, text, label, voice });
     setRecUrl(null);
     setSaid("");
-    saidRef.current = ""; // ✅ reset transcript ref
+    saidRef.current = "";
     setPercent(0);
     setModalOpen(true);
-    try {
-      const url = await getAudioUrl(text, voice);
-      setModelUrl(url);
-    } catch {
-      setModelUrl(null);
-    }
   }
 
   /** ===== Recording + Auto scoring ===== */
   function setupSR(lang = "en-US") {
     const SR: any =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      (typeof window !== "undefined" &&
+        ((window as any).SpeechRecognition ||
+          (window as any).webkitSpeechRecognition)) ||
+      null;
     if (!SR) return null;
     const r = new SR();
     r.lang = lang;
@@ -338,7 +329,6 @@ export default function VocabLesson({
     } else {
       srRef.current = r;
 
-      // ✅ FIX: chấm điểm NGAY khi có transcript -> không bị stale state
       r.onresult = (e: any) => {
         const saidText = e.results?.[0]?.[0]?.transcript || "";
         saidRef.current = saidText;
@@ -352,7 +342,6 @@ export default function VocabLesson({
         console.warn("[SpeechRecognition] error:", err);
       };
 
-      // Không chấm điểm ở onend nữa để tránh dùng state cũ
       r.onend = () => {};
 
       try {
@@ -375,7 +364,6 @@ export default function VocabLesson({
       setRecUrl(URL.createObjectURL(blob));
       stream.getTracks().forEach((t) => t.stop());
 
-      // ✅ Fallback: nếu SR có transcript thì chấm (KHÔNG dùng state `said`)
       if (modalFor) {
         const finalSaid = (saidRef.current || "").trim();
         if (finalSaid) {
@@ -463,7 +451,7 @@ export default function VocabLesson({
                   {/* nút loa / mic cho TỪ */}
                   <button
                     onClick={() => play(it.word, it.id, VOICE_WORD)}
-                    disabled={!isClient || isBusy}
+                    disabled={!isClient || !ttsSupported || isBusy}
                     className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-60"
                     title="Nghe phát âm mẫu"
                   >
@@ -530,9 +518,14 @@ export default function VocabLesson({
                         <div className="flex gap-2">
                           <button
                             onClick={() =>
-                              play(it.exampleEn!, it.id + ":ex", VOICE_EXAMPLE)
+                              play(
+                                it.exampleEn!,
+                                it.id + ":ex",
+                                VOICE_EXAMPLE
+                              )
                             }
-                            className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+                            disabled={!isClient || !ttsSupported}
+                            className="rounded-full border px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-60"
                             title="Nghe câu ví dụ"
                           >
                             🔊
@@ -607,7 +600,7 @@ export default function VocabLesson({
                 </div>
               </div>
 
-              {/* (Optional) show transcript nhỏ để debug/giúp HS biết SR nghe gì */}
+              {/* (Optional) show transcript nhỏ */}
               {/* <div className="mt-2 text-xs text-gray-500">Bạn nói: {said || "..."}</div> */}
             </div>
 
@@ -619,23 +612,14 @@ export default function VocabLesson({
 
               <div className="mt-3 flex flex-wrap gap-2 justify-center">
                 <button
-                  onClick={async () => {
-                    if (!modelUrl) {
-                      const u = await getAudioUrl(modalFor.text, modalFor.voice);
-                      setModelUrl(u);
-                    }
-                    const a = new Audio(modelUrl || "");
-                    try {
-                      const AC: any =
-                        (window as any).AudioContext ||
-                        (window as any).webkitAudioContext;
-                      if (AC) {
-                        const ctx = ((window as any).__vocabCtx2 ||= new AC());
-                        if (ctx.state === "suspended") await ctx.resume();
-                      }
-                    } catch {}
-                    a.play();
-                  }}
+                  onClick={() =>
+                    speakWithWebTTS(modalFor.text, {
+                      lang: "en-US",
+                      voiceHint: modalFor.voice,
+                      rate: 1,
+                      pitch: 1,
+                    })
+                  }
                   className="rounded-md bg-white text-[#0B5ED7] border border-white/20 px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   🔊 Nghe mẫu
