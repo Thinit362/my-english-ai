@@ -12,7 +12,7 @@ import {
 // ==== Config & API key helpers =====================================
 
 export const GEMINI_MODEL =
-  process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+  process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
 
 /** Đọc API key theo các tên biến bạn đang dùng */
 function getApiKey(): string {
