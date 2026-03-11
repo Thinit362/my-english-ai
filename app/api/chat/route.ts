@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'models/gemini-1.5-flash';
 
 function jerr(message: string, status = 500, extra?: any) {
   console.error('[API /api/chat] Error:', { status, message, extra });
