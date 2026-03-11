@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // ✅ Gemini 2.5 Flash
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // gọi bằng chuỗi để tránh lỗi type {role, parts}
     const result = await model.generateContent(prompt);
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       answer: text || "(Không có phản hồi từ Gemini)",
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
     });
   } catch (err: any) {
     console.error("[/api/gemini/chat] error:", err);
