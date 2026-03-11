@@ -22,7 +22,7 @@ export default function Header() {
           />
           <div>
             <h1 className="font-bold text-2xl text-sky-800">TIẾNG ANH THPT - GLOBAL SUCCESS</h1>
-            <p className="text-sm text-gray-600">THPT Hải An</p>
+            <p className="font-bold text-sm text-green-600">THPT Hải An-TP. Hải Phòng</p>
           </div>
         </div>
 
