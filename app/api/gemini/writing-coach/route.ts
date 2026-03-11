@@ -100,7 +100,7 @@ ${studentText}
 
     // ✅ cố ép JSON (nếu SDK/version hỗ trợ)
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 900,
@@ -126,7 +126,7 @@ ${studentText}
       return NextResponse.json({
         rubric: fallback.rubric,
         feedbackText: fallback.feedbackText,
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         debug: {
           note: "Gemini did not return valid JSON; fallback generated.",
           raw1,
@@ -142,7 +142,7 @@ ${studentText}
       rubric,
       feedbackText:
         feedbackText || "Gemini returned empty feedback. Please try again.",
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       // bật debug nếu bạn muốn xem raw khi cần:
       // debug: { raw1, raw2 }
     });
