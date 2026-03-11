@@ -21,7 +21,7 @@ export default function Header() {
             className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md"
           />
           <div>
-            <h1 className="font-bold text-2xl text-sky-800">MCVT Innovators</h1>
+            <h1 className="font-bold text-2xl text-sky-800">TIẾNG ANH THPT - GLOBAL SUCCESS</h1>
             <p className="text-sm text-gray-600">THPT Hải An</p>
           </div>
         </div>
