@@ -7,11 +7,11 @@ export default function Footer() {
         </p>
 
         <p>
-          📍 Địa chỉ: 10/117 Ngô Gia Tự, Nam Hải 2, Hải An, Hải Phòng
+          📍 Địa chỉ: 10/1177 Ngô Gia Tự, Nam Hải 2, Hải An, Hải Phòng
         </p>
 
         <p>
-          ☎ Điện thoại: 0225.268.6343    ✉ Email: thpt-haian@haiphong.edu.vn
+          ☎ Điện thoại: 0225.268.6343 ;     ✉ Email: thpt-haian@haiphong.edu.vn
         </p>
       </div>
     </footer>
