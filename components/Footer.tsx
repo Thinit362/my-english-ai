@@ -3,15 +3,15 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-container">
         <p className="footer-title">
-          Trường THPT Hải An - Thành phố Hải Phòng
+          FPT SCHOOL CAMPUS HAI PHONG - TRƯỜNG THCS-THPT FPT HẢI PHÒNG
         </p>
 
         <p>
-          📍 Địa chỉ: 10/1177 Ngô Gia Tự, Nam Hải 2, Hải An, Hải Phòng
+          📍 Địa chỉ: Khu tái định cư Đằng Lâm 1 – Phường Hải An – Thành phố Hải Phòng
         </p>
 
         <p>
-          ☎ Điện thoại: 0225.268.6343 ;     ✉ Email: thpt-haian@haiphong.edu.vn
+          ☎ Điện thoại: 0225 730 6898 ;     ✉ Email: tuyensinh.hp@fe.edu.vn
         </p>
       </div>
     </footer>
