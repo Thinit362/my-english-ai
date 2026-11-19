@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 export default function Header() {
-  const images = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"];
+  const images = ["/banner11.jpg", "/banner2.jpg", "/banner3.jpg"];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -16,13 +16,13 @@ export default function Header() {
       <div className="flex flex-wrap justify-between items-center px-6 py-3 bg-gradient-to-r from-sky-50 to-white">
         <div className="flex items-center gap-3">
           <img
-            src="/logo.png"
-            alt="THPT Hải An Logo"
+            src="/logo1.png"
+            alt="FPT SCHOOL CAMPUS HẢI PHÒNG"
             className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md"
           />
           <div>
             <h1 className="font-bold text-2xl text-sky-800">TIẾNG ANH THPT - GLOBAL SUCCESS</h1>
-            <p className="font-bold text-sm text-green-600">THPT Hải An-TP. Hải Phòng</p>
+            <p className="font-bold text-sm text-green-600">FPT SCHOOL CAMPUS HẢI PHÒNG</p>
           </div>
         </div>
 
